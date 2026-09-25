@@ -2,10 +2,13 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHeader from '@/components/PageHeader.astro';
 import CtaBand from '@/components/CtaBand.astro';
-import { ArrowRight, CalendarClock, Calculator, House, Percent, ReceiptIndianRupee } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { toolNav } from '@/config/nav';
 import { site } from '@/config/site';
 import { breadcrumbLd } from '@/lib/schema';
+import { formatINR } from '@/lib/format';
+import { compareRegimes } from '@/lib/tax/compute';
+import { defaultYearId, getRules } from '@/lib/tax/rules';
 
 const siteUrl = Astro.site ?? new URL('https://example.com');
 const crumbs = [
@@ -14,13 +17,20 @@ const crumbs = [
 ];
 const near = site.location.city ? ` in ${site.location.city}` : '';
 
-const icons: Record<string, typeof Calculator> = {
-  '/tools/income-tax-calculator': Calculator,
-  '/tools/hra-calculator': House,
-  '/tools/gst-calculator': ReceiptIndianRupee,
-  '/tools/advance-tax': CalendarClock,
-  '/tools/tds-calculator': Percent,
+/** Worksheet number, short tab name and what the result looks like, per tool. */
+const sheets: Record<string, { no: string; tab: string; out: string }> = {
+  '/tools/income-tax-calculator': { no: '01', tab: 'Income tax', out: 'Old vs new, side by side' },
+  '/tools/hra-calculator': { no: '02', tab: 'HRA', out: 'The three limits, lowest circled' },
+  '/tools/gst-calculator': { no: '03', tab: 'GST', out: 'An invoice-style breakdown' },
+  '/tools/advance-tax': { no: '04', tab: 'Advance tax', out: 'A calendar of due dates' },
+  '/tools/tds-calculator': { no: '05', tab: 'TDS', out: 'A ledger of sections and rates' },
 };
+
+const [featured, ...rest] = toolNav;
+
+// A worked example for the featured sheet, computed by the same engine as the calculator.
+const rules = getRules(defaultYearId);
+const example = compareRegimes({ salary: 1500000, age: 'below60' }, rules);
 
 const itemListLd = {
   '@context': 'https://schema.org',
@@ -40,29 +50,62 @@ const itemListLd = {
 >
   <PageHeader
     title="Tax calculators"
-    lead="Quick, private estimates that run in your browser. Nothing you type is stored or sent unless you choose to share it."
+    lead="Five worksheets that run in your browser. Nothing you type is stored or sent unless you choose to share it."
     crumbs={crumbs}
+    meta="Worksheets · 01 to 05"
   />
-  <section class="section">
+  <section class="pads-section" aria-label="Calculators">
     <div class="container">
-      <ul class="tool-grid" role="list">
-        {toolNav.map((t) => {
-          const Icon = icons[t.href] ?? Calculator;
-          return (
-            <li>
-              <a class="card card--link tool-card" href={t.href}>
-                <span class="icon-badge tool-icon"><Icon aria-hidden="true" /></span>
-                <h2 class="tool-title">{t.title}</h2>
-                <p class="muted">{t.short}</p>
-                <span class="tool-go" aria-hidden="true">
-                  Open <ArrowRight />
-                </span>
+      <ol class="pads" role="list">
+        <li class="pad pad--featured">
+          <div class="pad__sheet">
+            <p class="pad__tab" aria-hidden="true">WS-{sheets[featured.href].no} · {sheets[featured.href].tab}</p>
+            <div class="pad__copy">
+              <h2 class="pad__title"><a href={featured.href}>{featured.title}</a></h2>
+              <p class="pad__promise">{featured.short} Find out which regime costs you less, and your monthly take-home under each.</p>
+              <p class="pad__out">Result: {sheets[featured.href].out}</p>
+              <a class="btn btn--primary btn--lg pad__go" href={featured.href} aria-label={`Open calculator: ${featured.title}`}>
+                Open calculator <ArrowRight aria-hidden="true" />
               </a>
+            </div>
+            <figure class="pad__specimen">
+              <div class="spec" aria-hidden="true">
+                <p class="spec__head">Example · {formatINR(1500000)} salary</p>
+                <div class="spec__row">
+                  <span>Old regime</span><span>{formatINR(example.old.totalTax)}</span>
+                </div>
+                <div class="spec__row spec__row--best">
+                  <span>New regime</span><span>{formatINR(example.new.totalTax)}</span>
+                </div>
+                {example.better !== 'equal' && (
+                  <p class="spec__stamp">Better by {formatINR(example.saving)}</p>
+                )}
+              </div>
+              <figcaption class="pad__cap">
+                Worked example for {rules.shortLabel}: {formatINR(1500000)} salary, no deductions. Old regime{' '}
+                {formatINR(example.old.totalTax)}, new regime {formatINR(example.new.totalTax)}. Estimate, rules unverified.
+              </figcaption>
+            </figure>
+          </div>
+        </li>
+        {rest.map((t) => {
+          const m = sheets[t.href];
+          return (
+            <li class="pad">
+              <div class="pad__sheet">
+                <p class="pad__tab" aria-hidden="true">WS-{m.no} · {m.tab}</p>
+                <h2 class="pad__title"><a href={t.href}>{t.title}</a></h2>
+                <p class="pad__promise">{t.short}</p>
+                <p class="pad__out">Result: {m.out}</p>
+                <a class="btn btn--primary pad__go" href={t.href} aria-label={`Open calculator: ${t.title}`}>
+                  Open calculator <ArrowRight aria-hidden="true" />
+                </a>
+              </div>
             </li>
           );
         })}
-      </ul>
-      <p class="muted small tool-disclaimer">
+      </ol>
+      <p class="pads-note">
         All results are estimates for information only, not tax, legal or financial advice. Rates and rules can change
         with each Budget: check the official portals at
         <a href="https://www.incometax.gov.in" rel="noopener" target="_blank">incometax.gov.in</a> and
@@ -75,16 +118,224 @@ const itemListLd = {
 </BaseLayout>
 
 <style>
-  /* Minimal layout only; visual design is handled in a later pass. Hover lift comes from .card--link. */
-  .tool-grid {
-    list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-5);
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  .pads-section {
+    padding-block: var(--space-l) var(--space-xl);
   }
-  .tool-grid li { margin: 0; }
-  .tool-card { height: 100%; display: flex; flex-direction: column; }
-  .tool-title { font-size: 1.25rem; margin: 0 0 var(--space-2); }
-  .tool-card p { flex: 1; }
-  .tool-go { display: inline-flex; align-items: center; gap: var(--space-1); margin-top: var(--space-4); color: var(--accent); font-weight: 600; }
-  .tool-go :global(svg) { width: 1rem; height: 1rem; }
-  .tool-disclaimer { margin-top: var(--space-6); max-width: var(--measure); }
+  .pads {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-xl) var(--space-l);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+  }
+  .pad {
+    position: relative;
+    margin: 0;
+    padding-top: 1.75rem; /* room for the tab */
+  }
+  /* Two sheets under the top one, so each entry reads as a pad of worksheets. */
+  .pad::before,
+  .pad::after {
+    content: '';
+    position: absolute;
+    inset: 1.75rem 0 0;
+    background: var(--paper-50);
+    border-radius: var(--radius-paper);
+    box-shadow: var(--shadow-paper);
+  }
+  .pad::before {
+    transform: translate(6px, 7px) rotate(1.2deg);
+  }
+  .pad::after {
+    transform: translate(3px, 3px) rotate(-0.6deg);
+  }
+  .pad__sheet {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: var(--space-m) var(--space-m) var(--space-m) calc(var(--space-m) + 0.75rem);
+    background-color: var(--paper-50);
+    background-image:
+      linear-gradient(to right, transparent 0.9rem, color-mix(in oklch, var(--stamp-600) 45%, transparent) 0.9rem 1rem, transparent 1rem),
+      repeating-linear-gradient(to bottom, transparent 0 calc(1.75rem - 1px), var(--paper-200) calc(1.75rem - 1px) 1.75rem);
+    border-radius: 0 var(--radius-paper) var(--radius-paper) var(--radius-paper);
+    box-shadow: var(--shadow-paper);
+    transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
+  }
+  .pad__tab {
+    position: absolute;
+    left: 0;
+    bottom: 100%;
+    margin: 0;
+    padding: 0.4rem 1rem 0.35rem;
+    font-family: var(--font-paper);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    color: var(--forest-800);
+    background: var(--mint-100);
+    border-radius: 6px 6px 0 0;
+    clip-path: polygon(0 0, calc(100% - 0.6rem) 0, 100% 100%, 0 100%);
+    padding-right: 1.4rem;
+  }
+  .pad__title {
+    margin: 0 0 var(--space-2xs);
+    font-size: var(--step-2);
+    font-stretch: 92%;
+    line-height: 1.05;
+  }
+  .pad__title a {
+    color: var(--graphite-900);
+    text-decoration: none;
+  }
+  .pad__title a:hover {
+    color: var(--forest-700);
+  }
+  .pad__promise {
+    margin: 0 0 var(--space-2xs);
+    color: var(--graphite-700);
+  }
+  .pad__out {
+    margin: 0 0 var(--space-m);
+    font-family: var(--font-paper);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--graphite-700);
+  }
+  .pad__go {
+    margin-top: auto;
+    align-self: flex-start;
+  }
+  .pad__go :global(svg) {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+  @media (max-width: 35rem) {
+    .pad__go {
+      align-self: stretch;
+    }
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .pad:hover .pad__sheet,
+    .pad:focus-within .pad__sheet {
+      transform: translateY(-4px) rotate(-0.4deg);
+      box-shadow: var(--shadow-lift);
+    }
+    .pad:hover .pad__go :global(svg) {
+      transform: translateX(3px);
+    }
+    .pad__go :global(svg) {
+      transition: transform var(--dur-fast) var(--ease-out);
+    }
+  }
+
+  /* Featured: the income tax worksheet spans the row, with a specimen receipt. */
+  .pad--featured {
+    grid-column: 1 / -1;
+  }
+  .pad--featured .pad__sheet {
+    display: grid;
+    gap: var(--space-l);
+    align-items: center;
+    padding: var(--space-l) var(--space-l) var(--space-l) calc(var(--space-l) + 1rem);
+  }
+  @media (min-width: 52rem) {
+    .pad--featured .pad__sheet {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    }
+  }
+  .pad--featured .pad__title {
+    font-size: var(--step-4);
+    font-stretch: 86%;
+  }
+  .pad--featured .pad__promise {
+    font-size: var(--step-1);
+    line-height: 1.45;
+    max-width: 34ch;
+  }
+  .pad__copy {
+    display: flex;
+    flex-direction: column;
+  }
+  .pad__specimen {
+    margin: 0;
+    display: grid;
+    gap: var(--space-2xs);
+  }
+  .spec {
+    position: relative;
+    padding: 1.125rem 1.25rem 1.5rem;
+    font-family: var(--font-paper);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    background: var(--paper-100);
+    border: 1px solid var(--paper-300);
+    border-radius: var(--radius-paper);
+    transform: rotate(1.5deg);
+  }
+  .spec__head {
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.625rem;
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--graphite-700);
+    border-bottom: 1.5px dashed var(--paper-300);
+  }
+  .spec__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    color: var(--graphite-700);
+  }
+  .spec__row + .spec__row {
+    border-top: 1px dotted var(--paper-300);
+  }
+  .spec__row span:last-child {
+    font-weight: 700;
+    color: var(--graphite-900);
+  }
+  .spec__row--best span {
+    color: var(--forest-800) !important;
+    font-weight: 700;
+  }
+  .spec__stamp {
+    position: absolute;
+    right: 1rem;
+    bottom: -0.9rem;
+    margin: 0;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--stamp-700);
+    background: var(--paper-50);
+    border: 2px solid var(--stamp-600);
+    border-radius: 5px;
+    transform: rotate(-7deg);
+  }
+  .pad__cap {
+    margin-top: var(--space-s);
+    font-size: var(--step--1);
+    color: var(--graphite-700);
+  }
+
+  .pads-note {
+    margin: var(--space-xl) 0 0;
+    max-width: var(--measure);
+    font-size: var(--step--1);
+    color: var(--graphite-700);
+  }
+  .pads-note a {
+    color: var(--forest-700);
+  }
 </style>

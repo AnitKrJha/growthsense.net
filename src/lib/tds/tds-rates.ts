@@ -22,6 +22,8 @@ export interface TdsRow {
   rateIndividual: number | null;
   /** Rate in percent for other payees (firms, companies, etc.). null = variable. */
   rateOthers: number | null;
+  /** Company rate, only where it differs from `rateOthers` (e.g. 194D). */
+  rateCompany?: number | null;
   /** Shown instead of / next to the numeric rates. */
   rateText?: string;
   /** Rate if the payee has no PAN (s.206AA), as display text. */
@@ -141,6 +143,7 @@ export const tdsRows: readonly TdsRow[] = [
     threshold: '₹20,000 a year',
     rateIndividual: 2,
     rateOthers: 2,
+    rateCompany: 10,
     rateText: '2% (payees other than companies), 10% (companies)',
     noPan: NO_PAN_20,
     newActRef: NEW_ACT_TODO,

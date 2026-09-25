@@ -31,6 +31,7 @@ const faqs = [
 ];
 ---
 <ToolShell
+  worksheet="05 / TDS"
   title="TDS rate finder"
   seoTitle="TDS rate chart FY 2025-26: sections, thresholds and rates"
   description={`Search TDS rates and thresholds for FY 2025-26 by section (192, 194C, 194J, 194I and more), and work out the TDS on a payment. Need TDS returns filed${near}? Ask for help.`}
@@ -38,7 +39,7 @@ const faqs = [
   verifiedNote="TDS rates and thresholds are unverified as of 26 Sep 2026. They are for FY 2025-26 under the Income-tax Act, 1961. Section numbers change under the Income-tax Act, 2025 from 1 April 2026. Check on incometax.gov.in."
   ctaTopic="TDS returns / payments"
 >
-  <TdsRateFinder client:visible />
+  <TdsRateFinder client:load />
   <Fragment slot="after">
     <div class="prose tool-after">
       <h2>Using this table</h2>
@@ -63,6 +64,3 @@ const faqs = [
   </Fragment>
 </ToolShell>
 
-<style>
-  .tool-after { margin-top: var(--space-7); }
-</style>

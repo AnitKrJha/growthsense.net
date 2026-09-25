@@ -2,7 +2,7 @@
 interface Props { items: { name: string; path: string }[] }
 const { items } = Astro.props;
 ---
-<nav aria-label="Breadcrumb" class="crumbs small">
+<nav aria-label="Breadcrumb" class="crumbs">
   <ol>
     {items.map((it, i) => (
       <li>
@@ -12,8 +12,49 @@ const { items } = Astro.props;
   </ol>
 </nav>
 <style>
-  .crumbs ol { list-style: none; padding: 0; margin: 0 0 var(--space-4); display: flex; flex-wrap: wrap; gap: var(--space-2); color: var(--muted); }
-  .crumbs li { margin: 0; }
-  .crumbs li + li::before { content: '/'; margin-right: var(--space-2); color: var(--line); }
-  .crumbs a { color: var(--muted); }
+  .crumbs ol {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 0.4rem;
+    margin: 0;
+    padding: 0;
+    font-size: var(--step--1);
+    color: var(--graphite-500);
+  }
+  .crumbs li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    min-width: 0;
+  }
+  .crumbs li + li::before {
+    content: '';
+    width: 0.4rem;
+    height: 0.4rem;
+    border-top: 1.5px solid var(--line-strong);
+    border-right: 1.5px solid var(--line-strong);
+    transform: rotate(45deg);
+    margin-right: 0.2rem;
+  }
+  .crumbs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    color: var(--graphite-700);
+    text-decoration: none;
+  }
+  .crumbs a:hover {
+    color: var(--forest-700);
+    text-decoration: underline;
+  }
+  .crumbs [aria-current='page'] {
+    color: var(--graphite-500);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 28ch;
+  }
 </style>

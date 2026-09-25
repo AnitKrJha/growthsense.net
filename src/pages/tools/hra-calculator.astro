@@ -32,6 +32,7 @@ const faqs = [
 ];
 ---
 <ToolShell
+  worksheet="02 / HRA"
   title="HRA exemption calculator"
   seoTitle="HRA exemption calculator: exempt and taxable HRA (old regime)"
   description={`Work out how much of your house rent allowance is tax-free under the old regime. Shows all three HRA limits and which one applies. Salaried? Get ITR filing help${near}.`}
@@ -39,7 +40,7 @@ const faqs = [
   verifiedNote="HRA rules and the metro city list are unverified as of 26 Sep 2026. Section numbers and the metro list may change under the Income-tax Act, 2025 and its rules. Check on incometax.gov.in."
   ctaTopic="income tax return (ITR) filing"
 >
-  <HraCalculator client:visible />
+  <HraCalculator client:load />
   <Fragment slot="after">
     <div class="prose tool-after">
       <h2>How the HRA exemption works</h2>
@@ -66,6 +67,3 @@ const faqs = [
   </Fragment>
 </ToolShell>
 
-<style>
-  .tool-after { margin-top: var(--space-7); }
-</style>

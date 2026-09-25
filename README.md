@@ -49,6 +49,15 @@ Never commit an `.npmrc` that points to an internal registry. The pnpm lockfile 
 
 To hide or show a service, toggle it in `site.services` in `site.ts`. A service is only built if it is enabled **and** its Markdown file has `draft: false`. **Financing** is currently disabled and its content is a draft, because it isn't confirmed what the service means.
 
+## Design system
+
+The art direction is **"Paperwork → Filed"**: papers in, acknowledgement out. It is written up in [`DESIGN.md`](DESIGN.md), with the audience, tone and principles in [`PRODUCT.md`](PRODUCT.md). Read both before changing any UI.
+
+- **Tokens** are in `src/styles/tokens.css`: OKLCH colours (forest desk, warm paper, graphite ink, stamp red), fluid type steps, spacing, shadows and motion. Use the variables rather than hard-coded values.
+- **Global classes** are in `src/styles/global.css`. The public class API is listed at the top of that file, for example `.sheet`, `.sheet--ruled`, `.desk`, `.stamp`, `.btn--whatsapp`, `.kicker` and `.field`.
+- **Type:** Bricolage Grotesque for display, Hanken Grotesk for text, and Martian Mono for paper artefacts only (receipts, stamps, form labels). All three are self-hosted through `@fontsource-variable`.
+- **Motion** uses transform, opacity and clip-path only. Everything has a static fallback under `prefers-reduced-motion`. Page changes use CSS cross-document view transitions, so no client router is needed.
+
 ## Environment variables
 
 Copy `.env.example` to `.env` for local use and set the same variables in Vercel. `PUBLIC_*` variables are baked in at build time, so rebuild after changing them.

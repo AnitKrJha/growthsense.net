@@ -1,0 +1,361 @@
+---
+/**
+ * Final CTA on a forest-800 band: a huge headline and WhatsApp button, with a WhatsApp-style conversation
+ * that types itself out once in view (CSS only, timed by --t in ms; MotionBoot adds .is-inview).
+ * Without JS or with reduced motion, the whole conversation is shown and no typing dots appear.
+ * The conversation is an illustration, labelled as such. Owner facts come from site.ts or show <Todo>.
+ */
+import { Phone, FileText } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
+import Todo from '@/components/Todo.astro';
+import { site } from '@/config/site';
+import { formatPhone } from '@/lib/contact';
+import { defaultYearId, getRules } from '@/lib/tax';
+import { chatCopy as c } from './copy';
+import { callLink, waLink } from './links';
+
+const wa = waLink();
+const call = callLink();
+const phone = formatPhone(site.contact.phone);
+const hours = site.contact.hoursLabel;
+const initials = c.ownerName
+  .split(/\s+/)
+  .map((w) => w[0])
+  .join('')
+  .slice(0, 2)
+  .toUpperCase();
+const firstName = c.ownerName.split(' ')[0];
+const year = getRules(defaultYearId).shortLabel.replace(/^FY\s*/, '');
+
+/** Tuning: when each message appears (ms after the panel is in view). Incoming ones show typing dots first. */
+type Msg = { from: 'you' | 'them'; t: number; text?: string; doc?: string };
+const TYPING_MS = 1000;
+const messages: Msg[] = [
+  { from: 'you', t: 250, text: 'Hi, my Form 16 just came. Can you file my ITR?' },
+  { from: 'them', t: 1700, text: 'Sure. Send Form 16, AIS and bank details. I’ll share a quote first.' },
+  { from: 'you', t: 2900, doc: `Form16_${year}.pdf` },
+  { from: 'them', t: 4500, text: 'Got it. Here’s your summary to check before anything is filed.' },
+  { from: 'you', t: 5700, text: 'Looks right. Please go ahead.' },
+  { from: 'them', t: 7200, text: 'Filed ✓ Acknowledgement sent.' },
+];
+const endT = messages[messages.length - 1].t + 500;
+---
+<section class="hm-section hm-chat" aria-labelledby="hm-chat-title" style={`--end: ${endT}; --typing: ${TYPING_MS};`}>
+  <div class="container hm-chat__grid">
+    <div class="hm-chat__copy">
+      <h2 id="hm-chat-title" class="hm-chat__title">
+        {c.title.split(' ').slice(0, -1).join(' ')} <span>{c.title.split(' ').slice(-1)}</span>
+      </h2>
+      <p class="hm-chat__lead">{c.lead}</p>
+    </div>
+
+    <div class="hm-chat__actions">
+      <a class="hm-chat__wa" {...wa}><FaWhatsapp aria-hidden="true" /> {c.wa}</a>
+      <div class="hm-chat__more">
+        <a class="hm-chat__call" {...call}><Phone aria-hidden="true" /> {c.call}</a>
+        <a class="hm-chat__enq" href="/contact">{c.enquiry} <span class="hm-arrow__glyph" aria-hidden="true">→</span></a>
+      </div>
+      <dl class="hm-chat__facts">
+        <div><dt>Phone</dt><dd>{phone ?? <Todo label="phone number" />}</dd></div>
+        <div><dt>Hours</dt><dd>{hours ?? <Todo label="working hours" />}</dd></div>
+      </dl>
+    </div>
+
+    <figure class="chat" data-inview aria-labelledby="hm-chat-caption">
+      <div class="chat__bar" aria-hidden="true">
+        {site.owner.photo ? (
+          <img class="chat__avatar" src={site.owner.photo.avatar} alt="" width="40" height="40" loading="lazy" decoding="async" />
+        ) : (
+          <span class="chat__avatar">{initials}</span>
+        )}
+        <span class="chat__who">
+          <span class="chat__name">{c.ownerName}</span>
+          <span class="chat__role">{c.ownerRole}</span>
+        </span>
+      </div>
+      <ol class="chat__log" aria-label="Example conversation">
+        {messages.map((m) => (
+          <li class:list={['msg', m.from === 'you' ? 'msg--out' : 'msg--in', { 'msg--doc': !!m.doc }]} style={`--t: ${m.t};`}>
+            {m.from === 'them' && (
+              <span class="msg__typing" aria-hidden="true"><i></i><i></i><i></i></span>
+            )}
+            <div class="msg__body">
+              <span class="hm-sr">{m.from === 'you' ? 'You: ' : `${firstName}: `}</span>
+              {m.doc ? (
+                <span class="doc">
+                  <span class="doc__icon" aria-hidden="true"><FileText /></span>
+                  <span class="doc__meta">
+                    <span class="doc__name">{m.doc}</span>
+                    <span class="doc__kind">PDF document</span>
+                    <span class="doc__bar" aria-hidden="true"></span>
+                  </span>
+                </span>
+              ) : (
+                <p>{m.text}</p>
+              )}
+              {m.from === 'you' && <span class="msg__ticks" aria-hidden="true">✓✓</span>}
+            </div>
+          </li>
+        ))}
+      </ol>
+      <figcaption id="hm-chat-caption" class="chat__caption">{c.caption}</figcaption>
+    </figure>
+  </div>
+</section>
+
+<style>
+  .hm-chat {
+    color: var(--paper-50);
+    background: var(--grain), var(--forest-800);
+    background-blend-mode: soft-light, normal;
+    padding-block: var(--space-2xl) var(--space-3xl);
+  }
+
+  /* mobile: headline → big buttons → chat. desktop: copy + buttons left, chat right */
+  .hm-chat__grid {
+    display: grid;
+    gap: var(--space-l);
+  }
+  @media (min-width: 60rem) {
+    .hm-chat__grid {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      grid-template-areas: 'copy chat' 'actions chat';
+      grid-template-rows: auto 1fr;
+      column-gap: var(--space-2xl);
+      row-gap: var(--space-l);
+    }
+    .hm-chat__copy { grid-area: copy; align-self: end; }
+    .hm-chat__actions { grid-area: actions; align-self: start; }
+    .chat { grid-area: chat; align-self: center; }
+  }
+
+  .hm-chat__title {
+    margin: 0 0 var(--space-s);
+    font-family: var(--font-display);
+    font-weight: 750;
+    font-stretch: 76%;
+    font-size: clamp(3.1rem, 1.6rem + 6vw, 6.75rem);
+    line-height: 0.9;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+  .hm-chat__title span { color: var(--mint-300); }
+  .hm-chat__lead { margin: 0; max-width: 42ch; font-size: var(--step-0); line-height: 1.7; color: var(--paper-300); }
+
+  /* ---------- CTAs ---------- */
+  .hm-chat__actions { display: grid; gap: var(--space-s); justify-items: start; }
+  .hm-chat__wa {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6em;
+    width: 100%;
+    max-width: 26rem;
+    min-height: 64px;
+    padding: 0 2rem;
+    border-radius: var(--radius-ui);
+    background: var(--whatsapp);
+    color: var(--paper-50);
+    font-family: var(--font-text);
+    font-weight: 700;
+    font-size: 1.25rem;
+    text-decoration: none;
+    box-shadow: 0 10px 28px -10px color-mix(in oklch, var(--forest-950) 80%, transparent);
+    transition: background-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+  }
+  .hm-chat__wa :global(svg) { width: 1.5rem; height: 1.5rem; }
+  .hm-chat__wa:hover { background: var(--whatsapp-hover); color: var(--paper-50); transform: translateY(-1px); }
+  .hm-chat__wa:focus-visible { outline: 3px solid var(--mint-300); outline-offset: 4px; }
+  @media (min-width: 40rem) { .hm-chat__wa { width: auto; } }
+  /* one soft ring when the conversation finishes, to hand the story to the button */
+  .hm-chat__wa::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 2px solid var(--mint-300);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .hm-chat__more { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs) var(--space-m); }
+  .hm-chat__call {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    min-height: 52px;
+    padding: 0 1.4rem;
+    border-radius: var(--radius-ui);
+    background: var(--mint-300);
+    color: var(--forest-950);
+    font-weight: 650;
+    font-size: 1.0625rem;
+    text-decoration: none;
+    transition: transform var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  }
+  .hm-chat__call :global(svg) { width: 1.1rem; height: 1.1rem; }
+  .hm-chat__call:hover { color: var(--forest-950); background: color-mix(in oklch, var(--mint-300), var(--paper-50) 30%); transform: translateY(-1px); }
+  .hm-chat__enq {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    min-height: var(--tap);
+    font-weight: 650;
+    color: var(--paper-50);
+    text-decoration: underline;
+    text-underline-offset: 0.22em;
+  }
+  .hm-chat__enq:hover { color: var(--mint-300); }
+  .hm-chat__enq:hover .hm-arrow__glyph { transform: translateX(3px); }
+  .hm-chat__call:focus-visible,
+  .hm-chat__enq:focus-visible { outline: 3px solid var(--mint-300); outline-offset: 3px; }
+
+  .hm-chat__facts { display: flex; flex-wrap: wrap; gap: var(--space-2xs) var(--space-l); margin: var(--space-2xs) 0 0; font-size: 0.9375rem; }
+  .hm-chat__facts div { display: flex; gap: 0.5em; }
+  .hm-chat__facts dt { color: var(--paper-300); }
+  .hm-chat__facts dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* ---------- chat panel ---------- */
+  .chat {
+    margin: 0;
+    width: 100%;
+    max-width: 27rem;
+    justify-self: center;
+    border-radius: 22px;
+    overflow: hidden;
+    background: var(--grain), var(--forest-900);
+    background-blend-mode: soft-light, normal;
+    border: 1px solid color-mix(in oklch, var(--mint-300) 14%, transparent);
+    box-shadow: 0 30px 60px -30px color-mix(in oklch, var(--forest-950) 90%, transparent);
+  }
+  .chat__bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-s);
+    background: var(--forest-950);
+  }
+  .chat__avatar {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--mint-300);
+    color: var(--forest-950);
+    font-family: var(--font-display);
+    font-weight: 750;
+    font-size: 0.9375rem;
+    object-fit: cover;
+  }
+  .chat__who { display: grid; line-height: 1.3; }
+  .chat__name { font-weight: 650; }
+  .chat__role { font-size: 0.8125rem; color: var(--paper-300); }
+
+  .chat__log {
+    display: grid;
+    gap: var(--space-2xs);
+    margin: 0;
+    padding: var(--space-s);
+    list-style: none;
+  }
+  .msg { position: relative; display: grid; margin: 0; max-width: 86%; }
+  .msg--out { justify-self: end; }
+  .msg--in { justify-self: start; }
+  .msg__body {
+    position: relative;
+    padding: 0.55rem 0.8rem;
+    border-radius: 16px 16px 16px 5px;
+    background: var(--paper-50);
+    color: var(--graphite-900);
+    font-size: 0.9375rem;
+    line-height: 1.45;
+    box-shadow: 0 1px 0 color-mix(in oklch, var(--forest-950) 30%, transparent);
+  }
+  .msg--out .msg__body { border-radius: 16px 16px 5px 16px; background: var(--mint-100); }
+  .msg__body p { margin: 0; }
+  .msg__ticks { display: block; margin-top: 0.1rem; text-align: right; font-size: 0.6875rem; letter-spacing: -0.15em; color: var(--forest-600); }
+
+  .doc { display: flex; align-items: center; gap: 0.65rem; min-width: 13rem; }
+  .doc__icon {
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.8rem;
+    border-radius: 4px;
+    background: var(--paper-50);
+    color: var(--stamp-700);
+    box-shadow: inset 0 0 0 1px var(--paper-300);
+  }
+  .doc__icon :global(svg) { width: 1.25rem; height: 1.25rem; }
+  .doc__meta { display: grid; gap: 0.1rem; flex: 1; }
+  .doc__name { font-family: var(--font-paper); font-stretch: 87.5%; font-size: 0.8125rem; font-weight: 600; word-break: break-all; }
+  .doc__kind { font-size: 0.8125rem; color: var(--graphite-700); }
+  .doc__bar { height: 3px; margin-top: 0.2rem; border-radius: 2px; background: var(--forest-600); transform-origin: left; }
+
+  /* typing dots sit where the incoming bubble will appear; hidden unless motion is on */
+  .msg__typing {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: flex;
+    gap: 4px;
+    padding: 0.8rem 0.9rem;
+    border-radius: 16px 16px 16px 5px;
+    background: var(--paper-50);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .msg__typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--graphite-500); }
+
+  .chat__caption { padding: 0 var(--space-s) var(--space-s); font-size: 0.8125rem; color: var(--paper-300); }
+
+  /* ---------- the conversation types itself ---------- */
+  @keyframes hm-msg-in {
+    from { opacity: 0; transform: translateY(10px) scale(0.97); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes hm-typing-window {
+    0% { opacity: 0; transform: scale(0.9); }
+    12% { opacity: 1; transform: none; }
+    88% { opacity: 1; transform: none; }
+    100% { opacity: 0; transform: none; }
+  }
+  @keyframes hm-dot {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-4px); }
+  }
+  @keyframes hm-upload {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+  }
+  @keyframes hm-ring {
+    0% { opacity: 0.9; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.12, 1.35); }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :root[data-home-motion] .chat:not(.is-inview) .msg__body { opacity: 0; }
+    :root[data-home-motion] .chat.is-inview .msg__body {
+      transform-origin: bottom left;
+      animation: hm-msg-in 380ms var(--ease-out) both;
+      animation-delay: calc(var(--t) * 1ms);
+    }
+    :root[data-home-motion] .chat.is-inview .msg--out .msg__body { transform-origin: bottom right; }
+    :root[data-home-motion] .chat.is-inview .msg__typing {
+      animation: hm-typing-window calc(var(--typing) * 1ms) linear both;
+      animation-delay: calc((var(--t) - var(--typing)) * 1ms);
+    }
+    :root[data-home-motion] .chat.is-inview .msg__typing i { animation: hm-dot 900ms ease-in-out infinite; }
+    :root[data-home-motion] .chat.is-inview .msg__typing i:nth-child(2) { animation-delay: 150ms; }
+    :root[data-home-motion] .chat.is-inview .msg__typing i:nth-child(3) { animation-delay: 300ms; }
+    :root[data-home-motion] .chat.is-inview .doc__bar {
+      animation: hm-upload 800ms var(--ease-out) both;
+      animation-delay: calc(var(--t) * 1ms + 150ms);
+    }
+    :root[data-home-motion] .hm-chat:has(.chat.is-inview) .hm-chat__wa::after {
+      animation: hm-ring 1100ms var(--ease-out) 1 forwards;
+      animation-delay: calc(var(--end) * 1ms);
+    }
+  }
+</style>

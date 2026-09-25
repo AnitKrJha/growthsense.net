@@ -1,10 +1,10 @@
 ---
-/** Consistent icon per service slug, rendered inside an .icon-badge. */
+/** Consistent icon per service slug. `badge` (default) renders inside an .icon-badge; `bare` renders the icon alone. */
 import { FileText, Receipt, Landmark, CreditCard, HandCoins } from 'lucide-react';
 import type { ServiceSlug } from '@/config/site';
 
-interface Props { slug: ServiceSlug | string; class?: string }
-const { slug, class: cls } = Astro.props;
+interface Props { slug: ServiceSlug | string; class?: string; variant?: 'badge' | 'bare' }
+const { slug, class: cls, variant = 'badge' } = Astro.props;
 const icons = {
   'income-tax-return-filing': FileText,
   'gst-registration-and-returns': Receipt,
@@ -14,4 +14,8 @@ const icons = {
 } as const;
 const Icon = icons[slug as keyof typeof icons] ?? FileText;
 ---
-<span class:list={['icon-badge', cls]} aria-hidden="true"><Icon /></span>
+{variant === 'bare' ? (
+  <Icon className={cls} aria-hidden="true" />
+) : (
+  <span class:list={['icon-badge', cls]} aria-hidden="true"><Icon /></span>
+)}

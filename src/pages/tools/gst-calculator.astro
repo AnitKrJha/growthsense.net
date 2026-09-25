@@ -31,6 +31,7 @@ const faqs = [
 ];
 ---
 <ToolShell
+  worksheet="03 / GST"
   title="GST calculator"
   seoTitle="GST calculator India: add or remove GST, CGST/SGST and IGST split"
   description={`Free GST calculator for India. Add or remove GST at 5%, 18%, 40% and special rates, and see the CGST + SGST or IGST split to the paisa. Help with GST returns${near} too.`}
@@ -38,7 +39,7 @@ const faqs = [
   verifiedNote="GST rates are unverified as of 26 Sep 2026. They reflect the rate changes effective 22 Sep 2025 as we understand them. Check the rate for your HSN/SAC code on cbic-gst.gov.in."
   ctaTopic="GST registration / returns"
 >
-  <GstCalculator client:visible />
+  <GstCalculator client:load />
   <Fragment slot="after">
     <div class="prose tool-after">
       <h2>How GST is worked out</h2>
@@ -67,6 +68,3 @@ const faqs = [
   </Fragment>
 </ToolShell>
 
-<style>
-  .tool-after { margin-top: var(--space-7); }
-</style>

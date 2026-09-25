@@ -1,0 +1,362 @@
+---
+/**
+ * Document checklist as a real, tickable ruled sheet. Ticks live in the page only (no storage).
+ * "Print checklist" prints just this sheet; "Send me this list on WhatsApp" pre-fills a message
+ * that names the service and lists what the visitor already has.
+ */
+import { Printer, RotateCcw } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
+import { site } from '@/config/site';
+import { whatsappUrl, telUrl, formatPhone } from '@/lib/contact';
+
+interface Props {
+  id?: string;
+  /** Service name shown on the sheet and in the WhatsApp message. */
+  service: string;
+  /** Short code for the form line, e.g. "ITR". */
+  code: string;
+  /** WhatsApp topic phrase, e.g. "income tax return (ITR) filing". */
+  topic: string;
+  /** Enquiry fallback when WhatsApp isn't configured. */
+  fallbackHref: string;
+  groups: { heading?: string; items: string[] }[];
+  /** Section letter shown in the heading box. */
+  part?: string;
+}
+const { id = 'documents', service, code, topic, fallbackHref, groups, part } = Astro.props;
+const total = groups.reduce((n, g) => n + g.items.length, 0);
+const baseMessage = `Hello ${site.owner.name}, please send me the document checklist for ${topic}.`;
+const wa = whatsappUrl(baseMessage);
+const tel = telUrl();
+const titleId = `${id}-title`;
+const countId = `${id}-count`;
+---
+<section class="cl sheet sheet--ledger" id={id} aria-labelledby={titleId} data-checklist data-base-message={baseMessage}>
+  <div class="print-only cl-print-head">
+    <strong>{site.brandName}</strong> · {site.owner.name} · Document checklist: {service}
+  </div>
+
+  <header class="cl-head">
+    <p class="cl-form" aria-hidden="true">Checklist · {code} · {total} items</p>
+    <h2 id={titleId}>
+      {part && <span class="part" aria-hidden="true">{part}</span>}
+      Documents you’ll need
+    </h2>
+    <p class="cl-intro">
+      Tick what you already have. This is a starting list: you’ll get one tailored to your case, so you only collect what applies.
+    </p>
+  </header>
+
+  <div class="cl-progress no-print" aria-hidden="true">
+    <span class="cl-bar"><span class="cl-bar-fill" data-bar></span></span>
+  </div>
+  <p class="cl-count" id={countId} aria-live="polite">
+    <span data-count>0</span> of {total} ready
+  </p>
+
+  {groups.map((g, gi) => (
+    <fieldset class="cl-group">
+      <legend class="cl-legend">{g.heading ?? 'Documents'}</legend>
+      <ul role="list">
+        {g.items.map((item, ii) => (
+          <li>
+            <label class="cl-item" for={`${id}-${gi}-${ii}`}>
+              <input class="cl-box" type="checkbox" id={`${id}-${gi}-${ii}`} data-item={item} />
+              <span class="cl-text">{item}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+    </fieldset>
+  ))}
+
+  <div class="cl-actions no-print">
+    <a
+      class="btn btn--whatsapp"
+      href={wa ?? fallbackHref}
+      target={wa ? '_blank' : undefined}
+      rel={wa ? 'noopener' : undefined}
+      title={wa ? undefined : 'TODO: WhatsApp number not set'}
+      data-wa={wa ? '' : undefined}
+    >
+      <FaWhatsapp aria-hidden="true" /> Send me this list on WhatsApp
+    </a>
+    <button type="button" class="btn btn--ghost" data-print>
+      <Printer aria-hidden="true" /> Print checklist
+    </button>
+    <button type="button" class="cl-reset" data-reset hidden>
+      <RotateCcw aria-hidden="true" /> Clear ticks
+    </button>
+  </div>
+
+  <p class="cl-note">
+    Please don’t send PAN, Aadhaar or other documents through the website form. Share them on WhatsApp or in person once you decide to go ahead.
+  </p>
+
+  <div class="print-only cl-print-foot">
+    {site.brandName} · {site.owner.name}
+    {site.contact.whatsapp && <> · WhatsApp {formatPhone(site.contact.whatsapp)}</>}
+    {tel && <> · Phone {formatPhone(site.contact.phone)}</>}
+    {site.contact.email && <> · {site.contact.email}</>}
+  </div>
+</section>
+
+<style>
+  .cl-head {
+    margin-bottom: var(--space-s);
+  }
+  .cl-form {
+    margin: 0 0 var(--space-xs);
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--graphite-500);
+  }
+  .cl-head h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: var(--step-3);
+    margin-bottom: var(--space-2xs);
+  }
+  .cl-intro {
+    margin: 0;
+    max-width: 58ch;
+    color: var(--graphite-700);
+  }
+
+  .cl-progress {
+    margin-top: var(--space-m);
+  }
+  .cl-bar {
+    display: block;
+    height: 6px;
+    overflow: hidden;
+    background: var(--paper-200);
+    border-radius: 6px;
+  }
+  .cl-bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--forest-700);
+    border-radius: inherit;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--dur) var(--ease-out);
+  }
+  .cl-count {
+    margin: var(--space-2xs) 0 var(--space-m);
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--graphite-700);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cl-group {
+    margin: 0 0 var(--space-m);
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+  .cl-legend {
+    padding: 0;
+    margin-bottom: var(--space-3xs);
+    font-family: var(--font-display);
+    font-size: var(--step-1);
+    font-weight: 650;
+    letter-spacing: -0.015em;
+    color: var(--graphite-900);
+  }
+  .cl-group ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .cl-group li {
+    margin: 0;
+  }
+  .cl-item {
+    display: grid;
+    grid-template-columns: 1.5rem minmax(0, 1fr);
+    gap: var(--space-xs);
+    align-items: start;
+    min-height: 2.75rem;
+    padding: 0.6rem 0 0.55rem;
+    cursor: pointer;
+    border-bottom: 1px solid color-mix(in oklch, var(--paper-300) 80%, transparent);
+  }
+  .cl-text {
+    line-height: 1.5;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+
+  /* A real checkbox, drawn as an ink box. The tick is revealed left to right with clip-path. */
+  .cl-box {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    margin: 0.1rem 0 0;
+    background: var(--paper-50);
+    border: 1.75px solid var(--graphite-700);
+    border-radius: 4px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  }
+  .cl-box::after {
+    content: '';
+    width: 1rem;
+    height: 1rem;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2.6 8.8 6.2 12.2 13.6 3.6' fill='none' stroke='%23175437' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 260ms var(--ease-out);
+  }
+  .cl-box:checked {
+    border-color: var(--forest-700);
+    background: var(--mint-100);
+  }
+  .cl-box:checked::after {
+    clip-path: inset(0 0 0 0);
+  }
+  .cl-box:focus-visible {
+    outline: 3px solid var(--carbon-600);
+    outline-offset: 2px;
+  }
+  .cl-item:hover .cl-box {
+    border-color: var(--forest-700);
+  }
+  .cl-box:checked + .cl-text {
+    color: var(--graphite-500);
+  }
+
+  .cl-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2xs) var(--space-xs);
+    margin-top: var(--space-m);
+  }
+  .cl-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: var(--tap);
+    padding: 0 0.5rem;
+    font: inherit;
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--graphite-700);
+    background: none;
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .cl-reset :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+  .cl-note {
+    margin: var(--space-m) 0 0;
+    font-size: var(--step--1);
+    color: var(--graphite-700);
+    max-width: 60ch;
+  }
+  @media (max-width: 29.99rem) {
+    .cl-actions .btn {
+      width: 100%;
+    }
+  }
+
+  @media print {
+    .cl-print-head {
+      margin-bottom: 8mm;
+      padding-bottom: 3mm;
+      font-size: 10pt;
+      border-bottom: 1.5pt solid #000;
+    }
+    .cl-print-foot {
+      margin-top: 8mm;
+      padding-top: 3mm;
+      font-size: 9pt;
+      border-top: 0.75pt solid #000;
+    }
+    .cl-head h2 {
+      font-size: 18pt;
+    }
+    .cl-item {
+      min-height: 0;
+      padding: 2.2mm 0;
+      border-bottom: 0.5pt solid #bbb;
+    }
+    .cl-box {
+      border-color: #000;
+    }
+    .cl-box:checked + .cl-text {
+      color: #000;
+    }
+    .cl-count {
+      margin-bottom: 4mm;
+    }
+    .cl-note {
+      font-size: 9pt;
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-checklist]').forEach((sheet) => {
+    const boxes = Array.from(sheet.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));
+    const count = sheet.querySelector<HTMLElement>('[data-count]');
+    const bar = sheet.querySelector<HTMLElement>('[data-bar]');
+    const reset = sheet.querySelector<HTMLButtonElement>('[data-reset]');
+    const wa = sheet.querySelector<HTMLAnchorElement>('a[data-wa]');
+    const printBtn = sheet.querySelector<HTMLButtonElement>('[data-print]');
+    const base = sheet.dataset.baseMessage ?? '';
+    const waBase = wa?.href.split('?')[0];
+
+    const update = () => {
+      const ticked = boxes.filter((b) => b.checked);
+      if (count) count.textContent = String(ticked.length);
+      if (bar) bar.style.transform = `scaleX(${boxes.length ? ticked.length / boxes.length : 0})`;
+      if (reset) reset.hidden = ticked.length === 0;
+      if (wa && waBase) {
+        const have = ticked.map((b) => `- ${b.dataset.item}`).join('\n');
+        const message = ticked.length ? `${base}\n\nI already have:\n${have}` : base;
+        wa.href = `${waBase}?text=${encodeURIComponent(message)}`;
+      }
+    };
+
+    boxes.forEach((b) => b.addEventListener('change', update));
+    reset?.addEventListener('click', () => {
+      boxes.forEach((b) => (b.checked = false));
+      update();
+      boxes[0]?.focus();
+    });
+
+    printBtn?.addEventListener('click', () => {
+      const root = document.documentElement;
+      const cleanup = () => {
+        delete root.dataset.printScope;
+        sheet.removeAttribute('data-print-target');
+        window.removeEventListener('afterprint', cleanup);
+      };
+      root.dataset.printScope = 'checklist';
+      sheet.setAttribute('data-print-target', '');
+      window.addEventListener('afterprint', cleanup);
+      window.print();
+    });
+
+    update();
+  });
+</script>

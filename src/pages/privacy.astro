@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHeader from '@/components/PageHeader.astro';
+import LongformDoc from '@/components/LongformDoc.astro';
 import Todo from '@/components/Todo.astro';
 import { site } from '@/config/site';
 import { mailtoUrl } from '@/lib/contact';
@@ -13,7 +14,18 @@ const crumbs = [
 ];
 const { owner, contact } = site;
 const mail = mailtoUrl('Privacy request');
-// TODO(owner): update when the notice changes.
+const toc = [
+  { id: 'who-is-responsible-for-your-data', title: 'Who is responsible for your data' },
+  { id: 'what-is-collected', title: 'What is collected' },
+  { id: 'why-it-is-used', title: 'Why it is used' },
+  { id: 'where-it-goes', title: 'Where it goes' },
+  { id: 'how-long-it-is-kept', title: 'How long it is kept' },
+  { id: 'how-it-is-protected', title: 'How it is protected' },
+  { id: 'your-rights', title: 'Your rights' },
+  { id: 'children', title: 'Children' },
+  { id: 'changes-to-this-notice', title: 'Changes to this notice' },
+];
+// TODO(owner): update when this page changes.
 const lastUpdated = '26 September 2026';
 ---
 <BaseLayout
@@ -23,17 +35,15 @@ const lastUpdated = '26 September 2026';
 >
   <PageHeader
     title="Privacy notice"
+    meta="Notice · DPDP Act, 2023"
     lead="What information is collected, why, where it goes, and how to ask for it to be corrected or deleted."
     crumbs={crumbs}
   />
 
-  <section class="section">
-    <div class="container prose">
-      <p class="small muted">Last updated: {lastUpdated}</p>
-
+  <LongformDoc toc={toc} lastUpdated={lastUpdated} docRef="PRV-01">
       <p class="notice"><strong>Please don’t send PAN, Aadhaar, bank details or other documents through the website contact form.</strong> If you decide to go ahead, share documents on WhatsApp or in person.</p>
 
-      <h2>Who is responsible for your data</h2>
+      <h2 id="who-is-responsible-for-your-data">Who is responsible for your data</h2>
       <p>
         This website is run by {owner.name}, trading as {site.brandName} (“{site.brandName}”, “I”, “me”). For the purposes of the
         Digital Personal Data Protection Act, 2023 (DPDP Act), {owner.name} is the <em>data fiduciary</em> for personal data you
@@ -41,7 +51,7 @@ const lastUpdated = '26 September 2026';
       </p>
       <p>Contact for privacy questions: {mail ? <a href={mail}>{contact.email}</a> : <Todo label="privacy contact email" />}</p>
 
-      <h2>What is collected</h2>
+      <h2 id="what-is-collected">What is collected</h2>
       <h3>When you use the contact form</h3>
       <ul>
         <li>your name</li>
@@ -68,7 +78,7 @@ const lastUpdated = '26 September 2026';
         tracking cookies and does not use analytics at present. <Todo label="update this line if analytics are added" />
       </p>
 
-      <h2>Why it is used</h2>
+      <h2 id="why-it-is-used">Why it is used</h2>
       <ul>
         <li>to reply to your enquiry and give you a checklist and a quote</li>
         <li>to provide the service you ask for, if you decide to go ahead</li>
@@ -76,7 +86,7 @@ const lastUpdated = '26 September 2026';
       </ul>
       <p>Your information is used only for these purposes. It is processed on the basis of the consent you give by contacting me, and, where applicable, for purposes permitted by law.</p>
 
-      <h2>Where it goes</h2>
+      <h2 id="where-it-goes">Where it goes</h2>
       <ul>
         <li>
           <strong>Form provider.</strong> Contact-form submissions are delivered through a third-party form service
@@ -87,23 +97,23 @@ const lastUpdated = '26 September 2026';
         <li><strong>Messaging and email.</strong> If you use WhatsApp, phone or email, those providers process your messages under their own privacy policies.</li>
         <li><strong>Government portals.</strong> When you engage a service, the information needed for your return or payment is entered on the official portal concerned (for example incometax.gov.in or gst.gov.in).</li>
       </ul>
-      <p><strong>Your data is never sold, rented or shared for marketing.</strong></p>
+      <p class="doc-key">Your data is never sold, rented or shared for marketing.</p>
 
-      <h2>How long it is kept</h2>
+      <h2 id="how-long-it-is-kept">How long it is kept</h2>
       <p>
         Enquiries that don’t lead to any work are deleted within a reasonable period once they are no longer needed.
         <Todo label="confirm retention period, e.g. 12 months" /> Records of work done are kept for as long as the law requires,
         and then deleted.
       </p>
 
-      <h2>How it is protected</h2>
+      <h2 id="how-it-is-protected">How it is protected</h2>
       <p>
         Reasonable security measures are used to protect your information, such as keeping records on password-protected devices and
         accounts and limiting access to what is needed for your work. No method of transmission over the internet is completely
         secure, which is another reason not to send identity documents through the website form.
       </p>
 
-      <h2>Your rights</h2>
+      <h2 id="your-rights">Your rights</h2>
       <p>Under the DPDP Act, 2023, you can:</p>
       <ul>
         <li>ask for a summary of the personal data held about you and how it is used</li>
@@ -118,13 +128,12 @@ const lastUpdated = '26 September 2026';
         If you are not satisfied with the response, you may complain to the Data Protection Board of India.
       </p>
 
-      <h2>Children</h2>
+      <h2 id="children">Children</h2>
       <p>This website is not directed at children. If you are under 18, please ask a parent or guardian to get in touch on your behalf.</p>
 
-      <h2>Changes to this notice</h2>
+      <h2 id="changes-to-this-notice">Changes to this notice</h2>
       <p>This notice may be updated from time to time. The date at the top shows when it last changed.</p>
 
-      <p class="small muted">This notice is written in plain language and is not legal advice. <Todo label="owner to review this notice, ideally with a lawyer" /></p>
-    </div>
-  </section>
+      <p class="doc-end">This notice is written in plain language and is not legal advice. <Todo label="owner to review this notice, ideally with a lawyer" /></p>
+  </LongformDoc>
 </BaseLayout>

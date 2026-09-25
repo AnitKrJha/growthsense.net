@@ -1,0 +1,368 @@
+---
+/**
+ * "How it works" as a thermal filing slip that prints as it scrolls into view.
+ *
+ * Layout: one grid. Column 1 is the receipt (a single paper layer behind the rows), column 2 holds the
+ * heading, the plain-language notes (aligned row by row with the receipt lines) and the CTA. On mobile the
+ * notes sit on the receipt itself.
+ *
+ * Motion (progressive):
+ *   1. animation-timeline: view() where supported: the paper clips down with a stepped feed, each row
+ *      prints with a small jitter as it crosses --print-line, and the FILED stamp lands last.
+ *   2. Otherwise, with MotionBoot's IntersectionObserver: the same keyframes play once on a timer.
+ *   3. No JS, or prefers-reduced-motion: fully printed and static.
+ */
+import { FaWhatsapp } from 'react-icons/fa';
+import { receiptCopy as c } from './copy';
+import { callLink, waLink } from './links';
+
+const wa = waLink(c.ctaTopic);
+const call = callLink();
+---
+<section class="hm-section hm-how" aria-labelledby="hm-how-title">
+  <div class="container">
+    <div class="slip" data-inview>
+      <header class="slip__head">
+        <h2 id="hm-how-title" class="hm-h2">{c.title}</h2>
+        <p class="hm-lead">{c.lead}</p>
+      </header>
+
+      <div class="slip__paper-wrap" aria-hidden="true">
+        <span class="slip__printer"></span>
+        <div class="slip__paper"></div>
+      </div>
+
+      <div class="slip__top slip__print" style="--k: 0">
+        <p class="slip__brand">{c.header}</p>
+        <p class="slip__meta">{c.attendedBy}</p>
+        <p class="slip__cols" aria-hidden="true"><span>{c.columns.item}</span><span>{c.columns.by}</span></p>
+      </div>
+
+      <ol class="slip__items">
+        {c.items.map((it, i) => (
+          <li class="slip__item">
+            <p class="slip__line slip__print" style={`--k: ${i + 1}`}>
+              <span class="slip__n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+              <span class="slip__label">{it.label}</span>
+              <span class="slip__by"><span class="hm-sr">Done by: </span>{it.by}</span>
+            </p>
+            <p class="slip__note slip__print" style={`--k: ${i + 1}`}>{it.note}</p>
+          </li>
+        ))}
+      </ol>
+
+      <dl class="slip__totals slip__print" style="--k: 5">
+        {c.totals.map((t, i) => (
+          <div class:list={['slip__total', { 'slip__total--grand': i === c.totals.length - 1 }]}>
+            <dt>{t.label}</dt>
+            <dd>{t.value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <div class="slip__foot slip__print" style="--k: 6">
+        <p class="slip__foot-text">{c.footer}</p>
+        <span class="slip__barcode" aria-hidden="true"></span>
+        <span class="slip__stamp hm-stamp" aria-hidden="true">{c.stamp}</span>
+      </div>
+
+      <div class="slip__cta">
+        <a class="hm-wa slip__wa" {...wa}><FaWhatsapp aria-hidden="true" /> {c.cta}</a>
+        <a class="hm-arrow" {...call}>or call instead <span class="hm-arrow__glyph" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hm-how {
+    background: var(--paper-200);
+    color: var(--graphite-900);
+    /* where rows "print": the line on screen that the paper edge follows (from the viewport bottom) */
+    --print-line: 30vh;
+  }
+
+  /* ---------- grid ----------
+     Named row lines let the heading share row 1 with the receipt header on desktop. */
+  .slip {
+    --pad: 1.25rem;
+    --zz: 14px; /* zig-zag tooth width */
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: [head] auto [top] auto [items] repeat(4, auto) [totals] auto [foot] auto [cta] auto [end];
+    max-width: 27rem;
+    margin-inline: auto;
+  }
+  @media (min-width: 56rem) {
+    .slip {
+      grid-template-columns: clamp(19rem, 28vw, 23rem) minmax(0, 1fr);
+      grid-template-rows: [head top] auto [items] repeat(4, auto) [totals] auto [foot] auto [cta] auto [end];
+      column-gap: var(--space-xl);
+      max-width: 66rem;
+    }
+  }
+
+  .slip__head { grid-row: head; grid-column: 1; padding-bottom: var(--space-xl); }
+  @media (min-width: 56rem) {
+    .slip__head { grid-column: 2; align-self: end; padding-bottom: var(--space-m); }
+  }
+
+  .slip__paper-wrap {
+    grid-column: 1;
+    grid-row: top / cta;
+    position: relative;
+    filter:
+      drop-shadow(0 1px 1px color-mix(in oklch, var(--graphite-900) 10%, transparent))
+      drop-shadow(0 14px 18px color-mix(in oklch, var(--graphite-900) 14%, transparent));
+  }
+  .slip__paper {
+    height: 100%;
+    background: var(--hm-grain-dark), var(--paper-50);
+    background-blend-mode: multiply, normal;
+    /* zig-zag torn bottom edge */
+    -webkit-mask: conic-gradient(from -45deg at bottom, transparent, black 1deg 89deg, transparent 90deg) 50% / var(--zz) 100%;
+    mask: conic-gradient(from -45deg at bottom, transparent, black 1deg 89deg, transparent 90deg) 50% / var(--zz) 100%;
+  }
+  /* the printer mouth the slip feeds out of */
+  .slip__printer {
+    position: absolute;
+    z-index: 2;
+    inset: -0.6rem -0.9rem auto;
+    height: 1.1rem;
+    border-radius: 0.6rem 0.6rem 0.3rem 0.3rem;
+    background: var(--forest-900);
+    box-shadow: inset 0 -4px 0 var(--forest-950), 0 6px 10px -4px color-mix(in oklch, var(--graphite-900) 40%, transparent);
+  }
+
+  /* rows sit above the paper layer */
+  .slip__top,
+  .slip__items,
+  .slip__totals,
+  .slip__foot { position: relative; z-index: 1; }
+
+  /* ---------- receipt typography (paper artefact: Martian Mono) ---------- */
+  .slip__top,
+  .slip__line,
+  .slip__totals,
+  .slip__foot {
+    grid-column: 1;
+    padding-inline: var(--pad);
+    font-family: var(--font-paper);
+    font-stretch: 87.5%;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .slip__top { grid-row: top; align-self: end; padding-top: calc(var(--space-l) + 0.5rem); text-align: center; }
+  .slip__top p { margin: 0; }
+  .slip__brand { font-weight: 700; font-size: 0.9375rem; letter-spacing: 0.06em; }
+  .slip__meta { color: var(--graphite-700); }
+  .slip__cols {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--space-s) !important;
+    padding-block: 0.3rem;
+    border-block: 1px dashed var(--graphite-500);
+    color: var(--graphite-700);
+    font-size: 0.75rem;
+  }
+
+  .slip__items {
+    grid-column: 1 / -1;
+    grid-row: items / span 4;
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .slip__item {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid;
+    align-content: start;
+    margin: 0;
+    padding-top: var(--space-s);
+  }
+  .slip__line {
+    display: grid;
+    grid-template-columns: 2.5ch minmax(0, 1fr) auto;
+    gap: 0 1ch;
+    align-items: end;
+    margin: 0;
+  }
+  .slip__n { align-self: start; color: var(--graphite-700); }
+  .slip__label { display: flex; align-items: flex-end; font-weight: 600; }
+  /* dotted leader between item and "by" */
+  .slip__label::after {
+    content: '';
+    flex: 1 1 1.5ch;
+    min-width: 1.5ch;
+    margin: 0 0 0.38em 0.8ch;
+    border-bottom: 1.5px dotted var(--graphite-500);
+  }
+  .slip__by { font-weight: 600; }
+
+  .slip__note {
+    grid-column: 1;
+    margin: var(--space-3xs) 0 0;
+    padding-inline: calc(var(--pad) + 3.5ch) var(--pad);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--graphite-700);
+    text-wrap: pretty;
+  }
+  @media (min-width: 56rem) {
+    .slip__note {
+      position: relative;
+      grid-column: 2;
+      grid-row: 1;
+      align-self: start;
+      margin: 0;
+      padding: 0;
+      max-width: 42ch;
+      font-size: var(--step-0);
+      line-height: 1.55;
+      color: var(--graphite-900);
+    }
+    .slip__line { grid-row: 1; }
+    /* a dotted annotation line from the slip to the note */
+    .slip__note::before {
+      content: '';
+      position: absolute;
+      top: 0.8em;
+      left: calc(-1 * var(--space-xl) + 0.5rem);
+      width: calc(var(--space-xl) - 1.25rem);
+      border-top: 1.5px dotted var(--graphite-500);
+    }
+  }
+
+  .slip__totals {
+    grid-row: totals;
+    margin: var(--space-m) var(--pad) 0;
+    padding: var(--space-2xs) 0 0;
+    border-top: 1px dashed var(--graphite-500);
+  }
+  .slip__total { display: flex; align-items: flex-end; gap: 0.8ch; }
+  .slip__total dt { display: flex; flex: 1; align-items: flex-end; }
+  .slip__total dt::after {
+    content: '';
+    flex: 1;
+    margin: 0 0 0.38em 0.8ch;
+    border-bottom: 1.5px dotted var(--graphite-500);
+  }
+  .slip__total dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .slip__total--grand {
+    margin-top: var(--space-2xs);
+    padding-top: var(--space-2xs);
+    border-top: 3px double var(--graphite-900);
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .slip__foot {
+    grid-row: foot;
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: var(--space-2xs);
+    padding-top: var(--space-m);
+    padding-bottom: calc(var(--space-l) + var(--zz));
+    text-align: center;
+  }
+  .slip__foot-text { margin: 0; color: var(--graphite-700); font-size: 0.75rem; }
+  .slip__barcode {
+    width: 72%;
+    height: 2.4rem;
+    background: repeating-linear-gradient(90deg,
+      var(--graphite-900) 0 2px, transparent 2px 4px,
+      var(--graphite-900) 4px 5px, transparent 5px 8px,
+      var(--graphite-900) 8px 11px, transparent 11px 12px,
+      var(--graphite-900) 12px 13px, transparent 13px 17px);
+    opacity: 0.88;
+  }
+  .slip__stamp {
+    position: absolute;
+    right: 0.6rem;
+    top: -2.9rem;
+    font-size: clamp(1.6rem, 1.3rem + 1vw, 2rem);
+    transform: rotate(-9deg);
+  }
+
+  .slip__cta {
+    grid-row: cta;
+    grid-column: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2xs) var(--space-m);
+    padding-top: var(--space-l);
+  }
+  @media (min-width: 56rem) {
+    .slip__cta { grid-column: 2; grid-row: totals / cta; align-self: center; padding-top: 0; }
+  }
+  .slip__wa { min-height: 52px; font-size: 1.0625rem; }
+
+  /* ---------- printing ---------- */
+  @keyframes hm-feed {
+    from { clip-path: inset(0 0 100% 0); }
+    to { clip-path: inset(0 0 0 0); }
+  }
+  /* each row: feed in with a small mechanical jitter */
+  @keyframes hm-print-row {
+    0% { opacity: 0; transform: translateY(-5px); }
+    45% { opacity: 1; transform: translateY(1.5px); }
+    70% { transform: translateY(-0.5px); }
+    100% { opacity: 1; transform: none; }
+  }
+  /* stamp: fast drop, one squash frame, small settle (DESIGN.md motion exception) */
+  @keyframes hm-stamp-land {
+    0% { opacity: 0; transform: rotate(-3deg) scale(1.5); }
+    55% { opacity: 1; transform: rotate(-10deg) scale(0.95); }
+    75% { transform: rotate(-9deg) scale(1.02); }
+    100% { opacity: 1; transform: rotate(-9deg) scale(1); }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    /* 1. scroll-driven, scrubbed with the page */
+    @supports (animation-timeline: view()) {
+      .slip__paper {
+        animation: hm-feed steps(28, end) both;
+        animation-timeline: view();
+        animation-range-start: cover var(--print-line);
+        animation-range-end: entry calc(100% + var(--print-line));
+      }
+      .slip__print {
+        animation: hm-print-row linear both;
+        animation-timeline: view();
+        animation-range-start: cover var(--print-line);
+        animation-range-end: cover calc(var(--print-line) + 3rem);
+      }
+      .slip__stamp {
+        animation: hm-stamp-land linear both;
+        animation-timeline: view();
+        animation-range-start: cover calc(var(--print-line) + 5rem);
+        animation-range-end: cover calc(var(--print-line) + 9rem);
+      }
+    }
+
+    /* 2. timed fallback, triggered once by MotionBoot */
+    @supports not (animation-timeline: view()) {
+      :root[data-home-motion] .slip:not(.is-inview) .slip__paper { clip-path: inset(0 0 100% 0); }
+      :root[data-home-motion] .slip:not(.is-inview) :is(.slip__print, .slip__stamp) { opacity: 0; }
+      :root[data-home-motion] .slip.is-inview .slip__paper { animation: hm-feed 1.9s steps(18, end) both; }
+      :root[data-home-motion] .slip.is-inview .slip__print {
+        animation: hm-print-row 420ms var(--ease-out) both;
+        animation-delay: calc(var(--k) * 250ms);
+      }
+      :root[data-home-motion] .slip.is-inview .slip__stamp {
+        animation: hm-stamp-land 480ms var(--ease-out) both;
+        animation-delay: 2.1s;
+      }
+    }
+  }
+</style>

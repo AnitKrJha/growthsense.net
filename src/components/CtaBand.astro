@@ -1,4 +1,5 @@
 ---
+/** Closing call to action: a tear-off slip on paper with WhatsApp, Call and Email. */
 import ContactButtons from './ContactButtons.astro';
 interface Props { title?: string; text?: string; topic?: string }
 const {
@@ -6,19 +7,60 @@ const {
   text = 'Send a message on WhatsApp or call. You will get a clear list of what is needed and a quote before any work starts.',
   topic,
 } = Astro.props;
+const id = `cta-${Math.random().toString(36).slice(2, 8)}`;
 ---
-<section class="section cta-band" aria-labelledby="cta-title">
-  <div class="container cta-inner">
-    <div>
-      <h2 id="cta-title">{title}</h2>
-      <p class="muted">{text}</p>
+<section class="cta-band no-print" aria-labelledby={id}>
+  <div class="container">
+    <div class="cta-slip sheet sheet--stacked">
+      <div class="cta-copy">
+        <p class="cta-meta" aria-hidden="true">Next step · checklist + quote</p>
+        <h2 id={id}>{title}</h2>
+        <p class="cta-text">{text}</p>
+      </div>
+      <ContactButtons topic={topic} showEmail size="lg" class="cta-actions" />
     </div>
-    <ContactButtons topic={topic} showEmail />
   </div>
 </section>
 <style>
-  .cta-band { background: var(--accent-soft); }
-  .cta-inner { display: grid; gap: var(--space-5); align-items: center; }
-  .cta-inner p { margin: 0; }
-  @media (min-width: 48rem) { .cta-inner { grid-template-columns: 1fr auto; } }
+  .cta-band {
+    padding-block: var(--space-xl);
+  }
+  .cta-slip {
+    display: grid;
+    gap: var(--space-m);
+    align-items: center;
+    padding-top: calc(var(--sheet-pad) + 0.5rem);
+  }
+  /* Perforation along the top edge. */
+  .cta-slip::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 6px;
+    background: radial-gradient(circle at 50% 0, var(--paper-100) 3.5px, transparent 4px) 0 0 / 14px 6px repeat-x;
+  }
+  .cta-meta {
+    margin: 0 0 var(--space-xs);
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--graphite-500);
+  }
+  .cta-copy h2 {
+    font-size: var(--step-3);
+    margin-bottom: var(--space-2xs);
+  }
+  .cta-text {
+    margin: 0;
+    max-width: 44ch;
+    color: var(--graphite-700);
+  }
+  @media (min-width: 60rem) {
+    .cta-slip {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--space-l);
+      padding-inline: var(--space-xl);
+    }
+  }
 </style>

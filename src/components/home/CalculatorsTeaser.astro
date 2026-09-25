@@ -1,0 +1,77 @@
+---
+/**
+ * Calculators teaser on the forest desk: heading, the live slab staircase island, and chips to the
+ * other free tools. The island is client:visible, so its JS loads only when the section is near.
+ */
+import { toolNav } from '@/config/nav';
+import SlabStaircase from './SlabStaircase';
+import { deskCopy } from './copy';
+
+const others = toolNav.filter((t) => t.href !== '/tools/income-tax-calculator');
+---
+<section class="hm-section hm-desk" aria-labelledby="hm-desk-title">
+  <div class="container">
+    <header class="hm-desk__head">
+      <h2 id="hm-desk-title" class="hm-h2">{deskCopy.title}</h2>
+      <p class="hm-lead">{deskCopy.lead}</p>
+    </header>
+
+    <SlabStaircase client:visible />
+
+    <nav class="hm-desk__tools" aria-labelledby="hm-desk-tools">
+      <p id="hm-desk-tools" class="hm-desk__tools-title">{deskCopy.otherTools}</p>
+      <ul role="list">
+        {others.map((t) => (
+          <li><a href={t.href}>{t.title}</a></li>
+        ))}
+        <li><a href="/tools" class="is-all">All calculators <span aria-hidden="true">→</span></a></li>
+      </ul>
+      <p class="hm-desk__note">{deskCopy.note} See the <a href="/disclaimer">disclaimer</a>.</p>
+    </nav>
+  </div>
+</section>
+
+<style>
+  .hm-desk {
+    color: var(--paper-50);
+    background:
+      radial-gradient(120% 70% at 50% -10%, color-mix(in oklch, var(--forest-700) 55%, transparent), transparent 70%),
+      var(--grain),
+      var(--forest-900);
+    background-blend-mode: normal, soft-light, normal;
+    padding-block: var(--space-2xl) var(--space-xl);
+    overflow: clip;
+  }
+  .hm-desk__head { max-width: 46rem; margin-bottom: var(--space-xl); }
+  .hm-desk__head .hm-h2 { font-stretch: 84%; font-size: clamp(2.6rem, 1.6rem + 4.6vw, 5rem); line-height: 0.94; }
+  .hm-desk__head .hm-lead { color: var(--paper-300); max-width: 52ch; }
+
+  .hm-desk__tools {
+    margin-top: var(--space-xl);
+    padding-top: var(--space-m);
+    border-top: 1px solid color-mix(in oklch, var(--paper-50) 14%, transparent);
+  }
+  .hm-desk__tools-title { margin: 0 0 var(--space-xs); font-weight: 600; color: var(--paper-300); }
+  .hm-desk__tools ul { display: flex; flex-wrap: wrap; gap: var(--space-2xs); list-style: none; margin: 0; padding: 0; }
+  .hm-desk__tools li { margin: 0; }
+  .hm-desk__tools a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    min-height: var(--tap);
+    padding: 0 1rem;
+    border-radius: var(--radius-pill);
+    border: 1px solid color-mix(in oklch, var(--paper-50) 24%, transparent);
+    color: var(--paper-50);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  }
+  .hm-desk__tools a:hover { border-color: var(--mint-300); background: color-mix(in oklch, var(--mint-300) 10%, transparent); color: var(--paper-50); }
+  .hm-desk__tools a:focus-visible { outline: 3px solid var(--mint-300); outline-offset: 2px; }
+  .hm-desk__tools a.is-all { border-color: transparent; color: var(--mint-300); text-decoration: underline; text-underline-offset: 0.22em; }
+  .hm-desk__note { margin: var(--space-s) 0 0; font-size: 0.875rem; color: var(--paper-300); }
+  .hm-desk__note a { color: var(--mint-300); }
+  .hm-desk__note a:focus-visible { outline: 3px solid var(--mint-300); outline-offset: 2px; }
+</style>

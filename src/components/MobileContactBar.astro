@@ -1,5 +1,5 @@
 ---
-/** Sticky call + WhatsApp bar, mobile only. */
+/** Sticky Call + WhatsApp bar, below 60rem only. Slides away while the header menu sheet is open. */
 import { Phone } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { whatsappUrl, telUrl, defaultWhatsappMessage } from '@/lib/contact';
@@ -7,16 +7,51 @@ interface Props { topic?: string }
 const wa = whatsappUrl(defaultWhatsappMessage(Astro.props.topic));
 const tel = telUrl();
 ---
-<div class="mobile-bar" role="region" aria-label="Quick contact">
-  <a class="btn btn--primary" href={tel ?? '/contact'}><Phone aria-hidden="true" /> Call</a>
-  <a class="btn btn--whatsapp" href={wa ?? '/contact'} target={wa ? '_blank' : undefined} rel={wa ? 'noopener' : undefined}><FaWhatsapp aria-hidden="true" /> WhatsApp</a>
+<div class="mobile-bar no-print" role="region" aria-label="Quick contact" data-inert-when-menu>
+  <a class="btn btn--primary mb-call" href={tel ?? '/contact'} title={tel ? undefined : 'TODO: phone number not set'}>
+    <Phone aria-hidden="true" /> Call
+  </a>
+  <a
+    class="btn btn--whatsapp mb-wa"
+    href={wa ?? '/contact'}
+    target={wa ? '_blank' : undefined}
+    rel={wa ? 'noopener' : undefined}
+    title={wa ? undefined : 'TODO: WhatsApp number not set'}
+  >
+    <FaWhatsapp aria-hidden="true" /> WhatsApp
+  </a>
 </div>
 <style>
   .mobile-bar {
-    position: fixed; inset: auto 0 0 0; z-index: 60; display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2);
-    padding: var(--space-2) var(--space-3) calc(var(--space-2) + env(safe-area-inset-bottom));
-    background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -4px 16px rgb(20 30 25 / 0.06);
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 60;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr);
+    gap: var(--space-2xs);
+    padding: 0.625rem max(0.75rem, env(safe-area-inset-right)) calc(0.625rem + env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+    background: var(--paper-50);
+    border-top: 1px solid var(--paper-300);
+    box-shadow: 0 -10px 24px -14px oklch(0.3 0.03 85 / 0.35);
+    view-transition-name: mobile-bar;
+    transition: transform var(--dur) var(--ease-out);
   }
-  .mobile-bar .btn { width: 100%; }
-  @media (min-width: 60rem) { .mobile-bar { display: none; } }
+  /* A perforated tear line along the top edge: the bar reads as a slip, not a toolbar. */
+  .mobile-bar::before {
+    content: '';
+    position: absolute;
+    inset: -1px 0 auto 0;
+    height: 1px;
+    background: repeating-linear-gradient(to right, var(--line-strong) 0 6px, transparent 6px 11px);
+    opacity: 0.55;
+  }
+  .mobile-bar .btn {
+    width: 100%;
+    min-height: 48px;
+  }
+  @media (min-width: 60rem) {
+    .mobile-bar {
+      display: none;
+    }
+  }
 </style>

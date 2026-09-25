@@ -1,0 +1,244 @@
+/* Split-flap deadline board. Plain CSS; only transform animates. */
+.flapboard {
+  --cell-w: clamp(1.28rem, 0.9rem + 1.6vw, 1.9rem);
+  --cell-h: calc(var(--cell-w) * 1.42);
+  --tile: oklch(0.15 0.02 162);
+  --tile-top: oklch(0.19 0.025 162);
+  --glyph: var(--paper-50);
+  --flip: 55ms;
+  position: relative;
+  z-index: 1;
+  color: var(--ink-desk);
+  background-color: var(--forest-950);
+  background-image: var(--grain-soft);
+  background-size: 160px 160px;
+  border-top: 1px solid var(--line-desk);
+  border-bottom: 1px solid oklch(0 0 0 / 0.35);
+}
+
+.flapboard__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-m);
+  padding-block: var(--space-m);
+}
+
+.flapboard__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-size: var(--step--1);
+  font-weight: 650;
+  color: var(--mint-300);
+  white-space: nowrap;
+}
+.flapboard__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--mint-300);
+  box-shadow: 0 0 0 0 oklch(0.86 0.09 158 / 0.6);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .flapboard__dot {
+    animation: flap-pulse 2.4s var(--ease-out) infinite;
+  }
+}
+@keyframes flap-pulse {
+  70%,
+  100% {
+    box-shadow: 0 0 0 0.55rem oklch(0.86 0.09 158 / 0);
+  }
+}
+
+.flapboard__board {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.4rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.45rem;
+  border-radius: 10px;
+  background: oklch(0.1 0.015 162);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.04),
+    inset 0 -1px 0 oklch(0 0 0 / 0.5),
+    0 10px 30px -14px oklch(0 0 0 / 0.8);
+}
+
+.flap-seg {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.flapboard__sep {
+  font-family: var(--font-paper);
+  font-size: calc(var(--cell-w) * 0.7);
+  color: oklch(0.86 0.09 158 / 0.45);
+  padding-inline: 0.05rem;
+}
+@media (max-width: 47.99rem) {
+  /* Title on its own row; date and days share the second. */
+  .flap-seg--title {
+    flex-basis: 100%;
+  }
+  .flapboard__sep--first {
+    display: none;
+  }
+}
+
+.flapboard__days {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.flapboard__unit {
+  font-family: var(--font-paper);
+  font-size: var(--step--2);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--ink-desk-2);
+}
+.flapboard__days.is-urgent {
+  --glyph: oklch(0.72 0.16 32); /* stamp red lifted for contrast on the dark tile (≥ 5:1) */
+}
+.flapboard__days.is-urgent .flapboard__unit {
+  color: oklch(0.72 0.16 32);
+}
+
+/* ── one flap ── */
+.flap {
+  position: relative;
+  display: inline-block;
+  width: var(--cell-w);
+  height: var(--cell-h);
+  perspective: 240px;
+  font-family: var(--font-paper);
+  font-size: calc(var(--cell-h) * 0.62);
+  font-weight: 700;
+  line-height: var(--cell-h);
+  text-align: center;
+  color: var(--glyph);
+  font-variant-numeric: tabular-nums;
+}
+.flap__half,
+.flap__leaf {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+  background: var(--tile);
+  backface-visibility: hidden;
+}
+.flap__half > span,
+.flap__leaf > span {
+  display: block;
+  height: var(--cell-h);
+}
+.flap__top,
+.flap__leaf--top {
+  top: 0;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(var(--tile-top), var(--tile));
+}
+.flap__bottom,
+.flap__leaf--bottom {
+  bottom: 0;
+  border-radius: 0 0 3px 3px;
+}
+.flap__bottom > span,
+.flap__leaf--bottom > span {
+  transform: translateY(-50%);
+}
+/* hairline split */
+.flap::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(50% - 0.5px);
+  height: 1px;
+  background: oklch(0 0 0 / 0.75);
+  z-index: 3;
+}
+
+.flap__leaf--top {
+  z-index: 2;
+  transform-origin: 50% 100%;
+  animation: flap-fall var(--flip) cubic-bezier(0.55, 0, 1, 0.45) forwards;
+}
+.flap__leaf--bottom {
+  z-index: 2;
+  transform-origin: 50% 0%;
+  transform: rotateX(90deg);
+  animation: flap-land var(--flip) cubic-bezier(0, 0.55, 0.45, 1) var(--flip) forwards;
+}
+@keyframes flap-fall {
+  to {
+    transform: rotateX(-90deg);
+  }
+}
+@keyframes flap-land {
+  from {
+    transform: rotateX(90deg);
+  }
+  to {
+    transform: rotateX(0deg);
+  }
+}
+
+/* ── controls ── */
+.flapboard__controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.flapboard__btn {
+  display: inline-grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0;
+  color: var(--ink-desk-2);
+  background: transparent;
+  border: 1px solid var(--line-desk);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+.flapboard__btn:hover {
+  color: var(--paper-50);
+  border-color: var(--mint-300);
+}
+.flapboard__btn:focus-visible,
+.flapboard__note:focus-visible {
+  outline: 3px solid var(--mint-300);
+  outline-offset: 2px;
+}
+.flapboard__btn svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+.flapboard__note {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding-inline: 0.5rem;
+  font-size: var(--step--1);
+  color: var(--ink-desk-2);
+  text-decoration: underline dotted;
+  text-underline-offset: 0.25em;
+}
+.flapboard__note:hover {
+  color: var(--paper-50);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flap__leaf {
+    display: none;
+  }
+}

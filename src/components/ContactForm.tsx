@@ -1,8 +1,9 @@
 import { useEffect, useId, useRef, useState, type SubmitEvent } from 'react';
-import { Send, TriangleAlert, CircleCheck } from 'lucide-react';
+import { Send, TriangleAlert, RotateCcw } from 'lucide-react';
 import { serviceNav } from '@/config/nav';
 import { site } from '@/config/site';
 import { mailtoUrl, telUrl, whatsappUrl, formatPhone } from '@/lib/contact';
+import './ContactForm.css';
 
 /**
  * Contact form island. POSTs JSON to PUBLIC_FORM_ENDPOINT (Formspree-style). If the endpoint is unset
@@ -15,7 +16,7 @@ type Values = Record<Field, string> & { language: string; company: string };
 type Status =
   | { kind: 'idle' }
   | { kind: 'sending' }
-  | { kind: 'sent' }
+  | { kind: 'sent'; service: string; at: string }
   | { kind: 'mailto'; href: string; reason: 'no-endpoint' | 'failed' }
   | { kind: 'no-channel'; reason: 'no-endpoint' | 'failed' };
 
@@ -45,6 +46,12 @@ function validate(v: Values): Partial<Record<Field, string>> {
 
 const serviceLabel = (value: string) => services.find((s) => s.value === value)?.label ?? value;
 
+const sentStatus = (service: string): Status => ({
+  kind: 'sent',
+  service: serviceLabel(service),
+  at: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+});
+
 function summary(v: Values): string {
   const mobile = normaliseIndianMobile(v.phone);
   return [
@@ -66,6 +73,7 @@ export default function ContactForm() {
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
   const [touched, setTouched] = useState<Partial<Record<Field, boolean>>>({});
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
+  const receivedRef = useRef<HTMLDivElement>(null);
   const refs = {
     name: useRef<HTMLInputElement>(null),
     phone: useRef<HTMLInputElement>(null),
@@ -78,6 +86,11 @@ export default function ContactForm() {
     const q = new URLSearchParams(window.location.search).get('service');
     if (q && services.some((s) => s.value === q)) setValues((v) => ({ ...v, service: q }));
   }, []);
+
+  // The form is replaced by the "received" slip: move focus there so keyboard and screen-reader users land on it.
+  useEffect(() => {
+    if (status.kind === 'sent') receivedRef.current?.focus();
+  }, [status.kind]);
 
   const set = (field: keyof Values, value: string) => {
     const next = { ...values, [field]: value };
@@ -112,7 +125,7 @@ export default function ContactForm() {
 
     // Honeypot: bots fill hidden fields. Pretend success and send nothing.
     if (values.company) {
-      setStatus({ kind: 'sent' });
+      setStatus(sentStatus(values.service));
       return;
     }
 
@@ -140,7 +153,7 @@ export default function ContactForm() {
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setStatus({ kind: 'sent' });
+      setStatus(sentStatus(values.service));
       setValues({ name: '', phone: '', service: '', message: '', language: '', company: '' });
       setTouched({});
       setErrors({});
@@ -167,156 +180,198 @@ export default function ContactForm() {
     </>
   );
 
+  const sent = status.kind === 'sent';
+
   return (
-    <form className="contact-form" noValidate onSubmit={onSubmit} aria-describedby={id('privacy')}>
-      <div className="cf-grid">
-        <div className={fieldClass('name')}>
-          <label htmlFor={id('name')}>Your name</label>
-          <input
-            ref={refs.name}
-            id={id('name')}
-            name="name"
-            className="input"
-            autoComplete="name"
-            required
-            value={values.name}
-            onChange={(e) => set('name', e.target.value)}
-            onBlur={() => blur('name')}
-            aria-invalid={errors.name ? true : undefined}
-            aria-describedby={describedBy('name')}
-          />
-          {errors.name && <p id={id('name-error')} className="error-text">{errors.name}</p>}
-        </div>
-
-        <div className={fieldClass('phone')}>
-          <label htmlFor={id('phone')}>Mobile number</label>
-          <input
-            ref={refs.phone}
-            id={id('phone')}
-            name="phone"
-            type="tel"
-            inputMode="tel"
-            className="input tabular"
-            autoComplete="tel-national"
-            placeholder="98765 43210"
-            required
-            value={values.phone}
-            onChange={(e) => set('phone', e.target.value)}
-            onBlur={() => blur('phone')}
-            aria-invalid={errors.phone ? true : undefined}
-            aria-describedby={describedBy('phone', true)}
-          />
-          <p id={id('phone-hint')} className="hint">Indian mobile number, so you can be called or messaged back.</p>
-          {errors.phone && <p id={id('phone-error')} className="error-text">{errors.phone}</p>}
-        </div>
-
-        <div className={fieldClass('service')}>
-          <label htmlFor={id('service')}>What do you need help with?</label>
-          <select
-            ref={refs.service}
-            id={id('service')}
-            name="service"
-            className="select"
-            required
-            value={values.service}
-            onChange={(e) => set('service', e.target.value)}
-            onBlur={() => blur('service')}
-            aria-invalid={errors.service ? true : undefined}
-            aria-describedby={describedBy('service')}
-          >
-            <option value="" disabled>
-              Choose a service
-            </option>
-            {services.map((s) => (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            ))}
-          </select>
-          {errors.service && <p id={id('service-error')} className="error-text">{errors.service}</p>}
-        </div>
-
-        <div className="field">
-          <label htmlFor={id('language')}>
-            Preferred language <span className="optional">(optional)</span>
-          </label>
-          <select
-            id={id('language')}
-            name="language"
-            className="select"
-            value={values.language}
-            onChange={(e) => set('language', e.target.value)}
-          >
-            <option value="">No preference</option>
-            {languages.map((l) => (
-              <option key={l} value={l}>
-                {l}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className={`${fieldClass('message')} cf-full`}>
-          <label htmlFor={id('message')}>Message</label>
-          <textarea
-            ref={refs.message}
-            id={id('message')}
-            name="message"
-            className="textarea"
-            rows={5}
-            maxLength={2000}
-            required
-            value={values.message}
-            onChange={(e) => set('message', e.target.value)}
-            onBlur={() => blur('message')}
-            aria-invalid={errors.message ? true : undefined}
-            aria-describedby={describedBy('message', true)}
-          />
-          <p id={id('message-hint')} className="hint">
-            A line or two is enough, for example “Salaried, two Form 16s this year, need ITR filed.”
+    <div className="contact-form">
+      {sent && (
+        <div
+          ref={receivedRef}
+          className="cf-received fade-in"
+          tabIndex={-1}
+          role="group"
+          aria-labelledby={id('received-title')}
+        >
+          <span className="stamp cf-stamp" aria-hidden="true">
+            Received
+          </span>
+          <p className="cf-received-meta" aria-hidden="true">
+            Enquiry slip · {status.at}
           </p>
-          {errors.message && <p id={id('message-error')} className="error-text">{errors.message}</p>}
+          <h3 id={id('received-title')} className="cf-received-title">
+            Thank you, your enquiry has been sent.
+          </h3>
+          <p className="cf-received-text">
+            You’ll get a reply by phone or WhatsApp
+            {site.contact.hoursLabel ? ` during working hours (${site.contact.hoursLabel})` : ' as soon as possible'}.
+          </p>
+          <dl className="cf-receipt">
+            <div>
+              <dt>Service</dt>
+              <dd>{status.service}</dd>
+            </div>
+            <div>
+              <dt>Date</dt>
+              <dd>{status.at}</dd>
+            </div>
+          </dl>
+          <button type="button" className="btn btn--ghost" onClick={() => setStatus({ kind: 'idle' })}>
+            <RotateCcw aria-hidden="true" /> Send another enquiry
+          </button>
+        </div>
+      )}
+
+      <form className="cf-form" noValidate onSubmit={onSubmit} aria-describedby={id('privacy')} hidden={sent}>
+        <div className="cf-grid">
+          <div className={fieldClass('name')}>
+            <label htmlFor={id('name')}>Your name</label>
+            <input
+              ref={refs.name}
+              id={id('name')}
+              name="name"
+              className="input"
+              autoComplete="name"
+              required
+              value={values.name}
+              onChange={(e) => set('name', e.target.value)}
+              onBlur={() => blur('name')}
+              aria-invalid={errors.name ? true : undefined}
+              aria-describedby={describedBy('name')}
+            />
+            {errors.name && <p id={id('name-error')} className="error-text">{errors.name}</p>}
+          </div>
+
+          <div className={fieldClass('phone')}>
+            <label htmlFor={id('phone')}>Mobile number</label>
+            <input
+              ref={refs.phone}
+              id={id('phone')}
+              name="phone"
+              type="tel"
+              inputMode="tel"
+              className="input tabular"
+              autoComplete="tel-national"
+              placeholder="98765 43210"
+              required
+              value={values.phone}
+              onChange={(e) => set('phone', e.target.value)}
+              onBlur={() => blur('phone')}
+              aria-invalid={errors.phone ? true : undefined}
+              aria-describedby={describedBy('phone', true)}
+            />
+            <p id={id('phone-hint')} className="hint">Indian mobile number, so you can be called or messaged back.</p>
+            {errors.phone && <p id={id('phone-error')} className="error-text">{errors.phone}</p>}
+          </div>
+
+          <div className={fieldClass('service')}>
+            <label htmlFor={id('service')}>What do you need help with?</label>
+            <select
+              ref={refs.service}
+              id={id('service')}
+              name="service"
+              className="select"
+              required
+              value={values.service}
+              onChange={(e) => set('service', e.target.value)}
+              onBlur={() => blur('service')}
+              aria-invalid={errors.service ? true : undefined}
+              aria-describedby={describedBy('service')}
+            >
+              <option value="" disabled>
+                Choose a service
+              </option>
+              {services.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+            {errors.service && <p id={id('service-error')} className="error-text">{errors.service}</p>}
+          </div>
+
+          <div className="field">
+            <label htmlFor={id('language')}>
+              Preferred language <span className="optional">(optional)</span>
+            </label>
+            <select
+              id={id('language')}
+              name="language"
+              className="select"
+              value={values.language}
+              onChange={(e) => set('language', e.target.value)}
+            >
+              <option value="">No preference</option>
+              {languages.map((l) => (
+                <option key={l} value={l}>
+                  {l}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={`${fieldClass('message')} cf-full`}>
+            <label htmlFor={id('message')}>Message</label>
+            <textarea
+              ref={refs.message}
+              id={id('message')}
+              name="message"
+              className="textarea"
+              rows={5}
+              maxLength={2000}
+              required
+              value={values.message}
+              onChange={(e) => set('message', e.target.value)}
+              onBlur={() => blur('message')}
+              aria-invalid={errors.message ? true : undefined}
+              aria-describedby={describedBy('message', true)}
+            />
+            <p id={id('message-hint')} className="hint">
+              A line or two is enough, for example “Salaried, two Form 16s this year, need ITR filed.”
+            </p>
+            {errors.message && <p id={id('message-error')} className="error-text">{errors.message}</p>}
+          </div>
+
+          {/* Honeypot: hidden from people and assistive tech; bots tend to fill it. */}
+          <div className="cf-hp" aria-hidden="true">
+            <label htmlFor={id('hp')}>Leave this field empty</label>
+            <input
+              id={id('hp')}
+              name="hp_check"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={values.company}
+              onChange={(e) => set('company', e.target.value)}
+            />
+          </div>
         </div>
 
-        {/* Honeypot: hidden from people and assistive tech; bots tend to fill it. */}
-        <div className="cf-hp" aria-hidden="true">
-          <label htmlFor={id('hp')}>Leave this field empty</label>
-          <input
-            id={id('hp')}
-            name="hp_check"
-            type="text"
-            tabIndex={-1}
-            autoComplete="off"
-            value={values.company}
-            onChange={(e) => set('company', e.target.value)}
-          />
+        <p id={id('privacy')} className="notice cf-note">
+          <TriangleAlert aria-hidden="true" />
+          <span>
+            Please don’t send PAN, Aadhaar or other documents through this form. Your details are used only to reply to you. See the{' '}
+            <a href="/privacy">privacy notice</a>.
+          </span>
+        </p>
+
+        <div className="cf-actions">
+          <p className="cf-sign" aria-hidden="true">
+            For office use · Reply by phone or WhatsApp
+          </p>
+          <button
+            type="submit"
+            className="btn btn--primary btn--lg"
+            disabled={status.kind === 'sending'}
+            aria-disabled={status.kind === 'sending'}
+          >
+            <Send aria-hidden="true" /> {status.kind === 'sending' ? 'Sending…' : 'Send enquiry'}
+          </button>
         </div>
-      </div>
-
-      <p id={id('privacy')} className="notice cf-note">
-        <TriangleAlert aria-hidden="true" />
-        <span>
-          Please don’t send PAN, Aadhaar or other documents through this form. Your details are used only to reply to you. See the{' '}
-          <a href="/privacy">privacy notice</a>.
-        </span>
-      </p>
-
-      <div className="cf-actions">
-        <button type="submit" className="btn btn--primary" disabled={status.kind === 'sending'} aria-disabled={status.kind === 'sending'}>
-          <Send aria-hidden="true" /> {status.kind === 'sending' ? 'Sending…' : 'Send enquiry'}
-        </button>
-      </div>
+      </form>
 
       <div className="cf-status" aria-live="polite" role="status">
-        {status.kind === 'sent' && (
-          <p className="notice notice--info cf-msg fade-in">
-            <CircleCheck aria-hidden="true" />
-            <span>
-              <strong>Thank you, your enquiry has been sent.</strong> You’ll get a reply by phone or WhatsApp
-              {site.contact.hoursLabel ? ` during working hours (${site.contact.hoursLabel})` : ' as soon as possible'}.
-            </span>
-          </p>
-        )}
+        {status.kind === 'sending' && <p className="visually-hidden">Sending your enquiry…</p>}
+        {sent && <p className="visually-hidden">Enquiry received. Thank you.</p>}
         {status.kind === 'mailto' && (
           <p className="notice cf-msg fade-in">
             <TriangleAlert aria-hidden="true" />
@@ -340,6 +395,6 @@ export default function ContactForm() {
           </p>
         )}
       </div>
-    </form>
+    </div>
   );
 }

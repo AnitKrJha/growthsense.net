@@ -3,66 +3,290 @@ import { site } from '@/config/site';
 import { serviceNav, toolNav } from '@/config/nav';
 import { formatPhone, telUrl, mailtoUrl, whatsappUrl } from '@/lib/contact';
 import Todo from './Todo.astro';
+
 const year = new Date().getFullYear();
-const { contact, location } = site;
+const { contact, location, owner } = site;
+const firstName = owner.name.split(' ')[0];
+const portals = [
+  { label: 'incometax.gov.in', url: 'https://www.incometax.gov.in' },
+  { label: 'gst.gov.in', url: 'https://www.gst.gov.in' },
+  { label: 'echallan.parivahan.gov.in', url: 'https://echallan.parivahan.gov.in' },
+];
 ---
-<footer class="site-footer">
-  <div class="container cols">
-    <div>
-      <p class="f-brand"><img src={site.logo.white} width={site.logo.width} height={site.logo.height} alt={site.brandName} loading="lazy" /></p>
-      <p class="muted small">{site.owner.name} · {site.owner.role}{location.city ? `, ${location.city}` : ''}</p>
-      <ul class="f-list small">
-        <li>Phone: {contact.phone ? <a href={telUrl()!}>{formatPhone(contact.phone)}</a> : <Todo label="phone" />}</li>
-        <li>WhatsApp: {contact.whatsapp ? <a href={whatsappUrl()!} target="_blank" rel="noopener">{formatPhone(contact.whatsapp)}</a> : <Todo label="WhatsApp" />}</li>
-        <li>Email: {contact.email ? <a href={mailtoUrl()!}>{contact.email}</a> : <Todo label="email" />}</li>
-        <li>Hours: {contact.hoursLabel ?? <Todo label="working hours" />}</li>
-      </ul>
+<footer class="site-footer desk desk--deep" data-inert-when-menu>
+  <div class="container">
+    <div class="f-cols">
+      <section class="f-contact" aria-labelledby="f-contact-title">
+        <h2 id="f-contact-title" class="f-title">Talk to {firstName}</h2>
+        <p class="f-sub">{owner.name} · {owner.role}{location.city ? `, ${location.city}` : ''}</p>
+        <dl class="f-dl">
+          <div>
+            <dt>WhatsApp</dt>
+            <dd>{contact.whatsapp ? <a href={whatsappUrl()!} target="_blank" rel="noopener">{formatPhone(contact.whatsapp)}</a> : <Todo label="WhatsApp" />}</dd>
+          </div>
+          <div>
+            <dt>Phone</dt>
+            <dd>{contact.phone ? <a href={telUrl()!}>{formatPhone(contact.phone)}</a> : <Todo label="phone" />}</dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd>{contact.email ? <a href={mailtoUrl()!}>{contact.email}</a> : <Todo label="email" />}</dd>
+          </div>
+          <div>
+            <dt>Hours</dt>
+            <dd>{contact.hoursLabel ?? <Todo label="working hours" />}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <nav class="f-nav" aria-labelledby="f-services-title">
+        <h2 id="f-services-title" class="f-head">Services</h2>
+        <ul role="list">{serviceNav.map((s) => <li><a href={s.href}>{s.title}</a></li>)}</ul>
+      </nav>
+      <nav class="f-nav" aria-labelledby="f-tools-title">
+        <h2 id="f-tools-title" class="f-head">Calculators</h2>
+        <ul role="list">{toolNav.map((t) => <li><a href={t.href}>{t.title}</a></li>)}</ul>
+      </nav>
+      <nav class="f-nav" aria-labelledby="f-site-title">
+        <h2 id="f-site-title" class="f-head">Site</h2>
+        <ul role="list">
+          <li><a href="/about">About</a></li>
+          <li><a href="/faq">FAQ</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a href="/privacy">Privacy</a></li>
+          <li><a href="/disclaimer">Disclaimer</a></li>
+        </ul>
+      </nav>
     </div>
-    <nav aria-label="Services">
-      <p class="f-head">Services</p>
-      <ul class="f-list">{serviceNav.map((s) => <li><a href={s.href}>{s.title}</a></li>)}</ul>
-    </nav>
-    <nav aria-label="Calculators">
-      <p class="f-head">Calculators</p>
-      <ul class="f-list">{toolNav.map((t) => <li><a href={t.href}>{t.title}</a></li>)}</ul>
-    </nav>
-    <nav aria-label="Site">
-      <p class="f-head">Site</p>
-      <ul class="f-list">
-        <li><a href="/about">About</a></li>
-        <li><a href="/faq">FAQ</a></li>
-        <li><a href="/contact">Contact</a></li>
-        <li><a href="/privacy">Privacy</a></li>
-        <li><a href="/disclaimer">Disclaimer</a></li>
-      </ul>
-    </nav>
-  </div>
-  <div class="container legal small muted">
-    <p>
-      Calculators and articles on this site are for general information only and are not tax, legal or financial advice.
-      See the <a href="/disclaimer">disclaimer</a>. Official portals: <a href="https://www.incometax.gov.in" rel="noopener">incometax.gov.in</a>,
-      <a href="https://www.gst.gov.in" rel="noopener">gst.gov.in</a>, <a href="https://echallan.parivahan.gov.in" rel="noopener">echallan.parivahan.gov.in</a>.
-    </p>
-    <p class="legal-row">
-      <span>© {year} {site.brandName} · {site.owner.name}</span>
-      <span>Website designed with <span aria-label="love">♥</span> by <a href={site.credit.url} rel="noopener">{site.credit.label}</a></span>
-    </p>
+
+    <!-- Giant wordmark: the logo mark (vector) + "GrowthSense" set to exactly the container width. -->
+    <a class="f-wordmark" href="/" aria-label={`${site.brandName}, home`}>
+      <svg viewBox="0 18 1000 128" aria-hidden="true" focusable="false" preserveAspectRatio="xMinYMid meet">
+        <svg x="0" y="22" width="142" height="118" viewBox="18 0 156 130">
+          <g fill="none" stroke-linecap="round" class="f-mark">
+            <path d="M26 117Q92 94 136 31" stroke-width="8" />
+            <path d="M87.5 93v31M115 86v38M142.5 77v47M169 64v60" stroke-width="6" />
+          </g>
+          <path d="M107 18 155 2l10 38z" class="f-mark-head" stroke-width="2" stroke-linejoin="round" />
+        </svg>
+        <text x="160" y="140" textLength="838" lengthAdjust="spacingAndGlyphs" class="f-word">GrowthSense</text>
+      </svg>
+    </a>
+
+    <div class="f-legal">
+      <p class="f-disclaimer">
+        Calculators and articles on this site are for general information only and are not tax, legal or financial advice.
+        See the <a href="/disclaimer">disclaimer</a>. {site.brandName} is not affiliated with any government department.
+      </p>
+      <div class="f-portals">
+        <p class="f-portals-label">Official portals</p>
+        <ul role="list">
+          {portals.map((p) => <li><a href={p.url} rel="noopener">{p.label}</a></li>)}
+        </ul>
+      </div>
+      <p class="f-row">
+        <span>© {year} {site.brandName} · {owner.name}</span>
+        <span class="f-credit">Website designed with <span aria-hidden="true" class="f-heart">♥</span><span class="visually-hidden">love</span> by <a href={site.credit.url} rel="noopener">{site.credit.label}</a></span>
+      </p>
+    </div>
   </div>
 </footer>
+
 <style>
-  .site-footer { background: var(--ink); color: #e8ece9; padding-block: var(--space-7) calc(var(--space-6) + 4.5rem); }
-  @media (min-width: 60rem) { .site-footer { padding-bottom: var(--space-6); } }
-  .site-footer a { color: #cfe8dc; }
-  .site-footer a:hover { color: #fff; }
-  .site-footer .muted { color: #b5beb9; }
-  .site-footer .todo { color: var(--warn-ink); }
-  .cols { display: grid; gap: var(--space-6); grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
-  .f-brand { margin-bottom: var(--space-2); }
-  .f-brand img { height: 1.75rem; width: auto; }
-  .f-head { font-weight: 600; color: #fff; margin-bottom: var(--space-2); }
-  .f-list { list-style: none; padding: 0; margin: 0; }
-  .f-list li { margin-top: var(--space-2); }
-  .f-list a { display: inline-block; padding-block: 0.3rem; }
-  .legal { margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid rgb(255 255 255 / 0.12); }
-  .legal-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); margin: 0; }
+  .site-footer {
+    padding-block: var(--space-xl) calc(var(--space-l) + 4.75rem + env(safe-area-inset-bottom));
+    font-size: 0.9375rem;
+  }
+  @media (min-width: 60rem) {
+    .site-footer {
+      padding-bottom: var(--space-l);
+    }
+  }
+
+  .f-cols {
+    display: grid;
+    gap: var(--space-l) var(--space-m);
+    grid-template-columns: 1fr 1fr;
+  }
+  .f-contact {
+    grid-column: 1 / -1;
+  }
+  @media (min-width: 48rem) {
+    .f-cols {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  @media (min-width: 64rem) {
+    .f-cols {
+      grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
+      gap: var(--space-l);
+    }
+    .f-contact {
+      grid-column: auto;
+    }
+  }
+
+  .f-title {
+    margin: 0 0 var(--space-3xs);
+    font-size: var(--step-2);
+    font-stretch: 92%;
+    color: var(--paper-50);
+  }
+  .f-sub {
+    margin: 0 0 var(--space-s);
+    color: var(--ink-desk-2);
+  }
+  .f-dl {
+    display: grid;
+    gap: 0;
+    margin: 0;
+    max-width: 26rem;
+    border-top: 1px solid var(--line-desk);
+  }
+  .f-dl > div {
+    display: grid;
+    grid-template-columns: 6.5rem 1fr;
+    gap: var(--space-2xs);
+    align-items: center;
+    min-height: 2.75rem;
+    border-bottom: 1px solid var(--line-desk);
+  }
+  .f-dl dt {
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-desk-2);
+  }
+  .f-dl dd {
+    margin: 0;
+    font-weight: 600;
+  }
+  .f-dl a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+  }
+
+  .f-head {
+    margin: 0 0 var(--space-2xs);
+    font-family: var(--font-text);
+    font-size: 0.9375rem;
+    font-weight: 650;
+    letter-spacing: 0;
+    color: var(--paper-50);
+  }
+  .f-nav ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .f-nav li {
+    margin: 0;
+  }
+  .f-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    color: var(--ink-desk-2);
+    text-decoration: none;
+  }
+  .f-nav a:hover {
+    color: var(--paper-50);
+    text-decoration: underline;
+  }
+
+  .f-wordmark {
+    display: block;
+    margin: var(--space-xl) 0 var(--space-l);
+    border-radius: 4px;
+  }
+  .f-wordmark > svg {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .f-mark {
+    stroke: var(--mint-300);
+  }
+  .f-mark-head {
+    fill: var(--mint-300);
+    stroke: var(--mint-300);
+  }
+  .f-word {
+    fill: var(--paper-100);
+    font-family: var(--font-display);
+    font-size: 142px;
+    font-weight: 700;
+    font-stretch: 100%;
+    letter-spacing: -0.02em;
+  }
+
+  .f-legal {
+    display: grid;
+    gap: var(--space-s);
+    padding-top: var(--space-m);
+    border-top: 1px solid var(--line-desk);
+    color: var(--ink-desk-2);
+    font-size: var(--step--1);
+  }
+  .f-disclaimer {
+    margin: 0;
+    max-width: 62ch;
+  }
+  .f-portals {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2xs) var(--space-xs);
+  }
+  .f-portals-label {
+    margin: 0;
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .f-portals ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .f-portals li {
+    margin: 0;
+  }
+  .f-portals a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    padding: 0.2rem 0.95rem;
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    color: var(--ink-desk);
+    text-decoration: none;
+    border: 1px solid var(--line-desk);
+    border-radius: var(--radius-pill);
+    transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  }
+  .f-portals a:hover {
+    color: var(--mint-300);
+    border-color: var(--mint-300);
+  }
+  .f-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2xs) var(--space-m);
+    margin: var(--space-2xs) 0 0;
+  }
+  .f-heart {
+    display: inline-block;
+    color: oklch(0.7 0.16 29);
+  }
+  .f-credit a {
+    font-weight: 650;
+  }
 </style>

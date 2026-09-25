@@ -1,11 +1,10 @@
 ---
 import { getCollection } from 'astro:content';
-import { ArrowRight, MessageCircle } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHeader from '@/components/PageHeader.astro';
-import CtaBand from '@/components/CtaBand.astro';
 import ContactButtons from '@/components/ContactButtons.astro';
-import ServiceIcon from '@/components/ServiceIcon.astro';
+import { codeFor, folio } from '@/components/service-codes';
 import { site, type ServiceSlug } from '@/config/site';
 import { serviceMeta } from '@/config/nav';
 import { breadcrumbLd } from '@/lib/schema';
@@ -16,6 +15,16 @@ const entries = (
   await getCollection('services', ({ id, data }) => !data.draft && site.services[id as ServiceSlug] === true)
 ).sort((a, b) => a.data.order - b.data.order);
 
+const rows = entries.map((e, i) => ({
+  href: `/services/${e.id}`,
+  folio: folio(i + 1),
+  title: serviceMeta[e.id as ServiceSlug]?.title ?? e.data.title,
+  summary: e.data.description,
+  tab: codeFor(e.id).tab,
+  docs: e.data.documents.reduce((n, g) => n + g.items.length, 0),
+  steps: e.data.process.length,
+}));
+
 const crumbs = [
   { name: 'Home', path: '/' },
   { name: 'Services', path: '/services' },
@@ -25,59 +34,259 @@ const description = `Tax filing assistance${city ? ` in ${city}` : ''}: income t
 <BaseLayout title="Services: ITR, GST, TDS and challans" description={description} jsonLd={[breadcrumbLd(siteUrl, crumbs)]}>
   <PageHeader
     title="Services"
-    eyebrow={site.owner.role}
+    meta={`Index · ${rows.length} files`}
     lead={`Help with income tax, GST and TDS filing and payments, for individuals, freelancers and small businesses${city ? ` in and around ${city}` : ''}. Every service starts with a checklist and a quote. Pricing is on request.`}
     crumbs={crumbs}
   />
 
-  <section class="section" aria-labelledby="list-title">
+  <section class="ledger-section" aria-labelledby="ledger-title">
     <div class="container">
-      <h2 id="list-title" class="visually-hidden">All services</h2>
-      <ul class="svc-list" role="list">
-        {entries.map((e) => (
-          <li>
-            <a class="card card--link svc-row" href={`/services/${e.id}`}>
-              <ServiceIcon slug={e.id} />
-              <div class="svc-body">
-                <h3>{serviceMeta[e.id as ServiceSlug]?.title ?? e.data.title}</h3>
-                <p class="muted">{e.data.description}</p>
-                <ul class="checklist small svc-points">
-                  {e.data.included.slice(0, 3).map((item) => <li>{item}</li>)}
-                </ul>
-              </div>
-              <span class="link-arrow">Details <ArrowRight aria-hidden="true" /></span>
-            </a>
-          </li>
-        ))}
-      </ul>
-
-      <div class="card unsure">
-        <span class="icon-badge" aria-hidden="true"><MessageCircle /></span>
-        <div>
-          <h2 class="unsure-title">Not sure which service you need?</h2>
-          <p class="muted">Describe your situation in a message and you will be told what applies to you, what documents are needed and what it will cost.</p>
-          <ContactButtons />
+      <div class="ledger sheet sheet--ledger">
+        <h2 id="ledger-title" class="visually-hidden">All services</h2>
+        <div class="ledger-head" aria-hidden="true">
+          <span class="lh-no">No.</span>
+          <span>Service</span>
+          <span class="lh-docs">Checklist</span>
         </div>
+        <ol class="ledger-rows" role="list">
+          {rows.map((r) => (
+            <li>
+              <a class="row" href={r.href}>
+                <span class="row-no" aria-hidden="true">{r.folio}</span>
+                <span class="row-main">
+                  <span class="row-title">{r.title}</span>
+                  <span class="row-summary">{r.summary}</span>
+                </span>
+                <span class="row-docs">
+                  <span class="row-tab" aria-hidden="true">{r.tab}</span>
+                  <span class="row-count">{r.docs} documents · {r.steps} steps</span>
+                </span>
+                <ArrowRight className="row-arrow" aria-hidden="true" />
+              </a>
+            </li>
+          ))}
+        </ol>
+        <div class="ledger-foot">
+          <p>Every file opens with a document checklist and a quote. Nothing is filed until you approve it.</p>
+          <span class="stamp ledger-stamp">Pricing · {site.pricing}</span>
+        </div>
+      </div>
+
+      <div class="unsure">
+        <div class="unsure-copy">
+          <h2 class="unsure-title">Not sure which one you need?</h2>
+          <p>Describe your situation in a message and you will be told what applies to you, what documents are needed and what it will cost.</p>
+        </div>
+        <ContactButtons showEmail />
       </div>
     </div>
   </section>
-
-  <CtaBand />
 </BaseLayout>
 
 <style>
-  .svc-list { list-style: none; padding: 0; margin: 0 0 var(--space-7); display: grid; gap: var(--space-4); }
-  .svc-list > li { margin: 0; }
-  .svc-row { display: grid; gap: var(--space-4); grid-template-columns: auto 1fr; align-items: start; }
-  .svc-row .icon-badge { margin: 0; }
-  .svc-row .link-arrow { grid-column: 2; color: var(--accent); }
-  @media (min-width: 48rem) {
-    .svc-row { grid-template-columns: auto 1fr auto; padding: var(--space-6); gap: var(--space-5); }
-    .svc-row .link-arrow { grid-column: 3; align-self: center; }
+  .ledger-section {
+    padding-bottom: var(--space-xl);
   }
-  .svc-body p { margin-bottom: var(--space-3); }
-  .svc-points { margin: 0; color: var(--ink-2); }
-  .unsure { display: grid; gap: var(--space-4); grid-template-columns: auto 1fr; align-items: start; background: var(--surface-2); box-shadow: none; }
-  .unsure .icon-badge { margin: 0; }
-  .unsure-title { font-size: 1.375rem; }
+  .ledger {
+    --row-pad: clamp(1rem, 0.6rem + 1.5vw, 1.75rem);
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: var(--space-xs);
+  }
+
+  .ledger-head,
+  .row {
+    display: grid;
+    grid-template-columns: var(--margin-line) minmax(0, 1fr);
+    column-gap: var(--row-pad);
+    padding-right: var(--row-pad);
+  }
+  @media (min-width: 48rem) {
+    .ledger-head,
+    .row {
+      grid-template-columns: var(--margin-line) minmax(0, 1fr) 11rem 1.5rem;
+    }
+  }
+
+  .ledger-head {
+    align-items: end;
+    padding-bottom: var(--space-2xs);
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--graphite-500);
+    border-bottom: 1.5px solid var(--graphite-700);
+  }
+  .lh-no {
+    text-align: center;
+  }
+  .lh-docs {
+    display: none;
+  }
+  @media (min-width: 48rem) {
+    .lh-docs {
+      display: block;
+    }
+  }
+
+  .ledger-rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .ledger-rows li {
+    margin: 0;
+    border-bottom: 1px solid var(--paper-300);
+  }
+  .row {
+    position: relative;
+    isolation: isolate;
+    align-items: start;
+    padding-block: var(--space-m);
+    color: var(--graphite-900);
+    text-decoration: none;
+  }
+  /* Highlighter sweep on hover and focus. */
+  .row::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 0 calc(var(--margin-line) + 2px);
+    z-index: -1;
+    background: var(--highlight);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 420ms var(--ease-out);
+  }
+  .row:hover,
+  .row:focus-visible {
+    color: var(--graphite-900);
+  }
+  .row:hover::before,
+  .row:focus-visible::before {
+    transform: scaleX(1);
+  }
+  .row:focus-visible {
+    outline-offset: -3px;
+  }
+
+  .row-no {
+    padding-top: 0.45rem;
+    font-family: var(--font-paper);
+    font-size: var(--step--1);
+    font-weight: 500;
+    text-align: center;
+    color: var(--graphite-500);
+  }
+  .row-main {
+    display: grid;
+    gap: var(--space-2xs);
+    min-width: 0;
+  }
+  .row-title {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 700;
+    font-stretch: 90%;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+  .row:hover .row-title {
+    color: var(--forest-700);
+  }
+  .row-summary {
+    max-width: 60ch;
+    color: var(--graphite-700);
+  }
+  .row-docs {
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+    margin-top: var(--space-xs);
+  }
+  .row-tab {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-stretch: 78%;
+    letter-spacing: -0.01em;
+    line-height: 1;
+    color: var(--forest-700);
+  }
+  .row-count {
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--graphite-500);
+  }
+  .row :global(.row-arrow) {
+    display: none;
+    width: 1.35rem;
+    height: 1.35rem;
+    margin-top: 0.4rem;
+    color: var(--forest-700);
+    transition: transform var(--dur) var(--ease-out);
+  }
+  .row:hover :global(.row-arrow) {
+    transform: translateX(4px);
+  }
+  @media (min-width: 48rem) {
+    .row-docs {
+      grid-column: 3;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-top: 0;
+      padding-top: 0.2rem;
+    }
+    .row-tab {
+      font-size: 2.25rem;
+    }
+    .row :global(.row-arrow) {
+      display: block;
+    }
+  }
+
+  .ledger-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-m);
+    padding: var(--space-m) var(--row-pad) var(--space-xs) calc(var(--margin-line) + var(--row-pad));
+  }
+  .ledger-foot p {
+    margin: 0;
+    max-width: 46ch;
+    color: var(--graphite-700);
+  }
+  .ledger-stamp {
+    --stamp-tilt: -5deg;
+    margin-inline: auto 0.5rem;
+  }
+
+  .unsure {
+    display: grid;
+    gap: var(--space-m);
+    align-items: center;
+    margin-top: var(--space-l);
+    padding: var(--space-m) 0 0;
+    border-top: 1px dashed var(--line-strong);
+  }
+  .unsure-title {
+    font-size: var(--step-2);
+    margin-bottom: var(--space-2xs);
+  }
+  .unsure-copy p {
+    margin: 0;
+    max-width: 52ch;
+    color: var(--graphite-700);
+  }
+  @media (min-width: 60rem) {
+    .unsure {
+      grid-template-columns: minmax(0, 1fr) auto;
+      padding-left: calc(var(--margin-line) + var(--row-pad, 1.75rem));
+    }
+  }
 </style>

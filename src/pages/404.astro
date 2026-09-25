@@ -5,39 +5,199 @@ import ContactButtons from '@/components/ContactButtons.astro';
 import { serviceNav, toolNav } from '@/config/nav';
 ---
 <BaseLayout title="Page not found" description="The page you were looking for doesn’t exist or has moved." noindex>
-  <section class="section nf">
-    <div class="container nf-inner">
-      <p class="eyebrow">Error 404</p>
-      <h1>This page doesn’t exist</h1>
-      <p class="lead">The link may be old, or the address may have a typo. Try one of these instead, or get in touch directly.</p>
-      <div class="cluster nf-actions">
-        <a class="btn btn--primary" href="/">Go to the home page</a>
-        <ContactButtons />
+  <section class="nf">
+    <div class="container nf-grid">
+      <div class="nf-copy">
+        <p class="nf-code" aria-hidden="true">Error 404 · File not found</p>
+        <h1>This page seems to have been misfiled.</h1>
+        <p class="lead">
+          The link may be old, or the address may have a typo. Everything else is still in order: start from the home page, pick a
+          folder below, or just ask.
+        </p>
+        <div class="cluster nf-actions">
+          <a class="btn btn--primary btn--lg" href="/">Back to the home page</a>
+          <ContactButtons />
+        </div>
       </div>
-      <div class="grid grid--2 nf-links">
-        <nav aria-labelledby="nf-services">
-          <h2 id="nf-services">Services</h2>
-          <ul>
-            {serviceNav.map((s) => <li><a class="link-arrow" href={s.href}>{s.title} <ArrowRight aria-hidden="true" /></a></li>)}
-          </ul>
-        </nav>
-        <nav aria-labelledby="nf-tools">
-          <h2 id="nf-tools">Calculators</h2>
-          <ul>
-            {toolNav.map((t) => <li><a class="link-arrow" href={t.href}>{t.title} <ArrowRight aria-hidden="true" /></a></li>)}
-          </ul>
-        </nav>
-      </div>
+
+      <figure class="nf-art" aria-hidden="true">
+        <!-- A crumpled sheet: faceted polygons in paper tones, with the stamp that caused the trouble. -->
+        <svg viewBox="0 0 320 300" width="320" height="300" class="ball">
+          <defs>
+            <filter id="nf-shadow" x="-20%" y="-20%" width="140%" height="160%">
+              <feGaussianBlur stdDeviation="10" />
+            </filter>
+          </defs>
+          <ellipse cx="160" cy="272" rx="112" ry="14" fill="oklch(0.3 0.03 85 / 0.18)" filter="url(#nf-shadow)" />
+          <g stroke="oklch(0.87 0.022 85)" stroke-width="1.2" stroke-linejoin="round">
+            <polygon points="70,120 118,62 160,96 128,150" fill="oklch(0.985 0.008 85)" />
+            <polygon points="118,62 190,44 212,98 160,96" fill="oklch(0.95 0.016 85)" />
+            <polygon points="190,44 252,88 236,132 212,98" fill="oklch(0.93 0.02 85)" />
+            <polygon points="252,88 268,160 236,132" fill="oklch(0.9 0.022 85)" />
+            <polygon points="70,120 128,150 102,206 58,178" fill="oklch(0.94 0.018 85)" />
+            <polygon points="128,150 160,96 212,98 236,132 196,176" fill="oklch(0.975 0.01 85)" />
+            <polygon points="236,132 268,160 244,214 196,176" fill="oklch(0.92 0.02 85)" />
+            <polygon points="102,206 128,150 196,176 172,238 118,240" fill="oklch(0.955 0.014 85)" />
+            <polygon points="196,176 244,214 210,250 172,238" fill="oklch(0.9 0.022 85)" />
+            <polygon points="58,178 102,206 118,240 84,226" fill="oklch(0.91 0.02 85)" />
+          </g>
+          <!-- faint ledger rules surviving on the facets -->
+          <g stroke="oklch(0.87 0.022 85)" stroke-width="1" opacity="0.9">
+            <path d="M88 112 L140 86 M92 126 L150 102 M140 186 L190 196 M136 200 L182 212" />
+          </g>
+          <path d="M150 104 L146 142" stroke="oklch(0.55 0.19 29 / 0.55)" stroke-width="1.5" />
+        </svg>
+        <span class="stamp nf-stamp">Misfiled</span>
+      </figure>
+    </div>
+
+    <div class="container nf-index">
+      <nav class="sheet sheet--ledger nf-drawer" aria-labelledby="nf-services">
+        <h2 id="nf-services" class="nf-drawer-title">Services</h2>
+        <ul role="list">
+          {serviceNav.map((s) => <li><a class="nf-row" href={s.href}><span>{s.title}</span> <ArrowRight aria-hidden="true" /></a></li>)}
+        </ul>
+      </nav>
+      <nav class="sheet sheet--ledger nf-drawer" aria-labelledby="nf-tools">
+        <h2 id="nf-tools" class="nf-drawer-title">Calculators</h2>
+        <ul role="list">
+          {toolNav.map((t) => <li><a class="nf-row" href={t.href}><span>{t.title}</span> <ArrowRight aria-hidden="true" /></a></li>)}
+        </ul>
+      </nav>
     </div>
   </section>
 </BaseLayout>
 
 <style>
-  .nf { background: var(--gradient-soft); min-height: 60vh; }
-  .nf-inner { max-width: 48rem; }
-  .nf-actions { margin-bottom: var(--space-7); }
-  .nf-links h2 { font-size: 1.25rem; }
-  .nf-links ul { list-style: none; padding: 0; margin: 0; }
-  .nf-links li { margin: 0; }
-  .nf-links a { min-height: var(--tap); }
+  .nf {
+    padding-block: var(--space-xl) var(--space-2xl);
+  }
+  .nf-grid {
+    display: grid;
+    gap: var(--space-l);
+    align-items: center;
+  }
+  @media (min-width: 60rem) {
+    .nf-grid {
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      gap: var(--space-xl);
+    }
+  }
+  .nf-code {
+    margin: 0 0 var(--space-s);
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--stamp-700);
+  }
+  .nf-copy h1 {
+    font-size: var(--step-5);
+    font-stretch: 80%;
+    max-width: 12ch;
+    line-height: 0.95;
+  }
+  .nf-actions {
+    margin-top: var(--space-m);
+  }
+
+  .nf-art {
+    position: relative;
+    margin: 0;
+    justify-self: center;
+    width: min(100%, 22rem);
+  }
+  .ball {
+    width: 100%;
+    height: auto;
+  }
+  .nf-stamp {
+    --stamp-tilt: 12deg;
+    position: absolute;
+    right: 4%;
+    top: 12%;
+    font-size: clamp(1.1rem, 0.9rem + 1vw, 1.5rem);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .ball {
+      animation: nf-settle 900ms var(--ease-out) both;
+      transform-origin: 50% 90%;
+    }
+    .nf-stamp {
+      animation: nf-stamp 420ms var(--ease-out) 700ms both;
+    }
+  }
+  @keyframes nf-settle {
+    from {
+      opacity: 0;
+      transform: translateY(-40px) rotate(-18deg);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes nf-stamp {
+    0% {
+      opacity: 0;
+      transform: rotate(var(--stamp-tilt)) scale(1.5);
+    }
+    60% {
+      opacity: 1;
+      transform: rotate(var(--stamp-tilt)) scale(0.96);
+    }
+    100% {
+      opacity: 1;
+      transform: rotate(var(--stamp-tilt)) scale(1);
+    }
+  }
+
+  .nf-index {
+    display: grid;
+    gap: var(--space-m);
+    margin-top: var(--space-xl);
+  }
+  @media (min-width: 48rem) {
+    .nf-index {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .nf-drawer-title {
+    font-size: var(--step-1);
+    margin-bottom: var(--space-2xs);
+  }
+  .nf-drawer ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .nf-drawer li {
+    margin: 0;
+    border-bottom: 1px solid var(--paper-300);
+  }
+  .nf-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-s);
+    min-height: var(--tap);
+    padding: 0.6rem 0.25rem;
+    color: var(--graphite-900);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .nf-row :global(svg) {
+    width: 1.1rem;
+    height: 1.1rem;
+    color: var(--forest-700);
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .nf-row:hover {
+    color: var(--graphite-900);
+    background: var(--highlight);
+  }
+  .nf-row:hover :global(svg) {
+    transform: translateX(3px);
+  }
 </style>

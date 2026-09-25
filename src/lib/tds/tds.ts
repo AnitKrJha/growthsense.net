@@ -1,7 +1,8 @@
 /** Search, filter and a simple TDS amount helper over `tdsRows`. Pure functions, no UI. */
 import { tdsRows, type TdsCategory, type TdsRow } from './tds-rates';
 
-export type PayeeType = 'individual' | 'others';
+/** 'others' = firms, LLPs, AOPs etc.; 'company' uses `rateCompany` where a section sets one. */
+export type PayeeType = 'individual' | 'others' | 'company';
 
 const norm = (s: string) => s.toLowerCase().replace(/[\s()]/g, '');
 
@@ -27,7 +28,9 @@ export function findTdsRow(section: string, rows: readonly TdsRow[] = tdsRows): 
 }
 
 export function rateFor(row: TdsRow, payee: PayeeType): number | null {
-  return payee === 'individual' ? row.rateIndividual : row.rateOthers;
+  if (payee === 'individual') return row.rateIndividual;
+  if (payee === 'company' && row.rateCompany !== undefined) return row.rateCompany;
+  return row.rateOthers;
 }
 
 export interface TdsAmountResult {

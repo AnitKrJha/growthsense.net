@@ -4,7 +4,9 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHeader from '@/components/PageHeader.astro';
 import CtaBand from '@/components/CtaBand.astro';
 import Todo from '@/components/Todo.astro';
+import { folio } from '@/components/service-codes';
 import { site, isTodo } from '@/config/site';
+import { whyUs } from '@/content/home';
 import { breadcrumbLd } from '@/lib/schema';
 
 const siteUrl = Astro.site ?? new URL('https://example.com');
@@ -13,20 +15,12 @@ const crumbs = [
   { name: 'About', path: '/about' },
 ];
 const { owner, location } = site;
-// Optional: add `photo: '/brand/owner.webp'` (and `photoAlt`) to site.owner once the owner sends a photo.
-const photo = (owner as { photo?: string | null }).photo ?? null;
+const firstName = owner.name.split(' ')[0];
+// Set `site.owner.photo` to null to fall back to the placeholder frame.
+const photo = owner.photo;
 const langNames: Record<string, string> = { en: 'English', hi: 'Hindi' };
 const languages = site.languages.map((l) => langNames[l] ?? l).join(', ');
 const city = location.city;
-
-const principles = [
-  'You get a document checklist and a quote before any work starts.',
-  'Your figures are checked against what the department already has (Form 26AS, AIS, GSTR-2B).',
-  'Nothing is filed until you have seen a plain-language summary and approved it.',
-  'Returns and payments go through official government portals only.',
-  'Your documents are used only for your work and are not shared or sold.',
-  'If something is outside the scope of this service, you are told so plainly.',
-];
 ---
 <BaseLayout
   title={`About ${owner.name}`}
@@ -35,78 +29,108 @@ const principles = [
 >
   <PageHeader
     title={`About ${owner.name}`}
-    eyebrow={`About ${site.brandName}`}
+    meta="Personal file · About"
     lead={`${site.brandName} is run by ${owner.name}, an individual tax practitioner offering tax filing assistance to salaried people, pensioners, freelancers and small businesses${city ? ` in and around ${city}` : ''}.`}
     crumbs={crumbs}
   />
 
-  <section class="section">
-    <div class="container about-grid">
-      <figure class="photo">
-        {photo ? (
-          <img src={photo} alt={(owner as { photoAlt?: string }).photoAlt ?? `Photo of ${owner.name}`} width="480" height="600" loading="eager" />
-        ) : (
-          <div class="photo-placeholder">
-            <UserRound aria-hidden="true" />
-            <Todo label="owner photo" />
+  <section class="about-section" aria-labelledby="file-title">
+    <div class="container">
+      <div class="file sheet sheet--stacked">
+        <h2 id="file-title" class="visually-hidden">Details</h2>
+        <figure class="photo">
+          <span class="clip" aria-hidden="true">
+            <svg viewBox="0 0 24 64" width="24" height="64" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M8 18V50a6 6 0 0 0 12 0V10a8 8 0 0 0-16 0v36" />
+            </svg>
+          </span>
+          <div class="photo-frame">
+            {photo ? (
+              <picture>
+                <source type="image/webp" srcset={photo.srcset} sizes="(min-width: 60rem) 18rem, 80vw" />
+                <img src={photo.fallback} alt={photo.alt} width={photo.width} height={photo.height} loading="eager" fetchpriority="high" decoding="async" />
+              </picture>
+            ) : (
+              <div class="photo-placeholder">
+                <UserRound aria-hidden="true" />
+                <span class="photo-slot">Photo</span>
+                <Todo label="owner photo" />
+              </div>
+            )}
           </div>
-        )}
-        <figcaption class="small muted">{owner.name} · {owner.role}</figcaption>
-      </figure>
+          <figcaption>{owner.name} · {owner.role}</figcaption>
+        </figure>
 
-      <div class="bio">
-        <h2>Background</h2>
-        <div class="prose">
-          {owner.bio ? <p>{owner.bio}</p> : <p><Todo label="short bio from the owner (2–4 sentences, real facts only)" /></p>}
+        <div class="fields">
+          <dl class="form">
+            <div class="form-row form-row--wide">
+              <dt>Name</dt>
+              <dd class="form-name">{owner.name}</dd>
+            </div>
+            <div class="form-row">
+              <dt>Trading as</dt>
+              <dd>{site.brandName}</dd>
+            </div>
+            <div class="form-row">
+              <dt>Role</dt>
+              <dd>{owner.role}</dd>
+            </div>
+            <div class="form-row form-row--wide">
+              <dt>Credentials</dt>
+              <dd>
+                {owner.credentials.length > 0 ? (
+                  <ul>{owner.credentials.map((c) => <li>{c}</li>)}</ul>
+                ) : (
+                  <Todo label="exact credentials, or remove this row if none" />
+                )}
+              </dd>
+            </div>
+            <div class="form-row">
+              <dt>Experience</dt>
+              <dd>{owner.yearsOfExperience ? `${owner.yearsOfExperience} years` : <Todo label="years of experience" />}</dd>
+            </div>
+            <div class="form-row">
+              <dt>Based in</dt>
+              <dd>{city ? [city, location.state].filter(Boolean).join(', ') : <Todo label="city / areas served" />}</dd>
+            </div>
+            <div class="form-row">
+              <dt>Works with you</dt>
+              <dd>{isTodo(location.mode) ? <Todo label="in person, online, or both" /> : location.mode}</dd>
+            </div>
+            <div class="form-row">
+              <dt>Languages</dt>
+              <dd>{languages}</dd>
+            </div>
+          </dl>
+
+          <div class="bio">
+            <h2 class="bio-title">Background</h2>
+            {owner.bio ? <p>{owner.bio}</p> : <p><Todo label="short bio from the owner (2–4 sentences, real facts only)" /></p>}
+          </div>
+
+          <p class="honest">
+            Only the credentials listed on this page are claimed. {site.brandName} is not affiliated with any government department.
+          </p>
         </div>
-
-        <dl class="facts">
-          <div>
-            <dt>Role</dt>
-            <dd>{owner.role}</dd>
-          </div>
-          <div>
-            <dt>Credentials</dt>
-            <dd>
-              {owner.credentials.length > 0 ? (
-                <ul>{owner.credentials.map((c) => <li>{c}</li>)}</ul>
-              ) : (
-                <Todo label="exact credentials, or remove this row if none" />
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt>Experience</dt>
-            <dd>{owner.yearsOfExperience ? `${owner.yearsOfExperience} years` : <Todo label="years of experience" />}</dd>
-          </div>
-          <div>
-            <dt>Based in</dt>
-            <dd>{city ? [city, location.state].filter(Boolean).join(', ') : <Todo label="city / areas served" />}</dd>
-          </div>
-          <div>
-            <dt>How you can work together</dt>
-            <dd>{isTodo(location.mode) ? <Todo label="in person, online, or both" /> : location.mode}</dd>
-          </div>
-          <div>
-            <dt>Languages</dt>
-            <dd>{languages}</dd>
-          </div>
-        </dl>
-        <p class="small muted">Only the credentials listed on this page are claimed. {site.brandName} is not affiliated with any government department.</p>
       </div>
     </div>
   </section>
 
-  <section class="section section--alt" aria-labelledby="how-title">
-    <div class="container">
-      <div class="section-head">
-        <p class="eyebrow">How the work is done</p>
-        <h2 id="how-title">A few simple rules</h2>
-        <p>Every client, every service, the same way.</p>
+  <section class="how-section" aria-labelledby="how-title">
+    <div class="container how-grid">
+      <div class="how-head">
+        <h2 id="how-title">How {firstName} works</h2>
+        <p>{whyUs.text}</p>
       </div>
-      <ul class="checklist principles">
-        {principles.map((p) => <li>{p}</li>)}
-      </ul>
+      <ol class="rules sheet sheet--ledger" role="list">
+        {whyUs.points.map((p, i) => (
+          <li>
+            <span class="rule-no" aria-hidden="true">{folio(i + 1)}</span>
+            <h3>{p.title}</h3>
+            <p>{p.text}</p>
+          </li>
+        ))}
+      </ol>
     </div>
   </section>
 
@@ -114,23 +138,196 @@ const principles = [
 </BaseLayout>
 
 <style>
-  .about-grid { display: grid; gap: var(--space-6); align-items: start; }
-  @media (min-width: 48rem) { .about-grid { grid-template-columns: minmax(14rem, 22rem) minmax(0, 1fr); gap: var(--space-8); } }
-  .photo { margin: 0; }
-  .photo img, .photo-placeholder { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
-  .photo-placeholder {
-    display: grid; place-items: center; align-content: center; gap: var(--space-3);
-    background: var(--gradient-soft); border: 1px dashed #b9d8c8; color: var(--accent);
+  .about-section {
+    padding-bottom: var(--space-xl);
   }
-  .photo-placeholder :global(svg) { width: 3.5rem; height: 3.5rem; opacity: 0.6; }
-  .photo figcaption { margin-top: var(--space-3); }
-  .facts { margin: var(--space-6) 0 var(--space-4); display: grid; border-top: 1px solid var(--line); }
-  .facts > div { display: grid; gap: var(--space-1); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
-  @media (min-width: 40rem) { .facts > div { grid-template-columns: 13rem 1fr; gap: var(--space-4); } }
-  .facts dt { font-weight: 600; color: var(--muted); font-size: 0.9375rem; }
-  .facts dd { margin: 0; }
-  .facts ul { margin: 0; padding-left: 1.1rem; }
-  .principles { display: grid; gap: var(--space-3) var(--space-6); max-width: 60rem; }
-  .principles li { margin: 0; }
-  @media (min-width: 48rem) { .principles { grid-template-columns: 1fr 1fr; } }
+  .file {
+    display: grid;
+    gap: var(--space-l);
+    padding-block: var(--space-l);
+  }
+  @media (min-width: 48rem) {
+    .file {
+      grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr);
+      gap: clamp(2rem, 1rem + 3vw, 4rem);
+    }
+  }
+
+  /* Photo slot, clipped to the file like a passport photo. */
+  .photo {
+    position: relative;
+    margin: 0;
+    max-width: 18rem;
+  }
+  .clip {
+    position: absolute;
+    top: -1.6rem;
+    right: 1.5rem;
+    z-index: 2;
+    color: var(--graphite-500);
+    transform: rotate(8deg);
+  }
+  .clip svg {
+    width: 20px;
+    height: auto;
+  }
+  .photo-frame {
+    padding: 0.6rem;
+    background: var(--paper-50);
+    border: 1px solid var(--paper-300);
+    box-shadow: var(--shadow-paper);
+    transform: rotate(-1.2deg);
+  }
+  .photo-frame picture {
+    display: block;
+  }
+  .photo-frame img,
+  .photo-placeholder {
+    display: grid;
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    height: auto;
+    object-fit: cover;
+    object-position: 62% 30%;
+  }
+  .photo-placeholder {
+    place-items: center;
+    align-content: center;
+    gap: var(--space-2xs);
+    padding: var(--space-s);
+    text-align: center;
+    color: var(--graphite-500);
+    background: var(--paper-200);
+    border: 1.5px dashed var(--line-strong);
+  }
+  .photo-placeholder :global(svg) {
+    width: 3rem;
+    height: 3rem;
+  }
+  .photo-slot {
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .photo figcaption {
+    margin-top: var(--space-s);
+    font-size: var(--step--1);
+    color: var(--graphite-500);
+  }
+
+  /* The details, set as a filled-in form. */
+  .form {
+    display: grid;
+    gap: 0 var(--space-l);
+    margin: 0;
+  }
+  @media (min-width: 40rem) {
+    .form {
+      grid-template-columns: 1fr 1fr;
+    }
+    .form-row--wide {
+      grid-column: 1 / -1;
+    }
+  }
+  .form-row {
+    display: grid;
+    align-content: start;
+    gap: 0.15rem;
+    padding: 0.7rem 0 0.6rem;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  .form dt {
+    font-size: var(--step--1);
+    font-weight: 600;
+    color: var(--graphite-500);
+  }
+  .form dd {
+    margin: 0;
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: var(--graphite-900);
+  }
+  .form dd ul {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  .form dd.form-name {
+    font-family: var(--font-display);
+    font-size: var(--step-2);
+    font-weight: 700;
+    font-stretch: 90%;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+
+  .bio {
+    margin-top: var(--space-l);
+    max-width: var(--measure);
+  }
+  .bio-title {
+    font-size: var(--step-2);
+  }
+  .honest {
+    margin: var(--space-m) 0 0;
+    font-size: var(--step--1);
+    color: var(--graphite-500);
+    max-width: 60ch;
+  }
+
+  .how-section {
+    padding-bottom: var(--space-s);
+  }
+  .how-grid {
+    display: grid;
+    gap: var(--space-l);
+  }
+  @media (min-width: 60rem) {
+    .how-grid {
+      grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+      gap: clamp(2rem, 1rem + 3vw, 4rem);
+      align-items: start;
+    }
+    .how-head {
+      position: sticky;
+      top: calc(var(--header-h) - var(--header-shrink) + 1.5rem);
+    }
+  }
+  .how-head p {
+    color: var(--graphite-700);
+    max-width: 44ch;
+  }
+  .rules {
+    margin: 0;
+    padding-top: var(--space-2xs);
+    padding-bottom: var(--space-2xs);
+    list-style: none;
+  }
+  .rules li {
+    position: relative;
+    margin: 0;
+    padding: var(--space-m) 0;
+    border-bottom: 1px solid var(--paper-300);
+  }
+  .rules li:last-child {
+    border-bottom: 0;
+  }
+  .rule-no {
+    position: absolute;
+    left: calc(-1 * (var(--margin-line) + var(--sheet-pad) * 0.6));
+    width: var(--margin-line);
+    top: calc(var(--space-m) + 0.3rem);
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    text-align: center;
+    color: var(--graphite-500);
+  }
+  .rules h3 {
+    margin-bottom: var(--space-3xs);
+  }
+  .rules p {
+    margin: 0;
+    max-width: 60ch;
+    color: var(--graphite-700);
+  }
 </style>

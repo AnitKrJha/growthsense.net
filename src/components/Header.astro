@@ -1,67 +1,480 @@
 ---
-import { Menu, X } from 'lucide-react';
+/**
+ * Site header. Desktop: logo, nav as a row of paper file tabs (the current page's tab is raised
+ * and joins the page's cover sheet below), and a persistent WhatsApp pill.
+ * Mobile: a Menu disclosure that pulls a full-screen paper sheet down from under the bar.
+ * Condensing: the header sticks at `top: -var(--header-shrink)`, so its top padding scrolls away
+ * natively; a sentinel + IntersectionObserver only toggles the shadow and logo scale.
+ */
+import { ArrowRight } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
 import { site } from '@/config/site';
 import { mainNav } from '@/config/nav';
 import { whatsappUrl, defaultWhatsappMessage } from '@/lib/contact';
+import { folio } from './service-codes';
+import ContactButtons from './ContactButtons.astro';
+
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
 const wa = whatsappUrl(defaultWhatsappMessage());
 ---
-<header class="site-header">
-  <div class="container bar">
-    <a class="brand" href="/">
-      <img src={site.logo.src} width={site.logo.width} height={site.logo.height} alt={`${site.brandName}, home`} />
-    </a>
+<div class="hdr-sentinel" aria-hidden="true" data-header-sentinel></div>
+<header class="site-header" data-header>
+  <div class="hdr-bar">
+    <div class="container hdr-inner">
+      <a class="hdr-brand" href="/">
+        <img src={site.logo.src} width={site.logo.width} height={site.logo.height} alt={`${site.brandName}, home`} />
+      </a>
 
-    <nav aria-label="Main" class="nav-desktop">
-      <ul>
-        {mainNav.map((n) => (
-          <li><a href={n.href} aria-current={isActive(n.href) ? 'page' : undefined}>{n.label}</a></li>
-        ))}
-      </ul>
-      <a class="btn btn--primary" href={wa ?? '/contact'} target={wa ? '_blank' : undefined} rel={wa ? 'noopener' : undefined}>Get help</a>
-    </nav>
-
-    <details class="nav-mobile">
-      <summary aria-label="Menu">
-        <Menu className="i-open" aria-hidden="true" />
-        <X className="i-close" aria-hidden="true" />
-      </summary>
-      <nav aria-label="Main mobile">
-        <ul>
+      <nav class="hdr-tabs" aria-label="Main">
+        <ul role="list">
           {mainNav.map((n) => (
-            <li><a href={n.href} aria-current={isActive(n.href) ? 'page' : undefined}>{n.label}</a></li>
+            <li>
+              <a class="tab" href={n.href} aria-current={isActive(n.href) ? 'page' : undefined}>{n.label}</a>
+            </li>
           ))}
         </ul>
       </nav>
-    </details>
+
+      <div class="hdr-actions">
+        <a
+          class="btn btn--whatsapp btn--pill hdr-wa"
+          href={wa ?? '/contact'}
+          target={wa ? '_blank' : undefined}
+          rel={wa ? 'noopener' : undefined}
+          title={wa ? undefined : 'TODO: WhatsApp number not set'}
+        >
+          <FaWhatsapp aria-hidden="true" /> WhatsApp
+        </a>
+        <button class="hdr-toggle" type="button" aria-expanded="false" aria-controls="site-menu" data-menu-toggle>
+          <span class="burger" aria-hidden="true"><span></span><span></span></span>
+          <span class="hdr-toggle-label" data-menu-label>Menu</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="menu" id="site-menu" data-menu>
+    <div class="menu-sheet">
+      <div class="container menu-inner">
+        <nav aria-label="Main">
+          <ol class="menu-list" role="list">
+            {mainNav.map((n, i) => (
+              <li>
+                <a href={n.href} aria-current={isActive(n.href) ? 'page' : undefined}>
+                  <span class="menu-folio" aria-hidden="true">{folio(i + 1)}</span>
+                  <span class="menu-label">{n.label}</span>
+                  <ArrowRight className="menu-arrow" aria-hidden="true" />
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+        <div class="menu-contact">
+          <p class="menu-note">Talk to {site.owner.name} directly.</p>
+          <ContactButtons size="lg" stack />
+          <a class="menu-home" href="/">Home</a>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 
 <style>
-  .site-header { position: sticky; top: 0; z-index: 50; background: rgb(251 250 247 / 0.92); backdrop-filter: saturate(1.4) blur(8px); border-bottom: 1px solid var(--line); }
-  .bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 4rem; }
-  .brand { display: flex; align-items: center; gap: var(--space-3); color: var(--ink); text-decoration: none; min-height: var(--tap); }
-  .brand img { height: 1.75rem; width: auto; }
-  @media (min-width: 48rem) { .brand img { height: 2rem; } }
+  .hdr-sentinel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1px;
+    height: 24px;
+    pointer-events: none;
+  }
 
-  .nav-desktop { display: none; align-items: center; gap: var(--space-5); }
-  .nav-desktop ul, .nav-mobile ul { list-style: none; margin: 0; padding: 0; }
-  .nav-desktop ul { display: flex; gap: var(--space-1); }
-  .nav-desktop li, .nav-mobile li { margin: 0; }
-  nav a:not(.btn) { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 var(--space-3); color: var(--ink-2); text-decoration: none; font-weight: 500; border-radius: 8px; }
-  nav a:not(.btn):hover { color: var(--ink); background: var(--surface-2); }
-  nav a[aria-current='page'] { color: var(--accent); }
+  .site-header {
+    position: sticky;
+    top: calc(-1 * var(--header-shrink));
+    z-index: 50;
+    view-transition-name: site-header;
+  }
 
-  .nav-mobile summary { list-style: none; display: grid; place-items: center; width: var(--tap); height: var(--tap); cursor: pointer; border-radius: 8px; }
-  .nav-mobile summary::-webkit-details-marker { display: none; }
-  .nav-mobile .i-close, .nav-mobile[open] .i-open { display: none; }
-  .nav-mobile[open] .i-close { display: block; }
-  .nav-mobile nav { position: absolute; left: 0; right: 0; top: 100%; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: var(--shadow); padding: var(--space-2) 1.25rem var(--space-4); }
-  .nav-mobile nav a { width: 100%; font-size: 1.0625rem; }
+  .hdr-bar {
+    position: relative;
+    z-index: 2;
+    background: var(--paper-100);
+    border-bottom: 1px solid var(--paper-300);
+  }
+  /* Condensed shadow: only opacity animates. */
+  .hdr-bar::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 -1px 0;
+    height: 12px;
+    transform: translateY(100%);
+    background: linear-gradient(oklch(0.3 0.03 85 / 0.1), transparent);
+    opacity: 0;
+    transition: opacity var(--dur) var(--ease-out);
+    pointer-events: none;
+  }
+  [data-condensed] .hdr-bar::after {
+    opacity: 1;
+  }
+
+  .hdr-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-s);
+    height: var(--header-h);
+    padding-top: var(--header-shrink);
+  }
+
+  .hdr-brand {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    margin-right: auto;
+    border-radius: 4px;
+  }
+  .hdr-brand img {
+    width: auto;
+    height: 28px;
+    transform-origin: left center;
+    transition: transform var(--dur) var(--ease-out);
+  }
+  @media (min-width: 48rem) {
+    .hdr-brand img {
+      height: 30px;
+    }
+  }
+  [data-condensed] .hdr-brand img {
+    transform: scale(0.92);
+  }
+
+  /* ---- file tabs (desktop) ---- */
+  .hdr-tabs {
+    display: none;
+    align-self: stretch;
+  }
+  .hdr-tabs ul {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .hdr-tabs li {
+    margin: 0;
+  }
+  .tab {
+    position: relative;
+    z-index: 0;
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    margin-bottom: -1px;
+    padding: 0 1.05rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--graphite-700);
+    text-decoration: none;
+    border-radius: 9px 9px 0 0;
+    transition: transform var(--dur) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  }
+  /* The tab body: a trapezoid via perspective, so the label stays upright. */
+  .tab::before {
+    content: '';
+    position: absolute;
+    inset: 0 -3px 0 -3px;
+    z-index: -1;
+    background: var(--paper-200);
+    border: 1px solid var(--paper-300);
+    border-bottom: 0;
+    border-radius: 9px 9px 0 0;
+    transform: perspective(30px) rotateX(2.2deg);
+    transform-origin: bottom;
+    transition: background-color var(--dur-fast) var(--ease-out);
+  }
+  .tab:hover {
+    color: var(--graphite-900);
+    transform: translateY(-3px);
+  }
+  .tab:hover::before {
+    background: oklch(0.95 0.017 85);
+  }
+  .tab:focus-visible {
+    outline-offset: -4px;
+  }
+  .tab[aria-current='page'] {
+    z-index: 2;
+    height: 50px;
+    color: var(--graphite-900);
+    transform: none;
+  }
+  .tab[aria-current='page']::before {
+    background: var(--paper-50);
+    box-shadow: 0 -3px 8px -4px oklch(0.3 0.03 85 / 0.18);
+  }
+  /* Covers the bar's bottom rule so the tab and the cover sheet read as one piece of paper. */
+  .tab[aria-current='page']::after {
+    content: '';
+    position: absolute;
+    left: -2px;
+    right: -2px;
+    bottom: -1px;
+    height: 3px;
+    background: var(--paper-50);
+  }
+
+  .hdr-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+  }
+  .hdr-wa {
+    display: none;
+    min-height: var(--tap);
+  }
+  @media (min-width: 40rem) {
+    .hdr-wa {
+      display: inline-flex;
+    }
+  }
+
+  /* ---- mobile toggle ---- */
+  .hdr-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: var(--tap);
+    min-height: var(--tap);
+    padding: 0 0.85rem;
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 650;
+    color: var(--graphite-900);
+    background: var(--paper-50);
+    border: 1.5px solid var(--paper-300);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .hdr-toggle:hover {
+    border-color: var(--line-strong);
+  }
+  .burger {
+    position: relative;
+    display: grid;
+    align-content: center;
+    gap: 5px;
+    width: 18px;
+    height: 18px;
+  }
+  .burger span {
+    display: block;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform var(--dur) var(--ease-out);
+  }
+  [data-menu-open] .burger span:first-child {
+    transform: translateY(3.5px) rotate(45deg);
+  }
+  [data-menu-open] .burger span:last-child {
+    transform: translateY(-3.5px) rotate(-45deg);
+  }
+
+  /* ---- menu sheet ---- */
+  .menu {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    visibility: hidden;
+    transform: translateY(-102%);
+    transition:
+      transform 460ms var(--ease-out),
+      visibility 0s linear 460ms;
+  }
+  [data-menu-open] .menu {
+    visibility: visible;
+    transform: none;
+    transition:
+      transform 460ms var(--ease-out),
+      visibility 0s;
+  }
+  .menu-sheet {
+    min-height: 100%;
+    padding-top: calc(var(--header-h) + var(--space-s));
+    padding-bottom: calc(var(--space-l) + env(safe-area-inset-bottom));
+    background-color: var(--paper-50);
+    background-image:
+      linear-gradient(
+        to right,
+        transparent calc(var(--margin-line) - 1px),
+        color-mix(in oklch, var(--stamp-600) 50%, transparent) calc(var(--margin-line) - 1px),
+        color-mix(in oklch, var(--stamp-600) 50%, transparent) calc(var(--margin-line) + 1px),
+        transparent calc(var(--margin-line) + 1px)
+      );
+    box-shadow: 0 16px 32px -12px oklch(0.3 0.03 85 / 0.3);
+  }
+  .menu-inner {
+    display: grid;
+    gap: var(--space-l);
+  }
+  .menu-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--paper-300);
+  }
+  .menu-list li {
+    margin: 0;
+    border-bottom: 1px solid var(--paper-300);
+  }
+  .menu-list a {
+    display: grid;
+    grid-template-columns: 2.25rem 1fr auto;
+    align-items: center;
+    gap: var(--space-xs);
+    min-height: 4rem;
+    color: var(--graphite-900);
+    text-decoration: none;
+  }
+  .menu-folio {
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    color: var(--graphite-500);
+  }
+  .menu-label {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.25rem);
+    font-weight: 700;
+    font-stretch: 90%;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .menu-list a :global(.menu-arrow) {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--forest-700);
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .menu-list a:hover :global(.menu-arrow) {
+    transform: translateX(4px);
+  }
+  .menu-list a[aria-current='page'] .menu-label {
+    color: var(--forest-700);
+  }
+  .menu-list a[aria-current='page'] .menu-folio {
+    color: var(--forest-700);
+  }
+  .menu-contact {
+    display: grid;
+    gap: var(--space-xs);
+  }
+  .menu-note {
+    margin: 0;
+    font-weight: 600;
+    color: var(--graphite-700);
+  }
+  .menu-home {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--tap);
+    font-weight: 600;
+  }
 
   @media (min-width: 60rem) {
-    .nav-desktop { display: flex; }
-    .nav-mobile { display: none; }
+    .hdr-tabs {
+      display: block;
+    }
+    .hdr-brand {
+      margin-right: var(--space-s);
+    }
+    .hdr-tabs {
+      margin-left: auto;
+    }
+    .hdr-toggle,
+    .menu {
+      display: none;
+    }
   }
 </style>
+
+<style is:global>
+  html.menu-open {
+    overflow: hidden;
+  }
+  html.menu-open .mobile-bar {
+    transform: translateY(110%);
+  }
+</style>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-header]');
+  const sentinel = document.querySelector<HTMLElement>('[data-header-sentinel]');
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const menu = document.querySelector<HTMLElement>('[data-menu]');
+  const label = document.querySelector<HTMLElement>('[data-menu-label]');
+
+  if (header && sentinel && 'IntersectionObserver' in window) {
+    new IntersectionObserver(([entry]) => {
+      header.toggleAttribute('data-condensed', !entry.isIntersecting);
+    }).observe(sentinel);
+  }
+
+  if (header && toggle && menu) {
+    const inertTargets = () => Array.from(document.querySelectorAll<HTMLElement>('[data-inert-when-menu]'));
+    let open = false;
+
+    const setOpen = (next: boolean, restoreFocus = true) => {
+      if (next === open) return;
+      open = next;
+      header.toggleAttribute('data-menu-open', open);
+      document.documentElement.classList.toggle('menu-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+      if (label) label.textContent = open ? 'Close' : 'Menu';
+      inertTargets().forEach((el) => (el.inert = open));
+      if (open) {
+        menu.querySelector<HTMLElement>('a[href]')?.focus({ preventScroll: true });
+      } else if (restoreFocus) {
+        toggle.focus({ preventScroll: true });
+      }
+    };
+
+    toggle.addEventListener('click', () => setOpen(!open));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && open) {
+        e.preventDefault();
+        setOpen(false);
+      }
+    });
+    // Links inside the sheet: close first so the next page never inherits a locked scroll.
+    menu.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('a')) setOpen(false, false);
+    });
+    // Leaving the mobile layout closes the sheet.
+    window.matchMedia('(min-width: 60rem)').addEventListener('change', (e) => {
+      if (e.matches) setOpen(false, false);
+    });
+    // Keep Tab inside the header while the sheet is open (the rest of the page is inert).
+    header.addEventListener('keydown', (e) => {
+      if (!open || e.key !== 'Tab') return;
+      const items = Array.from(
+        header.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'),
+      ).filter((el) => el.offsetParent !== null || el === toggle);
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+  }
+</script>

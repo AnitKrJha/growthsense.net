@@ -1,7 +1,9 @@
 ---
 /**
- * Shared wrapper for every /tools/* page: header, breadcrumbs, WebApplication + Breadcrumb JSON-LD,
- * the island (default slot), "rules last verified" note, disclaimer and CTA.
+ * Shared wrapper for every /tools/* page, set out as a worksheet file: a cover-sheet header with a
+ * "WORKSHEET · 01 / INCOME TAX · FY 2025-26" meta line, the island (default slot), the verification note and
+ * disclaimer as a stamped footnote, an explainer sheet (the `after` slot) and the closing CTA.
+ * Keeps WebApplication + BreadcrumbList JSON-LD.
  */
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHeader from '@/components/PageHeader.astro';
@@ -17,8 +19,12 @@ interface Props {
   /** e.g. "Rules last verified for FY 2025-26 on 26 Sep 2026". Shown above the disclaimer. */
   verifiedNote?: string;
   ctaTopic?: string;
+  /** Worksheet number and short name for the meta line, e.g. "01 / Income tax". */
+  worksheet?: string;
+  /** Year shown on the meta line. */
+  year?: string;
 }
-const { title, seoTitle, description, lead, verifiedNote, ctaTopic } = Astro.props;
+const { title, seoTitle, description, lead, verifiedNote, ctaTopic, worksheet, year = 'FY 2025-26' } = Astro.props;
 const siteUrl = Astro.site ?? new URL('https://example.com');
 const path = Astro.url.pathname.replace(/\/$/, '');
 const crumbs = [
@@ -26,6 +32,8 @@ const crumbs = [
   { name: 'Calculators', path: '/tools' },
   { name: title, path },
 ];
+const meta = ['Worksheet', worksheet, year].filter(Boolean).join(' · ');
+const hasAfter = Astro.slots.has('after');
 ---
 <BaseLayout
   title={seoTitle ?? title}
@@ -33,23 +41,125 @@ const crumbs = [
   whatsappTopic={ctaTopic}
   jsonLd={[breadcrumbLd(siteUrl, crumbs), webAppLd(siteUrl, { name: title, path, description })]}
 >
-  <PageHeader title={title} lead={lead} crumbs={crumbs} />
-  <section class="section tool-body">
+  <PageHeader title={title} lead={lead} crumbs={crumbs} meta={meta} />
+  <section class="tool-body" aria-label={`${title} worksheet`}>
     <div class="container">
       <slot />
-      <div class="tool-notes small">
-        {verifiedNote && <p class="notice notice--info">{verifiedNote}</p>}
-        <p class="muted">
-          Estimates for information only. This is not tax, legal or financial advice. Your actual liability depends on
-          your full facts and the law in force. <a href="/disclaimer">Read the disclaimer</a>.
-        </p>
-      </div>
-      <slot name="after" />
+      <aside class="tool-notes" aria-label="About these figures">
+        <span class="tool-notes__stamp" aria-hidden="true">Estimate</span>
+        <div class="tool-notes__text">
+          {verifiedNote && <p class="tool-notes__verify">{verifiedNote}</p>}
+          <p>
+            Estimates for information only. This is not tax, legal or financial advice. Your actual liability depends on
+            your full facts and the law in force. <a href="/disclaimer">Read the disclaimer</a>.
+          </p>
+        </div>
+      </aside>
     </div>
   </section>
+  {hasAfter && (
+    <section class="tool-explain" aria-label="How it works">
+      <div class="container">
+        <div class="tool-explain__sheet">
+          <slot name="after" />
+        </div>
+      </div>
+    </section>
+  )}
   <CtaBand title="Get this filed for you" topic={ctaTopic} />
 </BaseLayout>
+
 <style>
-  .tool-body { padding-top: var(--space-6); }
-  .tool-notes { margin-top: var(--space-6); max-width: var(--measure); }
+  .tool-body {
+    padding-block: var(--space-m) var(--space-xl);
+  }
+  .tool-notes {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-s);
+    align-items: start;
+    max-width: 52rem;
+    margin-top: var(--space-xl);
+    padding-top: var(--space-m);
+    border-top: 1px dashed var(--paper-300);
+    font-size: var(--step--1);
+    line-height: 1.55;
+    color: var(--graphite-700);
+  }
+  .tool-notes__stamp {
+    display: inline-block;
+    padding: 0.3rem 0.6rem 0.35rem;
+    font-family: var(--font-paper);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--stamp-700);
+    border: 2px solid var(--stamp-600);
+    border-radius: 5px;
+    box-shadow: inset 0 0 0 2px var(--paper-100), inset 0 0 0 3px var(--stamp-600);
+    transform: rotate(-6deg);
+    margin-top: 0.25rem;
+  }
+  .tool-notes__text p {
+    margin: 0 0 var(--space-2xs);
+  }
+  .tool-notes__verify {
+    color: var(--graphite-900);
+    font-weight: 550;
+  }
+  .tool-notes a {
+    color: var(--forest-700);
+  }
+
+  .tool-explain {
+    padding-bottom: var(--space-xl);
+  }
+  .tool-explain__sheet {
+    --rule: 1.75rem;
+    position: relative;
+    max-width: 52rem;
+    padding: var(--space-l) var(--space-m) var(--space-l) calc(var(--space-m) + 1.25rem);
+    background-color: var(--paper-50);
+    background-image: linear-gradient(
+      to right,
+      transparent 1.1rem,
+      color-mix(in oklch, var(--stamp-600) 45%, transparent) 1.1rem 1.2rem,
+      transparent 1.2rem
+    );
+    border-radius: var(--radius-paper);
+    box-shadow: var(--shadow-paper);
+  }
+  @media (min-width: 48rem) {
+    .tool-explain__sheet {
+      padding: var(--space-xl) var(--space-xl) var(--space-xl) calc(var(--space-xl) + 1.5rem);
+      background-image: linear-gradient(
+        to right,
+        transparent 2.75rem,
+        color-mix(in oklch, var(--stamp-600) 45%, transparent) 2.75rem 2.85rem,
+        transparent 2.85rem
+      );
+    }
+  }
+  /* The explainer content comes from each page's `after` slot. */
+  .tool-explain__sheet :global(.tool-after) {
+    margin: 0;
+    max-width: var(--measure);
+  }
+  .tool-explain__sheet :global(h2) {
+    font-size: var(--step-2);
+    margin-top: var(--space-l);
+  }
+  .tool-explain__sheet :global(h2:first-child) {
+    margin-top: 0;
+  }
+  .tool-explain__sheet :global(.table-wrap) {
+    margin-bottom: var(--space-s);
+    max-width: 30rem;
+  }
+  @media print {
+    .tool-notes__stamp {
+      box-shadow: none;
+    }
+  }
 </style>

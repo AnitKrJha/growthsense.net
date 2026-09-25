@@ -16,7 +16,12 @@ export function professionalServiceLd(siteUrl: URL): Json {
     url: abs(siteUrl, '/'),
     logo: abs(siteUrl, '/icon-512.png'),
     image: abs(siteUrl, '/og-default.png'),
-    founder: { '@type': 'Person', name: owner.name, jobTitle: owner.role },
+    founder: {
+      '@type': 'Person',
+      name: owner.name,
+      jobTitle: owner.role,
+      ...(owner.photo ? { image: abs(siteUrl, owner.photo.fallback) } : {}),
+    },
     priceRange: 'On request',
   };
   if (contact.phone) ld.telephone = `+${contact.phone}`;

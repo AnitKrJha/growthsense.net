@@ -24,6 +24,16 @@ export const site = {
     yearsOfExperience: null as number | null,
     /** TODO(owner): short bio for /about. */
     bio: null as string | null,
+    /** Portrait (4:5-ish, 912×1149 source) in /public/owner. `avatar` is a 192px square face crop. */
+    photo: {
+      src: '/owner/avinash-thakur-480.webp',
+      srcset: '/owner/avinash-thakur-480.webp 480w, /owner/avinash-thakur-912.webp 912w',
+      fallback: '/owner/avinash-thakur-480.jpg',
+      width: 912,
+      height: 1149,
+      alt: 'Avinash Thakur in a navy suit, standing by an office window overlooking the city',
+      avatar: '/owner/avinash-thakur-avatar.webp',
+    },
   },
 
   brandName: 'GrowthSense',

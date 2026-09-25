@@ -1,0 +1,31 @@
+---
+/**
+ * Motion bootstrap for the home narrative. Place once, before the first section that animates.
+ * Sets :root[data-home-motion] (only when motion is allowed and IntersectionObserver exists) and marks
+ * [data-inview] elements with .is-inview once they are on screen. If this never runs, every section
+ * simply renders in its final, fully visible state.
+ */
+import './home.css';
+---
+<script is:inline>
+  (() => {
+    const root = document.documentElement;
+    if (!('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    root.dataset.homeMotion = 'on';
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          // tall elements (the receipt on a short phone) may never reach 30%, so also accept "fills a third of the screen"
+          const enough = e.intersectionRatio >= 0.3 || e.intersectionRect.height >= innerHeight * 0.33;
+          if (!e.isIntersecting || !enough) continue;
+          e.target.classList.add('is-inview');
+          io.unobserve(e.target);
+        }
+      },
+      { threshold: [0, 0.1, 0.2, 0.3], rootMargin: '0px 0px -8% 0px' },
+    );
+    const start = () => document.querySelectorAll('[data-inview]').forEach((el) => io.observe(el));
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+    else start();
+  })();
+</script>

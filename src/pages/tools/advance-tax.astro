@@ -31,6 +31,7 @@ const faqs = [
 ];
 ---
 <ToolShell
+  worksheet="04 / Advance tax"
   title="Advance tax planner"
   seoTitle="Advance tax calculator: due dates, instalments and 234B/234C interest"
   description={`Plan your advance tax instalments for 15 June, September, December and March, and estimate interest under sections 234B and 234C. Get help with advance tax and ITR${near}.`}
@@ -38,7 +39,7 @@ const faqs = [
   verifiedNote="Advance tax rules and interest calculations are unverified as of 26 Sep 2026. This is an estimate only. Section numbers change under the Income-tax Act, 2025 from 1 April 2026. Check on incometax.gov.in."
   ctaTopic="advance tax"
 >
-  <AdvanceTaxCalculator client:visible />
+  <AdvanceTaxCalculator client:load />
   <Fragment slot="after">
     <div class="prose tool-after">
       <h2>How advance tax works</h2>
@@ -75,7 +76,3 @@ const faqs = [
   </Fragment>
 </ToolShell>
 
-<style>
-  .tool-after { margin-top: var(--space-7); }
-  .tool-after .table-wrap { margin-bottom: var(--space-4); max-width: 28rem; }
-</style>

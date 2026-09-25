@@ -5,7 +5,7 @@ import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHeader from '@/components/PageHeader.astro';
 import CtaBand from '@/components/CtaBand.astro';
 import Faq from '@/components/Faq.astro';
-import ServiceIcon from '@/components/ServiceIcon.astro';
+import { codeFor, folio } from '@/components/service-codes';
 import { site, type ServiceSlug } from '@/config/site';
 import { serviceMeta } from '@/config/nav';
 import { allFaqs, faqGroups } from '@/content/faqs';
@@ -19,6 +19,10 @@ const crumbs = [
 const services = (
   await getCollection('services', ({ id, data }) => !data.draft && site.services[id as ServiceSlug] === true)
 ).sort((a, b) => a.data.order - b.data.order);
+const index = [
+  ...faqGroups.map((g) => ({ id: g.id, title: g.title, count: g.items.length })),
+  { id: 'by-service', title: 'Questions by service', count: services.reduce((n, e) => n + e.data.faqs.length, 0) },
+];
 ---
 <BaseLayout
   title="FAQ: ITR, GST, TDS and working together"
@@ -27,39 +31,53 @@ const services = (
 >
   <PageHeader
     title="Frequently asked questions"
-    eyebrow="FAQ"
+    meta={`FAQ · ${allFaqs.length} questions · ${faqGroups.length} topics`}
     lead="Quick answers about how the work is done. If your question isn’t here, send a message on WhatsApp."
     crumbs={crumbs}
   />
 
-  <section class="section">
+  <section class="faq-section">
     <div class="container faq-layout">
-      <nav class="faq-toc small" aria-label="FAQ topics">
-        <p class="toc-title">Topics</p>
-        <ul>
-          {faqGroups.map((g) => <li><a href={`#${g.id}`}>{g.title}</a></li>)}
-          <li><a href="#by-service">Questions by service</a></li>
-        </ul>
+      <nav class="faq-index" aria-labelledby="faq-index-title">
+        <h2 id="faq-index-title" class="faq-index-title">Topics</h2>
+        <ol role="list">
+          {index.map((g, i) => (
+            <li>
+              <a href={`#${g.id}`}>
+                <span class="fi-no" aria-hidden="true">{folio(i + 1)}</span>
+                <span class="fi-title">{g.title}</span>
+                <span class="fi-count">{g.count}<span class="visually-hidden"> questions</span></span>
+              </a>
+            </li>
+          ))}
+        </ol>
       </nav>
-      <div class="faq-body">
-        {faqGroups.map((g) => (
+
+      <div class="faq-sheet sheet sheet--ledger">
+        {faqGroups.map((g, i) => (
           <section class="faq-group" aria-labelledby={g.id}>
-            <h2 id={g.id}>{g.title}</h2>
+            <h2 id={g.id} class="group-title">
+              <span class="group-no" aria-hidden="true">{folio(i + 1)}</span>
+              {g.title}
+            </h2>
             <Faq faqs={g.items} />
           </section>
         ))}
 
         <section class="faq-group" aria-labelledby="by-service">
-          <h2 id="by-service">Questions by service</h2>
-          <p class="muted">Each service page has its own questions, along with the document checklist and process.</p>
+          <h2 id="by-service" class="group-title">
+            <span class="group-no" aria-hidden="true">{folio(index.length)}</span>
+            Questions by service
+          </h2>
+          <p class="group-intro">Each service page has its own questions, along with the document checklist and process.</p>
           <ul class="svc-links" role="list">
             {services.map((e) => (
               <li>
-                <a class="card card--link" href={`/services/${e.id}#faqs`}>
-                  <ServiceIcon slug={e.id} />
-                  <span class="svc-name">{serviceMeta[e.id as ServiceSlug]?.title ?? e.data.title}</span>
-                  <span class="small muted">{e.data.faqs.length} questions</span>
-                  <ArrowRight aria-hidden="true" />
+                <a href={`/services/${e.id}#faqs`}>
+                  <span class="sl-tab" aria-hidden="true">{codeFor(e.id).tab}</span>
+                  <span class="sl-name">{serviceMeta[e.id as ServiceSlug]?.title ?? e.data.title}</span>
+                  <span class="sl-count">{e.data.faqs.length} questions</span>
+                  <ArrowRight className="sl-arrow" aria-hidden="true" />
                 </a>
               </li>
             ))}
@@ -73,23 +91,174 @@ const services = (
 </BaseLayout>
 
 <style>
-  .faq-layout { display: grid; gap: var(--space-6); }
-  @media (min-width: 60rem) { .faq-layout { grid-template-columns: 14rem minmax(0, 1fr); gap: var(--space-8); align-items: start; } }
-  .faq-toc { display: none; }
-  @media (min-width: 60rem) { .faq-toc { display: block; position: sticky; top: 6rem; } }
-  .toc-title { font-weight: 600; margin-bottom: var(--space-2); }
-  .faq-toc ul { list-style: none; padding: 0; margin: 0; border-left: 2px solid var(--line); }
-  .faq-toc li { margin: 0; }
-  .faq-toc a { display: block; padding: 0.35rem var(--space-3); color: var(--ink-2); text-decoration: none; margin-left: -2px; border-left: 2px solid transparent; }
-  .faq-toc a:hover { color: var(--accent); border-left-color: var(--accent); }
-  .faq-body { max-width: 48rem; }
-  .faq-group + .faq-group { margin-top: var(--space-7); }
-  .faq-group h2 { scroll-margin-top: 5.5rem; font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem); }
-  .svc-links { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-3); }
-  .svc-links li { margin: 0; }
-  .svc-links a { display: grid; grid-template-columns: auto 1fr auto auto; gap: var(--space-4); align-items: center; padding: var(--space-4); box-shadow: none; }
-  .svc-links .icon-badge { margin: 0; }
-  .svc-links a > :global(svg) { width: 1.125rem; height: 1.125rem; color: var(--accent); }
-  .svc-name { font-weight: 600; }
-  @media (max-width: 30rem) { .svc-links a { grid-template-columns: auto 1fr auto; } .svc-links .small { display: none; } }
+  .faq-layout {
+    display: grid;
+    gap: var(--space-m);
+  }
+  @media (min-width: 60rem) {
+    .faq-layout {
+      grid-template-columns: 16rem minmax(0, 1fr);
+      gap: clamp(2rem, 1rem + 2vw, 3.5rem);
+      align-items: start;
+    }
+  }
+
+  /* Quick-jump index: two columns of tabs on phones, a sticky drawer index on desktop. */
+  .faq-index-title {
+    margin: 0 0 var(--space-2xs);
+    font-family: var(--font-text);
+    font-size: var(--step--1);
+    font-weight: 650;
+    letter-spacing: 0;
+    color: var(--graphite-500);
+  }
+  .faq-index ol {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .faq-index li {
+    margin: 0;
+  }
+  .faq-index a {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    height: 100%;
+    padding: 0.45rem 0.7rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--graphite-700);
+    text-decoration: none;
+    background: var(--paper-200);
+    border: 1px solid var(--paper-300);
+    border-radius: 8px;
+    transition: transform var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  }
+  .faq-index a:hover {
+    color: var(--graphite-900);
+    background: var(--paper-50);
+    transform: translateX(3px);
+  }
+  .fi-no,
+  .fi-count {
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    font-weight: 500;
+    color: var(--graphite-500);
+  }
+  .fi-count {
+    font-variant-numeric: tabular-nums;
+  }
+  @media (max-width: 23rem) {
+    .faq-index ol {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (min-width: 60rem) {
+    .faq-index {
+      position: sticky;
+      top: calc(var(--header-h) - var(--header-shrink) + 1.5rem);
+    }
+    .faq-index ol {
+      grid-template-columns: 1fr;
+      gap: 0.3rem;
+    }
+    .faq-index a {
+      border-radius: 0 8px 8px 0;
+    }
+  }
+
+  .faq-section {
+    padding-bottom: var(--space-l);
+  }
+  .faq-group {
+    position: relative;
+  }
+  .faq-group + .faq-group {
+    margin-top: var(--space-xl);
+  }
+  .group-title {
+    position: relative;
+    margin-bottom: var(--space-s);
+    font-size: var(--step-2);
+  }
+  /* The group number sits in the ledger margin, left of the red line. */
+  .group-no {
+    position: absolute;
+    left: calc(-1 * (var(--margin-line) + var(--sheet-pad) * 0.6));
+    width: var(--margin-line);
+    top: 0.55em;
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    font-weight: 500;
+    letter-spacing: 0;
+    text-align: center;
+    color: var(--graphite-500);
+  }
+  .group-intro {
+    color: var(--graphite-700);
+    max-width: 58ch;
+  }
+
+  .svc-links {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--paper-300);
+  }
+  .svc-links li {
+    margin: 0;
+    border-bottom: 1px solid var(--paper-300);
+  }
+  .svc-links a {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.25rem var(--space-s);
+    min-height: 3.75rem;
+    padding: 0.6rem 0.25rem;
+    color: var(--graphite-900);
+    text-decoration: none;
+  }
+  .svc-links a:hover .sl-name {
+    color: var(--forest-700);
+  }
+  .sl-tab {
+    grid-row: span 2;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-stretch: 78%;
+    line-height: 1;
+    color: var(--forest-700);
+  }
+  .sl-name {
+    font-weight: 650;
+  }
+  .sl-count {
+    grid-column: 2;
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--graphite-500);
+  }
+  .svc-links a :global(.sl-arrow) {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    width: 1.15rem;
+    height: 1.15rem;
+    color: var(--forest-700);
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .svc-links a:hover :global(.sl-arrow) {
+    transform: translateX(3px);
+  }
 </style>

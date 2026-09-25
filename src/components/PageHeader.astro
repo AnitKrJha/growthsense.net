@@ -1,18 +1,101 @@
 ---
+/**
+ * Inner-page header: the cover sheet of a file. It sits flush under the header so the active nav
+ * tab joins it. Breadcrumbs and an optional form-number meta line (Martian Mono) run along the top,
+ * then a big Bricolage title and a lead. The default slot takes actions.
+ */
 import Breadcrumbs from './Breadcrumbs.astro';
-interface Props { title: string; lead?: string; eyebrow?: string; crumbs?: { name: string; path: string }[] }
-const { title, lead, eyebrow, crumbs } = Astro.props;
+interface Props {
+  title: string;
+  lead?: string;
+  /** Rendered as the page's kicker. Counts toward the two-per-page kicker limit. */
+  eyebrow?: string;
+  crumbs?: { name: string; path: string }[];
+  /** Form-number style meta line, e.g. "SERVICE · 01 / ITR". */
+  meta?: string;
+}
+const { title, lead, eyebrow, crumbs, meta } = Astro.props;
 ---
-<header class="page-header">
+<header class="page-cover">
   <div class="container">
-    {crumbs && <Breadcrumbs items={crumbs} />}
-    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
-    <h1>{title}</h1>
-    {lead && <p class="lead">{lead}</p>}
-    <slot />
+    <div class="cover sheet">
+      {(crumbs || meta) && (
+        <div class="cover-top">
+          {crumbs && <Breadcrumbs items={crumbs} />}
+          {meta && <p class="cover-meta">{meta}</p>}
+        </div>
+      )}
+      <div class="cover-body">
+        {eyebrow && <p class="kicker">{eyebrow}</p>}
+        <h1 class="page-title">{title}</h1>
+        {lead && <p class="lead cover-lead">{lead}</p>}
+        <slot />
+      </div>
+    </div>
   </div>
 </header>
 <style>
-  .page-header { padding-block: var(--space-6) var(--space-5); border-bottom: 1px solid var(--line); background: var(--surface); }
-  @media (min-width: 48rem) { .page-header { padding-block: var(--space-7) var(--space-6); } }
+  .page-cover {
+    padding-bottom: var(--space-l);
+  }
+  .cover {
+    --sheet-pad: clamp(1.25rem, 0.6rem + 3vw, 3.5rem);
+    padding-top: var(--space-2xs);
+    padding-bottom: clamp(1.75rem, 1rem + 3vw, 3.25rem);
+    border-radius: 0 0 var(--radius-paper) var(--radius-paper);
+  }
+  /* Two punched holes on the left edge: this is a sheet from a file. */
+  .cover::before {
+    content: '';
+    position: absolute;
+    left: clamp(0.4rem, 0.1rem + 0.8vw, 1rem);
+    top: 50%;
+    width: 11px;
+    height: 58px;
+    transform: translateY(-50%);
+    background:
+      radial-gradient(circle at 50% 5.5px, var(--paper-200) 4.5px, var(--paper-300) 5px, transparent 5.6px),
+      radial-gradient(circle at 50% calc(100% - 5.5px), var(--paper-200) 4.5px, var(--paper-300) 5px, transparent 5.6px);
+    pointer-events: none;
+  }
+  @media (max-width: 47.99rem) {
+    .cover::before {
+      display: none;
+    }
+  }
+  .cover-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0 var(--space-m);
+    padding-bottom: var(--space-2xs);
+    margin-bottom: clamp(1.25rem, 0.8rem + 2vw, 2.5rem);
+    border-bottom: 1px dashed var(--paper-300);
+  }
+  .cover-meta {
+    margin: 0;
+    padding-block: 0.6rem;
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--graphite-500);
+  }
+  .cover-body {
+    max-width: 52rem;
+  }
+  .page-title {
+    margin: 0;
+    max-width: 20ch;
+    view-transition-name: page-title;
+  }
+  .cover-lead {
+    margin: var(--space-s) 0 0;
+    max-width: 42rem;
+  }
+  .cover-body > :global(:not(.kicker, .page-title, .cover-lead)) {
+    margin-top: var(--space-m);
+  }
 </style>

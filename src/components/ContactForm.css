@@ -1,0 +1,173 @@
+/* ContactForm island: the inside of the "enquiry slip". The slip itself (sheet, perforation,
+   header strip) is drawn by the page (see contact.astro); this file styles fields, notes and the
+   stamped RECEIVED state. Everything is namespaced under .contact-form. */
+
+.contact-form {
+  position: relative;
+}
+
+.contact-form .cf-grid {
+  display: grid;
+  gap: var(--space-m);
+}
+@media (min-width: 40rem) {
+  .contact-form .cf-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-m) var(--space-s);
+  }
+  .contact-form .cf-full {
+    grid-column: 1 / -1;
+  }
+}
+
+.contact-form .field p {
+  margin: 0;
+}
+.contact-form .optional {
+  font-weight: 400;
+  color: var(--graphite-500);
+}
+
+/* Honeypot: off-screen, not display:none (some bots skip hidden inputs). */
+.contact-form .cf-hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.contact-form .cf-note,
+.contact-form .cf-msg {
+  display: flex;
+  gap: var(--space-xs);
+  align-items: flex-start;
+  margin: var(--space-m) 0 0;
+}
+.contact-form .cf-note svg,
+.contact-form .cf-msg svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-top: 0.15rem;
+  flex: none;
+}
+
+/* Signature line + submit: the bottom of a paper form. */
+.contact-form .cf-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  margin-top: var(--space-m);
+  padding-top: var(--space-m);
+  border-top: 1px dashed var(--paper-300);
+}
+.contact-form .cf-actions .btn {
+  width: 100%;
+}
+.contact-form .cf-sign {
+  margin: 0;
+  font-family: var(--font-paper);
+  font-size: var(--step--2);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--graphite-500);
+}
+@media (min-width: 40rem) {
+  .contact-form .cf-actions .btn {
+    width: auto;
+    min-width: 13rem;
+  }
+}
+
+/* ---------- received slip ---------- */
+.contact-form .cf-received {
+  position: relative;
+  padding: var(--space-l) 0 var(--space-s);
+  outline: none;
+}
+.contact-form .cf-received:focus-visible {
+  outline: 3px solid var(--carbon-600);
+  outline-offset: 6px;
+}
+.contact-form .cf-stamp {
+  --stamp-tilt: -7deg;
+  position: absolute;
+  top: var(--space-s);
+  right: 0;
+  font-size: clamp(1.25rem, 1rem + 1.2vw, 1.75rem);
+}
+.contact-form .cf-received-meta {
+  margin: 0 0 var(--space-xs);
+  font-family: var(--font-paper);
+  font-size: var(--step--2);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--graphite-500);
+}
+.contact-form .cf-received-title {
+  max-width: 18ch;
+  margin: 0 0 var(--space-xs);
+  font-size: var(--step-2);
+}
+.contact-form .cf-received-text {
+  max-width: 44ch;
+  color: var(--graphite-700);
+}
+.contact-form .cf-receipt {
+  display: grid;
+  gap: var(--space-2xs);
+  max-width: 26rem;
+  margin: var(--space-m) 0 var(--space-l);
+  font-family: var(--font-paper);
+  font-size: var(--step--1);
+}
+.contact-form .cf-receipt div {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2xs);
+}
+/* Dotted leader between label and value. */
+.contact-form .cf-receipt div::after {
+  content: '';
+  order: 1;
+  flex: 1;
+  min-width: 1.5rem;
+  border-bottom: 1.5px dotted var(--paper-300);
+  transform: translateY(-0.25em);
+}
+.contact-form .cf-receipt dt {
+  order: 0;
+  color: var(--graphite-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: var(--step--2);
+}
+.contact-form .cf-receipt dd {
+  order: 2;
+  margin: 0;
+  font-weight: 600;
+  color: var(--graphite-900);
+  text-align: right;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .contact-form .cf-stamp {
+    animation: cf-stamp-in 420ms var(--ease-out) 120ms both;
+  }
+}
+@keyframes cf-stamp-in {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--stamp-tilt)) scale(1.5);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(var(--stamp-tilt)) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(var(--stamp-tilt)) scale(1);
+  }
+}

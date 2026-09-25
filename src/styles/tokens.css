@@ -90,3 +90,51 @@
   --focus: var(--carbon-600);
   --ease: var(--ease-out);
 }
+
+/* Additions for chrome + inner pages (additive; nothing above is renamed). */
+:root {
+  /* colour: extra roles */
+  --line-strong: oklch(0.62 0.02 85); /* input borders: 3.5:1 on paper-50 */
+  --ink-desk: var(--paper-100); /* body text on forest desks */
+  --ink-desk-2: oklch(0.8 0.03 160); /* secondary text on desks: 8.7:1 on forest-900 */
+  --line-desk: oklch(0.86 0.09 158 / 0.16);
+  --highlight: oklch(0.95 0.035 158 / 0.85); /* highlighter sweep on ledger rows */
+  --warn-bg: oklch(0.95 0.06 95);
+  --warn-ink: oklch(0.42 0.09 70);
+  --warn-line: oklch(0.78 0.1 90);
+  --danger: var(--stamp-700);
+
+  /* type: one smaller step for paper artefacts (mono labels) */
+  --step--2: 0.75rem;
+
+  /* paper geometry */
+  --rule-gap: 1.75rem;
+  --margin-line: clamp(1.75rem, 1rem + 2.5vw, 3rem);
+  --shadow-stacked:
+    var(--shadow-paper),
+    5px 6px 0 -1px var(--paper-50),
+    5px 6px 0 0 var(--paper-300);
+
+  /* chrome */
+  --header-h: 4.5rem;
+  --header-shrink: 0.75rem; /* header top padding that scrolls away when stuck */
+
+  /* textures */
+  --grain-soft: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .055 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --ink-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='i'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -6 0 0 0 4.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23i)'/%3E%3C/svg%3E");
+
+  /* legacy aliases (pre-redesign names still used by calculator islands) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4.5rem;
+  --radius: var(--radius-ui);
+  --radius-lg: 16px;
+  --shadow: var(--shadow-paper);
+  --shadow-lg: var(--shadow-lift);
+  --gradient-soft: var(--mint-100); /* was a gradient; now flat (no gradients on surfaces) */
+}

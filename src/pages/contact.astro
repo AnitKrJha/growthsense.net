@@ -1,9 +1,12 @@
 ---
+/**
+ * Contact: an "enquiry slip" sheet (the form) beside a desk panel of direct channels.
+ * WhatsApp is the primary channel, so it is the largest action on the page.
+ */
 import { Clock, Mail, MapPin, Phone } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHeader from '@/components/PageHeader.astro';
-import ContactButtons from '@/components/ContactButtons.astro';
 import ContactForm from '@/components/ContactForm.tsx';
 import Todo from '@/components/Todo.astro';
 import { site, isTodo } from '@/config/site';
@@ -15,7 +18,8 @@ const crumbs = [
   { name: 'Home', path: '/' },
   { name: 'Contact', path: '/contact' },
 ];
-const { contact, location } = site;
+const { contact, location, owner } = site;
+const firstName = owner.name.split(' ')[0];
 const city = location.city;
 const wa = whatsappUrl(defaultWhatsappMessage());
 const tel = telUrl();
@@ -25,70 +29,81 @@ const address = [location.streetAddress, area, location.postalCode].filter(Boole
 ---
 <BaseLayout
   title={city ? `Contact: tax filing help in ${city}` : 'Contact: WhatsApp, call or send an enquiry'}
-  description={`Contact ${site.owner.name} (${site.brandName}) for ITR, GST, TDS or challan help. WhatsApp, call or send a short enquiry and get a checklist and quote.`}
+  description={`Contact ${owner.name} (${site.brandName}) for ITR, GST, TDS or challan help. WhatsApp, call or send a short enquiry and get a checklist and quote.`}
   jsonLd={[breadcrumbLd(siteUrl, crumbs)]}
 >
   <PageHeader
     title="Contact"
-    eyebrow="Get in touch"
-    lead="WhatsApp is usually the quickest. You can also call, or send a short enquiry below and you’ll be contacted back."
+    meta="Form · Enquiry"
+    lead={`WhatsApp is usually the quickest way to reach ${firstName}. You can also call, or fill in the enquiry slip and you’ll be contacted back.`}
     crumbs={crumbs}
-  >
-    <div class="head-actions"><ContactButtons showEmail /></div>
-  </PageHeader>
+  />
 
-  <section class="section contact-section">
+  <section class="contact" aria-label="Ways to get in touch">
     <div class="container contact-grid">
-      <div class="card form-card">
-        <h2 class="form-title">Send an enquiry</h2>
-        <p class="muted">A few details are enough. You’ll get a reply with a checklist and a quote.</p>
+      <div class="slip sheet sheet--stacked">
+        <div class="slip-head" aria-hidden="true">
+          <span>{site.brandName}</span>
+          <span>Enquiry slip</span>
+        </div>
+        <h2 class="slip-title">Send an enquiry</h2>
+        <p class="slip-lead">A few details are enough. You’ll get a reply with a document checklist and a quote.</p>
         <ContactForm client:load />
       </div>
 
-      <aside class="details" aria-labelledby="details-title">
-        <h2 id="details-title" class="details-title">Direct contact</h2>
-        <ul class="detail-list" role="list">
+      <aside class="channels desk desk--raised" aria-labelledby="channels-title">
+        <h2 id="channels-title" class="channels-title">Or reach {firstName} directly</h2>
+
+        <a
+          class="btn btn--whatsapp btn--lg btn--block wa-big"
+          href={wa ?? '#channels-title'}
+          target={wa ? '_blank' : undefined}
+          rel={wa ? 'noopener' : undefined}
+          aria-describedby={wa ? undefined : 'wa-missing'}
+        >
+          <FaWhatsapp aria-hidden="true" /> Message on WhatsApp
+        </a>
+        {!wa && <p id="wa-missing" class="small missing"><Todo label="WhatsApp number" /></p>}
+
+        <ul class="channel-list" role="list">
           <li>
-            <span class="icon-badge" aria-hidden="true"><FaWhatsapp /></span>
+            <Phone aria-hidden="true" />
             <div>
-              <p class="dl-label">WhatsApp</p>
-              <p>{wa ? <a href={wa} target="_blank" rel="noopener">{formatPhone(contact.whatsapp)}</a> : <Todo label="WhatsApp number" />}</p>
+              <p class="ch-label">Phone</p>
+              <p class="ch-value">{tel ? <a href={tel}>{formatPhone(contact.phone)}</a> : <Todo label="phone number" />}</p>
             </div>
           </li>
           <li>
-            <span class="icon-badge" aria-hidden="true"><Phone /></span>
+            <Mail aria-hidden="true" />
             <div>
-              <p class="dl-label">Phone</p>
-              <p>{tel ? <a href={tel}>{formatPhone(contact.phone)}</a> : <Todo label="phone number" />}</p>
+              <p class="ch-label">Email</p>
+              <p class="ch-value">{mail ? <a href={mail}>{contact.email}</a> : <Todo label="email" />}</p>
             </div>
           </li>
           <li>
-            <span class="icon-badge" aria-hidden="true"><Mail /></span>
+            <Clock aria-hidden="true" />
             <div>
-              <p class="dl-label">Email</p>
-              <p>{mail ? <a href={mail}>{contact.email}</a> : <Todo label="email" />}</p>
+              <p class="ch-label">Working hours</p>
+              <p class="ch-value">{contact.hoursLabel ?? <Todo label="working hours" />}</p>
             </div>
           </li>
           <li>
-            <span class="icon-badge" aria-hidden="true"><Clock /></span>
+            <MapPin aria-hidden="true" />
             <div>
-              <p class="dl-label">Working hours</p>
-              <p>{contact.hoursLabel ?? <Todo label="working hours" />}</p>
-            </div>
-          </li>
-          <li>
-            <span class="icon-badge" aria-hidden="true"><MapPin /></span>
-            <div>
-              <p class="dl-label">Location</p>
-              <p>{address || <Todo label="city / areas served" />}</p>
-              {location.areasServed.length > 0 && <p class="small muted">Areas served: {location.areasServed.join(', ')}</p>}
-              <p class="small muted">{isTodo(location.mode) ? <Todo label="in person, online, or both" /> : location.mode}</p>
+              <p class="ch-label">Location</p>
+              <p class="ch-value">{address || <Todo label="city / areas served" />}</p>
+              {location.areasServed.length > 0 && <p class="ch-sub">Areas served: {location.areasServed.join(', ')}</p>}
+              <p class="ch-sub">{isTodo(location.mode) ? <Todo label="in person, online, or both" /> : location.mode}</p>
             </div>
           </li>
         </ul>
 
-        <div class="notice docs-note">
-          <p><strong>Sending documents?</strong> Please don’t send PAN, Aadhaar or other documents through the form. Once you decide to go ahead, share them on WhatsApp or in person.</p>
+        <div class="docs-note">
+          <p class="stamp stamp--sm stamp--forest docs-stamp" aria-hidden="true">Note</p>
+          <p>
+            <strong>Sending documents?</strong> Please don’t send PAN, Aadhaar or other documents through the form. Once you decide
+            to go ahead, share them on WhatsApp or in person.
+          </p>
         </div>
       </aside>
     </div>
@@ -96,36 +111,137 @@ const address = [location.streetAddress, area, location.postalCode].filter(Boole
 </BaseLayout>
 
 <style>
-  .head-actions { margin-top: var(--space-5); }
-  .contact-section { background: var(--gradient-soft); }
-  .contact-grid { display: grid; gap: var(--space-6); align-items: start; }
-  @media (min-width: 60rem) { .contact-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--space-7); } }
-  .form-card { padding: var(--space-5); box-shadow: var(--shadow-lg); }
-  @media (min-width: 48rem) { .form-card { padding: var(--space-6); } }
-  .form-title, .details-title { font-size: 1.5rem; }
-
-  .detail-list { list-style: none; padding: 0; margin: 0 0 var(--space-5); display: grid; gap: var(--space-4); }
-  .detail-list li { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: var(--space-4); align-items: start; }
-  .detail-list .icon-badge { margin: 0; }
-  .detail-list p { margin: 0; }
-  .dl-label { font-weight: 600; font-size: 0.875rem; color: var(--muted); }
-  .detail-list a { font-weight: 600; }
-  .docs-note p { margin: 0; }
-</style>
-
-<style is:global>
-  /* ContactForm.tsx island styles (React markup, so global but namespaced under .contact-form). */
-  .contact-form .cf-grid { display: grid; gap: var(--space-4); }
-  @media (min-width: 40rem) {
-    .contact-form .cf-grid { grid-template-columns: 1fr 1fr; gap: var(--space-5) var(--space-4); }
-    .contact-form .cf-full { grid-column: 1 / -1; }
+  .contact {
+    padding-bottom: var(--space-2xl);
   }
-  .contact-form .field p { margin: 0; }
-  .contact-form .optional { font-weight: 400; color: var(--muted); }
-  .contact-form .cf-hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
-  .contact-form .cf-note, .contact-form .cf-msg { display: flex; gap: var(--space-3); align-items: flex-start; margin: var(--space-5) 0 0; }
-  .contact-form .cf-note svg, .contact-form .cf-msg svg { width: 1.25rem; height: 1.25rem; margin-top: 0.15rem; }
-  .contact-form .cf-actions { margin-top: var(--space-5); }
-  .contact-form .cf-actions .btn { width: 100%; }
-  @media (min-width: 40rem) { .contact-form .cf-actions .btn { width: auto; min-width: 12rem; } }
+  .contact-grid {
+    display: grid;
+    gap: var(--space-l);
+    align-items: start;
+  }
+  @media (min-width: 60rem) {
+    .contact-grid {
+      grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+      gap: var(--space-xl);
+    }
+    .channels {
+      position: sticky;
+      top: calc(var(--header-h) + var(--space-m));
+    }
+  }
+
+  /* ---------- enquiry slip ---------- */
+  .slip {
+    /* Perforated top edge: a row of punched dots, like a slip torn from a pad. */
+    padding-top: calc(var(--sheet-pad) + 0.75rem);
+    background-image: radial-gradient(circle at 7px 7px, var(--paper-100) 3.5px, transparent 4px);
+    background-size: 18px 14px;
+    background-repeat: repeat-x;
+    background-position: 2px 4px;
+  }
+  .slip-head {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-s);
+    padding-bottom: var(--space-2xs);
+    margin-bottom: var(--space-m);
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--graphite-500);
+    border-bottom: 1.5px solid var(--graphite-900);
+  }
+  .slip-title {
+    font-size: var(--step-2);
+    margin-bottom: var(--space-2xs);
+  }
+  .slip-lead {
+    color: var(--graphite-700);
+    margin-bottom: var(--space-m);
+    max-width: 48ch;
+  }
+
+  /* ---------- direct channels (desk) ---------- */
+  .channels {
+    padding: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+    border-radius: var(--radius-ui);
+  }
+  .channels-title {
+    font-size: var(--step-2);
+    color: var(--paper-50);
+    margin-bottom: var(--space-m);
+  }
+  .wa-big {
+    min-height: 60px;
+    font-size: 1.125rem;
+  }
+  .wa-big :global(svg) {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+  .missing {
+    margin: var(--space-2xs) 0 0;
+  }
+  .channel-list {
+    list-style: none;
+    padding: 0;
+    margin: var(--space-l) 0;
+    display: grid;
+  }
+  .channel-list li {
+    display: grid;
+    grid-template-columns: 1.25rem 1fr;
+    gap: var(--space-s);
+    align-items: start;
+    margin: 0;
+    padding-block: var(--space-s);
+    border-top: 1px solid var(--line-desk);
+  }
+  .channel-list li:last-child {
+    border-bottom: 1px solid var(--line-desk);
+  }
+  .channel-list :global(svg) {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-top: 0.2rem;
+    color: var(--mint-300);
+  }
+  .channel-list p {
+    margin: 0;
+  }
+  .ch-label {
+    font-size: var(--step--1);
+    color: var(--ink-desk-2);
+  }
+  .ch-value {
+    font-weight: 650;
+    font-size: 1.0625rem;
+  }
+  .ch-value a {
+    display: inline-block;
+    padding-block: 0.35rem;
+  }
+  .ch-sub {
+    font-size: var(--step--1);
+    color: var(--ink-desk-2);
+    margin-top: var(--space-3xs) !important;
+  }
+  .docs-note {
+    display: grid;
+    gap: var(--space-xs);
+    justify-items: start;
+  }
+  .docs-note p {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--ink-desk-2);
+  }
+  .docs-note strong {
+    color: var(--paper-50);
+  }
+  .docs-stamp {
+    --stamp-tilt: -3deg;
+  }
 </style>

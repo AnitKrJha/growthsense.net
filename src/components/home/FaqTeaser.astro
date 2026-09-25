@@ -1,0 +1,151 @@
+---
+/**
+ * FAQ teaser: native <details> (works without JS, keyboard accessible) with a custom marker and a smooth
+ * open via a grid-template-rows transition on ::details-content where supported. FAQPage JSON-LD for the
+ * same questions is added by the page (src/pages/index.astro) through BaseLayout's jsonLd prop.
+ */
+import { FaWhatsapp } from 'react-icons/fa';
+import { faqCopy as c } from './copy';
+import { waLink } from './links';
+
+interface Props {
+  faqs: { question: string; answer: string }[];
+}
+const { faqs } = Astro.props;
+const wa = waLink();
+---
+<section class="hm-section hm-faq" aria-labelledby="hm-faq-title">
+  <div class="container hm-faq__grid">
+    <header class="hm-faq__head">
+      <h2 id="hm-faq-title" class="hm-h2">{c.title}</h2>
+      <p class="hm-lead">{c.lead}</p>
+      <div class="hm-faq__links">
+        <a class="hm-arrow" href="/faq">{c.all} <span class="hm-arrow__glyph" aria-hidden="true">→</span></a>
+        <a class="hm-faq__wa" {...wa}><FaWhatsapp aria-hidden="true" /> {c.ask}</a>
+      </div>
+    </header>
+
+    <div class="hm-faq__list">
+      {faqs.map((f, i) => (
+        <details class="qa">
+          <summary class="qa__q">
+            <span class="qa__n" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <span class="qa__text">{f.question}</span>
+            <span class="qa__mark" aria-hidden="true"></span>
+          </summary>
+          <div class="qa__a">
+            <div class="qa__inner"><p set:html={f.answer} /></div>
+          </div>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .hm-faq { background: var(--paper-100); color: var(--graphite-900); padding-top: var(--space-xl); }
+  /* perforation, as if the FAQ tears off the page above */
+  .hm-faq__grid {
+    display: grid;
+    gap: var(--space-l);
+    padding-top: var(--space-xl);
+    border-top: 2px dashed var(--paper-300);
+  }
+  @media (min-width: 60rem) {
+    .hm-faq__grid { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: var(--space-2xl); align-items: start; }
+    .hm-faq__head { position: sticky; top: var(--space-xl); }
+  }
+  .hm-faq__head .hm-h2 { font-size: var(--step-3); font-stretch: 92%; }
+  .hm-faq__links { display: flex; flex-wrap: wrap; align-items: center; gap: 0 var(--space-m); margin-top: var(--space-s); }
+  .hm-faq__wa {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    min-height: var(--tap);
+    font-weight: 600;
+    color: var(--forest-700);
+    text-decoration: none;
+  }
+  .hm-faq__wa:hover { color: var(--forest-600); text-decoration: underline; text-underline-offset: 0.2em; }
+  .hm-faq__wa :global(svg) { width: 1.15em; height: 1.15em; color: var(--whatsapp); }
+
+  .hm-faq__list { border-top: 1px solid var(--paper-300); }
+  .qa { border-bottom: 1px solid var(--paper-300); }
+  .qa__q {
+    display: grid;
+    grid-template-columns: 2.25rem minmax(0, 1fr) 2.25rem;
+    align-items: start;
+    gap: var(--space-xs);
+    padding: var(--space-s) 0;
+    min-height: var(--tap);
+    cursor: pointer;
+    list-style: none;
+  }
+  .qa__q::-webkit-details-marker { display: none; }
+  .qa__q::marker { content: ''; }
+  .qa__q:focus-visible { outline: 3px solid var(--carbon-600); outline-offset: 2px; border-radius: 4px; }
+  .qa__n {
+    padding-top: 0.3em;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--graphite-500);
+    font-variant-numeric: tabular-nums;
+  }
+  .qa__text {
+    font-family: var(--font-display);
+    font-weight: 650;
+    font-size: clamp(1.15rem, 1.05rem + 0.5vw, 1.4rem);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  .qa__q:hover .qa__text { color: var(--forest-700); }
+
+  /* custom marker: a plus that turns into a cross */
+  .qa__mark {
+    position: relative;
+    justify-self: end;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-pill);
+    background: var(--paper-200);
+    transition: transform var(--dur) var(--ease-out), background-color var(--dur) var(--ease-out);
+  }
+  .qa__mark::before,
+  .qa__mark::after {
+    content: '';
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 0.85rem;
+    height: 2px;
+    background: var(--graphite-900);
+    translate: -50% -50%;
+  }
+  .qa__mark::after { rotate: 90deg; }
+  .qa[open] .qa__mark { transform: rotate(45deg); background: var(--mint-100); }
+
+  .qa__a { overflow: hidden; min-height: 0; }
+  .qa__inner { padding: 0 2.25rem var(--space-m) calc(2.25rem + var(--space-xs)); color: var(--graphite-700); max-width: 62ch; }
+  .qa__inner p { margin: 0; }
+  .qa__inner :global(a) { color: var(--forest-700); text-underline-offset: 0.2em; }
+  .qa__inner :global(a:hover) { color: var(--forest-600); }
+
+  @media (max-width: 30rem) {
+    .qa__q { grid-template-columns: minmax(0, 1fr) 2.25rem; }
+    .qa__n { display: none; }
+    .qa__inner { padding-inline: 0; }
+  }
+
+  /* smooth open (Chromium 131+); other browsers open instantly */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports selector(::details-content) {
+      .qa::details-content {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows var(--dur) var(--ease-out), content-visibility var(--dur) allow-discrete;
+      }
+      .qa[open]::details-content { grid-template-rows: 1fr; }
+    }
+  }
+</style>

@@ -1,0 +1,351 @@
+---
+/**
+ * Home hero: "Send us the mess. Get back an acknowledgement."
+ *
+ * Structure
+ *   section.hero[data-hero]     forest desk; data-story = pending | on | off, data-live once the canvas has taken over
+ *     .hero__track               tall (stage + HERO.story.pinVh) only when the scroll story runs (desktop, motion OK)
+ *       .hero__stage             sticky viewport-height stage
+ *         .hero__canvas          transparent WebGL canvas, full stage, behind the copy (masked where copy sits)
+ *         .hero__grid            copy (h1 + CTAs, real HTML: this is the LCP) and the anchor box
+ *           .hero__anchor        the filed composition is fitted to this box; holds the static poster
+ *
+ * Zero props. The copy is written here because it is tied to the illustration.
+ */
+import { Check, Phone } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
+import HeroCanvas from './HeroCanvas';
+import { posterSvg } from './poster';
+import { HERO } from './engine/config';
+import { site } from '@/config/site';
+import { hero } from '@/content/home';
+import { defaultWhatsappMessage, telUrl, whatsappUrl } from '@/lib/contact';
+
+const wa = whatsappUrl(defaultWhatsappMessage());
+const tel = telUrl();
+const firstName = site.owner.name.split(' ')[0];
+const poster = posterSvg();
+---
+
+<section
+  class="hero desk"
+  data-hero
+  data-story="pending"
+  aria-labelledby="hero-title"
+  style={`--pin: ${HERO.story.pinVh}vh`}
+>
+  <div class="hero__track" data-hero-track>
+    <div class="hero__stage" data-hero-stage>
+      <div class="hero__canvas" aria-hidden="true">
+        <HeroCanvas client:idle />
+      </div>
+
+      <div class="container hero__grid">
+        <div class="hero__copy" data-hero-copy>
+          <p class="kicker hero__kicker">{hero.eyebrow}</p>
+          <h1 id="hero-title" class="hero__title">
+            <span class="hero__l1">Send us</span>
+            <span class="hero__l2">the mess.</span>
+            <span class="hero__l3">Get back an <em>acknowledgement.</em></span>
+          </h1>
+          <p class="hero__lead">
+            Income tax, GST and TDS filing by {site.owner.name}. You get a document checklist, a quote before
+            any work starts, and nothing is filed until you approve it.
+          </p>
+          <div class="hero__ctas">
+            <a
+              class="btn btn--whatsapp btn--lg"
+              href={wa ?? '/contact'}
+              target={wa ? '_blank' : undefined}
+              rel={wa ? 'noopener' : undefined}
+              title={wa ? undefined : 'TODO: WhatsApp number not set yet'}
+            >
+              <FaWhatsapp aria-hidden="true" /> WhatsApp {firstName}
+            </a>
+            <a class="btn btn--ghost btn--lg" href={tel ?? '/contact'} title={tel ? undefined : 'TODO: phone number not set yet'}>
+              <Phone aria-hidden="true" /> Call
+            </a>
+          </div>
+          <ul class="hero__points" role="list">
+            {hero.points.map((p) => <li><Check aria-hidden="true" /> {p}</li>)}
+          </ul>
+        </div>
+
+        <div class="hero__anchor" data-hero-anchor>
+          <div class="hero__poster" set:html={poster} />
+        </div>
+      </div>
+
+      <p class="hero__cue" aria-hidden="true"><span class="hero__cue-line"></span> Scroll to file it</p>
+      <p class="visually-hidden">
+        Illustration: tax papers such as Form 16, the Annual Information Statement, a GSTR-3B return, invoices and
+        challans settle into a neat stack, a rubber stamp marks it FILED, and an acknowledgement slip slides forward.
+      </p>
+    </div>
+  </div>
+</section>
+
+<script is:inline>
+  // Decide before first paint whether the tall scroll track is needed, so enabling it never shifts layout.
+  (function () {
+    var s = document.querySelector('[data-hero]');
+    if (!s) return;
+    var rm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    s.dataset.story = !rm && 'WebGLRenderingContext' in window ? 'on' : 'off';
+  })();
+</script>
+
+<style>
+  .hero {
+    --stage-top: calc(var(--header-h) - var(--header-shrink));
+    --stage-h: calc(100svh - var(--stage-top));
+    position: relative;
+    overflow-x: clip;
+    isolation: isolate;
+    background-image:
+      var(--grain-soft),
+      radial-gradient(90% 70% at 72% 18%, oklch(0.42 0.075 160 / 0.55), transparent 62%),
+      radial-gradient(120% 90% at 50% 120%, oklch(0.14 0.03 162 / 0.9), transparent 60%);
+    background-size: 160px 160px, 100% 100%, 100% 100%;
+  }
+
+  .hero__track {
+    position: relative;
+  }
+  .hero__stage {
+    position: relative;
+    display: grid;
+    align-items: center;
+    min-height: min(var(--stage-h), 60rem);
+  }
+  @media (min-width: 60rem) {
+    .hero__stage {
+      min-height: clamp(36rem, var(--stage-h), 60rem);
+    }
+  }
+  /* Scroll story: the stage pins while the track scrolls past (desktop, motion allowed, tall enough). */
+  @media (min-width: 60rem) and (min-height: 640px) and (prefers-reduced-motion: no-preference) {
+    .hero[data-story='on'] .hero__track {
+      height: calc(var(--stage-h) + var(--pin));
+    }
+    .hero[data-story='on'] .hero__stage {
+      position: sticky;
+      top: var(--stage-top);
+      height: var(--stage-h);
+      min-height: 0;
+    }
+  }
+
+  /* ── canvas ── */
+  .hero__canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 600ms var(--ease-out);
+    /* Stacked layouts: papers behind the copy are dimmed; the anchor below the copy is fully visible. */
+    -webkit-mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.16) calc(var(--hero-mask-y, 60%) - 6rem), #000 var(--hero-mask-y, 60%));
+    mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.16) calc(var(--hero-mask-y, 60%) - 6rem), #000 var(--hero-mask-y, 60%));
+  }
+  @media (min-width: 60rem) {
+    .hero__canvas {
+      -webkit-mask-image: linear-gradient(90deg, rgb(0 0 0 / 0.14) calc(var(--hero-mask-x, 48%) - 4rem), #000 calc(var(--hero-mask-x, 48%) + 2rem));
+      mask-image: linear-gradient(90deg, rgb(0 0 0 / 0.14) calc(var(--hero-mask-x, 48%) - 4rem), #000 calc(var(--hero-mask-x, 48%) + 2rem));
+    }
+  }
+  .hero[data-live] .hero__canvas {
+    opacity: 1;
+  }
+  .hero__canvas :global(.hero__canvas-host) {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* ── layout ── */
+  .hero__grid {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    gap: var(--space-l);
+    padding-block: var(--space-l) var(--space-xl);
+  }
+  @media (min-width: 60rem) {
+    .hero__grid {
+      grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+      align-items: center;
+      gap: var(--space-xl);
+      padding-block: clamp(1.5rem, 6svh, 5.5rem);
+    }
+  }
+
+  /* ── copy ── */
+  .hero__kicker {
+    margin-bottom: var(--space-s);
+  }
+  .hero__title {
+    margin: 0 0 var(--space-m);
+    color: var(--paper-50);
+    font-weight: 750;
+    line-height: 0.9;
+    letter-spacing: -0.045em;
+  }
+  .hero__l1,
+  .hero__l2 {
+    display: block;
+    /* Capped by viewport height too, so the pinned stage never overflows on short laptop screens. */
+    font-size: min(var(--step-5), 12.5svh);
+    font-stretch: 76%;
+    font-variation-settings: 'opsz' 96;
+  }
+  .hero__l2 {
+    color: var(--paper-50);
+  }
+  .hero__l3 {
+    display: block;
+    margin-top: 0.45em;
+    font-size: min(clamp(1.45rem, 1.05rem + 1.7vw, 2.45rem), 5.2svh);
+    font-stretch: 96%;
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.025em;
+    color: var(--ink-desk);
+  }
+  .hero__l3 em {
+    font-style: normal;
+    color: var(--mint-300);
+  }
+  .hero__lead {
+    max-width: 34rem;
+    margin-bottom: var(--space-m);
+    font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.2rem);
+    line-height: 1.6;
+    color: var(--ink-desk-2);
+  }
+  .hero__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+  }
+  .hero__ctas .btn--whatsapp {
+    box-shadow: 0 10px 28px -12px oklch(0.52 0.13 150 / 0.9);
+  }
+  .hero__points {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2xs) var(--space-m);
+    margin: var(--space-m) 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--step--1);
+    color: var(--ink-desk-2);
+  }
+  .hero__points li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+  }
+  .hero__points :global(svg) {
+    width: 1rem;
+    height: 1rem;
+    color: var(--mint-300);
+  }
+
+  /* First-load choreography: the copy rises in, in reading order. */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero__kicker,
+    .hero__l1,
+    .hero__l2,
+    .hero__l3,
+    .hero__lead,
+    .hero__ctas,
+    .hero__points {
+      animation: hero-rise 900ms var(--ease-out) both;
+    }
+    .hero__l1 { animation-delay: 60ms; }
+    .hero__l2 { animation-delay: 140ms; }
+    .hero__l3 { animation-delay: 240ms; }
+    .hero__lead { animation-delay: 340ms; }
+    .hero__ctas { animation-delay: 420ms; }
+    .hero__points { animation-delay: 500ms; }
+  }
+  @keyframes hero-rise {
+    from {
+      opacity: 0;
+      transform: translateY(0.6rem);
+    }
+  }
+
+  /* ── anchor + poster ── */
+  .hero__anchor {
+    position: relative;
+    width: 100%;
+    height: clamp(15rem, 40svh, 26rem);
+    pointer-events: none;
+  }
+  @media (min-width: 60rem) {
+    .hero__anchor {
+      justify-self: center;
+      width: min(92%, 32rem);
+      height: min(56svh, 34rem);
+    }
+  }
+  .hero__poster {
+    position: absolute;
+    inset: 0;
+    transition: opacity 500ms var(--ease-out);
+    filter: drop-shadow(0 24px 30px oklch(0.1 0.03 162 / 0.35));
+  }
+  .hero__poster :global(svg) {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .hero[data-live] .hero__poster {
+    opacity: 0;
+  }
+
+  /* ── scroll cue (desktop story only; fades as the story starts) ── */
+  .hero__cue {
+    display: none;
+  }
+  @media (min-width: 60rem) and (min-height: 640px) and (prefers-reduced-motion: no-preference) {
+    .hero[data-story='on'] .hero__cue {
+      position: absolute;
+      z-index: 2;
+      left: 50%;
+      bottom: var(--space-m);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin: 0;
+      transform: translateX(-50%);
+      font-size: var(--step--1);
+      font-weight: 600;
+      color: var(--ink-desk-2);
+      opacity: calc(1 - var(--hero-p, 0) * 8);
+      transition: opacity 200ms linear;
+    }
+    .hero__cue-line {
+      position: relative;
+      width: 1px;
+      height: 2.25rem;
+      overflow: hidden;
+      background: var(--line-desk);
+    }
+    .hero__cue-line::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--mint-300);
+      transform: translateY(-100%);
+      animation: hero-cue 2.2s var(--ease-in-out) infinite;
+    }
+  }
+  @keyframes hero-cue {
+    to {
+      transform: translateY(100%);
+    }
+  }
+</style>

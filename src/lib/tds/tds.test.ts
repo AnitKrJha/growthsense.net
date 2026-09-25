@@ -85,4 +85,13 @@ describe('computeTds', () => {
     expect(computeTds(row('194H'), 'individual', 0)?.tds).toBe(0);
     expect(computeTds(row('194H'), 'individual', -5000)).toEqual({ rate: 2, base: 0, tds: 0, netPayable: 0 });
   });
+
+  it('194D uses 10% for companies, 2% for firms and individuals', () => {
+    // 1,00,000 × 10% = 10,000 (company); × 2% = 2,000 (firm / individual)
+    expect(computeTds(row('194D'), 'company', 100000)?.tds).toBe(10000);
+    expect(computeTds(row('194D'), 'others', 100000)?.tds).toBe(2000);
+    expect(computeTds(row('194D'), 'individual', 100000)?.tds).toBe(2000);
+    // sections without a separate company rate fall back to rateOthers
+    expect(rateFor(row('194C'), 'company')).toBe(2);
+  });
 });

@@ -2,8 +2,8 @@
 import '@fontsource-variable/bricolage-grotesque/standard.css';
 import '@fontsource-variable/hanken-grotesk';
 import '@fontsource-variable/martian-mono/standard.css';
-import '@/styles/global.css';
 import '@/styles/tokens.css';
+import '@/styles/global.css';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import MobileContactBar from '@/components/MobileContactBar.astro';
@@ -39,7 +39,7 @@ const ld = [professionalServiceLd(siteUrl), ...jsonLd];
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
-    <meta name="theme-color" content="#0b6e4f" />
+    <meta name="theme-color" content="#f8f3e9" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -64,7 +64,7 @@ const ld = [professionalServiceLd(siteUrl), ...jsonLd];
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <Header />
-    <main id="main">
+    <main id="main" tabindex="-1" data-inert-when-menu>
       <slot />
     </main>
     <Footer />

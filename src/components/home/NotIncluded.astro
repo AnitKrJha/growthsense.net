@@ -1,0 +1,161 @@
+---
+/**
+ * "The honest bit": things that are never on offer, struck through with a NOT INCLUDED stamp landing on
+ * the sheet, set against the short list of what you do get (text from home.ts, owner to confirm).
+ * Strikes draw in and the stamp lands once, when the sheet enters the viewport (MotionBoot). Without JS
+ * or with reduced motion, everything is already struck and stamped.
+ */
+import { honestCopy as c } from './copy';
+---
+<section class="hm-section hm-honest" aria-labelledby="hm-honest-title">
+  <div class="container hm-honest__grid">
+    <header class="hm-honest__head">
+      <h2 id="hm-honest-title" class="hm-h2">{c.title}</h2>
+      <p class="hm-lead">{c.lead}</p>
+    </header>
+
+    <div class="honest__sheet" data-inview>
+      <h3 class="honest__title">{c.notTitle}</h3>
+      <ul class="honest__never" role="list">
+        {c.never.map((item, i) => (
+          <li style={`--i: ${i}`}><span class="honest__strike">{item}</span></li>
+        ))}
+      </ul>
+      <span class="honest__stamp hm-stamp" aria-hidden="true">{c.stamp}</span>
+    </div>
+
+    <div class="honest__get">
+      <h3 class="honest__get-title">{c.getTitle}</h3>
+      <ul class="honest__get-list" role="list">
+        {c.get.map((p) => (
+          <li>
+            <p class="honest__get-item">{p.title}</p>
+            <p class="honest__get-text">{p.text}</p>
+          </li>
+        ))}
+      </ul>
+      <a class="hm-arrow" href="/about">{c.about} <span class="hm-arrow__glyph" aria-hidden="true">→</span></a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hm-honest { background: var(--paper-100); color: var(--graphite-900); }
+
+  .hm-honest__grid { display: grid; gap: var(--space-xl); }
+  @media (min-width: 60rem) {
+    .hm-honest__grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      grid-template-areas: 'head sheet' 'get sheet';
+      column-gap: var(--space-2xl);
+      row-gap: var(--space-xl);
+      align-items: start;
+    }
+    .hm-honest__head { grid-area: head; }
+    .honest__sheet { grid-area: sheet; margin-top: var(--space-l); }
+    .honest__get { grid-area: get; }
+  }
+  .hm-honest__head .hm-h2 { font-stretch: 78%; font-size: clamp(2.8rem, 1.8rem + 4.4vw, 5.25rem); line-height: 0.92; }
+
+  /* ---------- the struck-through sheet (ruled, with a stamp-red margin line) ---------- */
+  .honest__sheet {
+    position: relative;
+    padding: var(--space-l) var(--space-m) var(--space-xl) calc(3rem + var(--space-s));
+    background:
+      linear-gradient(to right, transparent 0 3rem, color-mix(in oklch, var(--stamp-600) 45%, transparent) 3rem calc(3rem + 1px), transparent calc(3rem + 1px)),
+      repeating-linear-gradient(to bottom, transparent 0 calc(1.75rem - 1px), var(--paper-200) calc(1.75rem - 1px) 1.75rem),
+      var(--paper-50);
+    border-radius: var(--radius-paper);
+    box-shadow: var(--shadow-paper);
+    rotate: 0.6deg;
+  }
+  .honest__title {
+    margin: 0 0 var(--space-s);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: var(--step-2);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .honest__never { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-xs); }
+  .honest__never li {
+    margin: 0;
+    font-size: clamp(1.0625rem, 1rem + 0.4vw, 1.25rem);
+    line-height: 1.45;
+    color: var(--graphite-700);
+  }
+  .honest__strike {
+    --hm-strike: 100%;
+    background: linear-gradient(var(--stamp-700), var(--stamp-700)) no-repeat 0 60% / var(--hm-strike) 2px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    padding-inline: 0.1em;
+  }
+
+  .honest__stamp {
+    position: absolute;
+    top: 52%;
+    right: 6%;
+    translate: 0 -50%;
+    rotate: -11deg;
+    font-size: clamp(1.7rem, 1.1rem + 2.6vw, 3.1rem);
+    white-space: nowrap;
+    /* ink speckle x a radial "spread" that grows as the stamp lands */
+    -webkit-mask-image: var(--hm-ink-mask), radial-gradient(circle at 45% 50%, black var(--hm-spread), transparent calc(var(--hm-spread) + 18%));
+    mask-image: var(--hm-ink-mask), radial-gradient(circle at 45% 50%, black var(--hm-spread), transparent calc(var(--hm-spread) + 18%));
+    -webkit-mask-size: 240px, 100% 100%;
+    mask-size: 240px, 100% 100%;
+    -webkit-mask-repeat: repeat, no-repeat;
+    mask-repeat: repeat, no-repeat;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+
+  /* ---------- what you do get ---------- */
+  .honest__get-title {
+    margin: 0 0 var(--space-s);
+    font-family: var(--font-display);
+    font-weight: 650;
+    font-size: var(--step-1);
+    letter-spacing: -0.015em;
+  }
+  .honest__get-list { list-style: none; margin: 0 0 var(--space-s); padding: 0; display: grid; gap: var(--space-s); }
+  .honest__get-list li { position: relative; margin: 0; padding-left: 2.1rem; }
+  .honest__get-list li::before {
+    content: '';
+    position: absolute;
+    left: 0.35rem;
+    top: 0.12em;
+    width: 0.5rem;
+    height: 0.95rem;
+    border: solid var(--forest-700);
+    border-width: 0 2.5px 2.5px 0;
+    rotate: 40deg;
+  }
+  .honest__get-item { margin: 0; font-weight: 650; font-size: 1.0625rem; }
+  .honest__get-text { margin: var(--space-3xs) 0 0; color: var(--graphite-700); max-width: 46ch; }
+
+  /* ---------- motion ---------- */
+  @keyframes hm-strike-draw {
+    from { --hm-strike: 0%; }
+    to { --hm-strike: 100%; }
+  }
+  @keyframes hm-stamp-press {
+    0% { opacity: 0; scale: 1.4; rotate: -4deg; --hm-spread: 0%; }
+    55% { opacity: 1; scale: 0.97; rotate: -12deg; }
+    75% { scale: 1.015; rotate: -11deg; }
+    100% { opacity: 1; scale: 1; rotate: -11deg; --hm-spread: 160%; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :root[data-home-motion] .honest__sheet:not(.is-inview) .honest__strike { --hm-strike: 0%; }
+    :root[data-home-motion] .honest__sheet:not(.is-inview) .honest__stamp { opacity: 0; }
+    :root[data-home-motion] .honest__sheet.is-inview .honest__strike {
+      animation: hm-strike-draw 520ms var(--ease-out) both;
+      animation-delay: calc(200ms + var(--i) * 170ms);
+    }
+    :root[data-home-motion] .honest__sheet.is-inview .honest__stamp {
+      animation: hm-stamp-press 620ms var(--ease-out) both;
+      animation-delay: 1.25s;
+    }
+  }
+</style>

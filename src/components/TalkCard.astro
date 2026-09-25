@@ -1,0 +1,153 @@
+---
+/**
+ * "Talk to Avinash" card: sticky beside service content on desktop, in-flow on mobile.
+ * Pricing is stamped "On request" (from site.pricing); the promises come from home.ts.
+ */
+import { Phone, Send } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
+import { site } from '@/config/site';
+import { hero } from '@/content/home';
+import { whatsappUrl, telUrl, defaultWhatsappMessage, formatPhone } from '@/lib/contact';
+
+interface Props {
+  /** Service name, e.g. "GST registration & returns". */
+  service: string;
+  /** WhatsApp topic phrase. */
+  topic: string;
+  /** Short code for the meta line. */
+  code: string;
+  enquiryHref: string;
+}
+const { service, topic, code, enquiryHref } = Astro.props;
+const firstName = site.owner.name.split(' ')[0];
+const wa = whatsappUrl(defaultWhatsappMessage(topic));
+const tel = telUrl();
+---
+<aside class="talk sheet sheet--stacked" aria-labelledby="talk-title">
+  <p class="talk-meta" aria-hidden="true">Enquiry · {code}</p>
+  <div class="talk-head">
+    {site.owner.photo && (
+      <img class="talk-avatar" src={site.owner.photo.avatar} alt="" width="56" height="56" loading="lazy" decoding="async" />
+    )}
+    <h2 id="talk-title" class="talk-title">Talk to {firstName}</h2>
+  </div>
+  <p class="talk-text">
+    Say what you need help with for <strong>{service}</strong>. You get a document checklist and a quote before any work starts.
+  </p>
+
+  <div class="talk-price">
+    <span class="talk-price-label">Pricing</span>
+    <span class="stamp stamp--sm talk-stamp">{site.pricing}</span>
+  </div>
+
+  <div class="talk-actions">
+    <a
+      class="btn btn--whatsapp btn--lg btn--block"
+      href={wa ?? enquiryHref}
+      target={wa ? '_blank' : undefined}
+      rel={wa ? 'noopener' : undefined}
+      title={wa ? undefined : 'TODO: WhatsApp number not set'}
+    >
+      <FaWhatsapp aria-hidden="true" /> WhatsApp {firstName}
+    </a>
+    <a class="btn btn--primary btn--block" href={tel ?? enquiryHref} title={tel ? undefined : 'TODO: phone number not set'}>
+      <Phone aria-hidden="true" /> {tel ? `Call ${formatPhone(site.contact.phone)}` : 'Call'}
+    </a>
+    <a class="btn btn--ghost btn--block" href={enquiryHref}>
+      <Send aria-hidden="true" /> Send an enquiry
+    </a>
+  </div>
+
+  <ul class="talk-points" role="list">
+    {hero.points.map((p) => <li>{p}</li>)}
+  </ul>
+</aside>
+
+<style>
+  .talk {
+    --sheet-pad: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+    display: grid;
+    gap: var(--space-s);
+  }
+  .talk-meta {
+    margin: 0;
+    font-family: var(--font-paper);
+    font-size: var(--step--2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--graphite-500);
+  }
+  .talk-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+  .talk-head .talk-title {
+    margin: 0;
+  }
+  .talk-avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--paper-50);
+    box-shadow: 0 0 0 1px var(--paper-300), var(--shadow-paper);
+  }
+  .talk-title {
+    margin: 0;
+    font-size: var(--step-2);
+    font-stretch: 90%;
+  }
+  .talk-text {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--graphite-700);
+  }
+  .talk-text strong {
+    color: var(--graphite-900);
+  }
+  .talk-price {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-s);
+    padding: var(--space-xs) 0;
+    border-block: 1px dashed var(--paper-300);
+  }
+  .talk-price-label {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--graphite-700);
+  }
+  .talk-stamp {
+    --stamp-tilt: -3deg;
+  }
+  .talk-actions {
+    display: grid;
+    gap: var(--space-2xs);
+  }
+  .talk-points {
+    display: grid;
+    gap: 0.3rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--step--1);
+    color: var(--graphite-700);
+  }
+  .talk-points li {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    margin: 0;
+  }
+  .talk-points li::before {
+    content: '';
+    flex: none;
+    width: 0.45rem;
+    height: 0.45rem;
+    background: var(--forest-700);
+    border-radius: 1px;
+    transform: translateY(-0.1em) rotate(45deg);
+  }
+</style>

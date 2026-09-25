@@ -7,23 +7,37 @@ interface Props {
   /** Topic used in the pre-filled WhatsApp message, e.g. "GST registration". */
   topic?: string;
   showEmail?: boolean;
+  /** `lg` for 56px buttons (CTA slips, menus). */
+  size?: 'md' | 'lg';
+  /** Stack the buttons full-width (sidebars, the mobile menu). */
+  stack?: boolean;
   class?: string;
 }
-const { topic, showEmail = false, class: cls } = Astro.props;
+const { topic, showEmail = false, size = 'md', stack = false, class: cls } = Astro.props;
 const wa = whatsappUrl(defaultWhatsappMessage(topic));
 const tel = telUrl();
 const mail = mailtoUrl(topic ? `Enquiry: ${topic}` : 'Enquiry');
+const sz = size === 'lg' ? 'btn--lg' : null;
 ---
-<div class:list={['cluster', cls]}>
+<div class:list={['cluster', 'contact-buttons', { 'contact-buttons--stack': stack }, cls]}>
   {wa ? (
-    <a class="btn btn--whatsapp" href={wa} target="_blank" rel="noopener"><FaWhatsapp aria-hidden="true" /> WhatsApp</a>
+    <a class:list={['btn btn--whatsapp', sz]} href={wa} target="_blank" rel="noopener"><FaWhatsapp aria-hidden="true" /> WhatsApp</a>
   ) : (
-    <a class="btn btn--whatsapp" href="/contact" title="TODO: WhatsApp number not set"><FaWhatsapp aria-hidden="true" /> WhatsApp</a>
+    <a class:list={['btn btn--whatsapp', sz]} href="/contact" title="TODO: WhatsApp number not set"><FaWhatsapp aria-hidden="true" /> WhatsApp</a>
   )}
   {tel ? (
-    <a class="btn btn--primary" href={tel}><Phone aria-hidden="true" /> Call</a>
+    <a class:list={['btn btn--primary', sz]} href={tel}><Phone aria-hidden="true" /> Call</a>
   ) : (
-    <a class="btn btn--primary" href="/contact" title="TODO: phone number not set"><Phone aria-hidden="true" /> Call</a>
+    <a class:list={['btn btn--primary', sz]} href="/contact" title="TODO: phone number not set"><Phone aria-hidden="true" /> Call</a>
   )}
-  {showEmail && mail && <a class="btn btn--ghost" href={mail}><Mail aria-hidden="true" /> Email</a>}
+  {showEmail && mail && <a class:list={['btn btn--ghost', sz]} href={mail}><Mail aria-hidden="true" /> Email</a>}
 </div>
+<style>
+  .contact-buttons--stack {
+    display: grid;
+    gap: var(--space-2xs);
+  }
+  .contact-buttons--stack .btn {
+    width: 100%;
+  }
+</style>

@@ -1,0 +1,393 @@
+---
+/**
+ * Services as manila file folders in a drawer. Each folder is a native <details> in an exclusive group
+ * (name="hm-folders"), so it is keyboard accessible and works without JS; the first folder starts open.
+ * Hover/focus pulls a folder up (transform only). Services come from the content collection, filtered to
+ * published (non-draft) entries that are enabled in site.services.
+ */
+import { getCollection } from 'astro:content';
+import { FaWhatsapp } from 'react-icons/fa';
+import { site, type ServiceSlug } from '@/config/site';
+import { serviceMeta } from '@/config/nav';
+import { folderTabs, foldersCopy } from './copy';
+import { waLink } from './links';
+
+/** Tuning: how many documents to show on the mini checklist. */
+const DOCS_SHOWN = 4;
+
+const entries = (await getCollection('services', ({ data }) => !data.draft))
+  .filter((e) => site.services[e.id as ServiceSlug])
+  .sort((a, b) => a.data.order - b.data.order);
+
+/** Trim a checklist line to its essentials: drop parentheticals and trailing qualifiers. */
+function shorten(item: string): string {
+  const noParens = item.replace(/\s*\([^)]*\)/g, '');
+  return noParens.split(/,\s(?:and|or|if|such as)\s/)[0].trim();
+}
+
+/** Round-robin across document groups so the preview covers each kind of paper. */
+function keyDocs(groups: { items: string[] }[], n: number): string[] {
+  const out: string[] = [];
+  const longest = Math.max(...groups.map((g) => g.items.length));
+  for (let r = 0; r < longest && out.length < n; r++) {
+    for (const g of groups) if (g.items[r] && out.length < n) out.push(shorten(g.items[r]));
+  }
+  return out;
+}
+
+const folders = entries.map((e, i) => {
+  const slug = e.id as ServiceSlug;
+  const meta = serviceMeta[slug];
+  return {
+    slug,
+    index: String(i + 1).padStart(2, '0'),
+    tab: folderTabs[slug] ?? e.data.title,
+    title: e.data.title,
+    summary: meta?.short ?? e.data.description,
+    docs: keyDocs(e.data.documents, DOCS_SHOWN),
+    total: e.data.documents.reduce((s, g) => s + g.items.length, 0),
+    wa: waLink(meta?.whatsappTopic ?? e.data.title),
+  };
+});
+const steps = Math.max(1, folders.length - 1);
+const unsureWa = waLink();
+---
+<section class="hm-section hm-folders" aria-labelledby="hm-folders-title">
+  <div class="container hm-folders__grid">
+    <div class="hm-folders__intro">
+      <h2 id="hm-folders-title" class="hm-h2">{foldersCopy.title}</h2>
+      <p class="hm-lead">{foldersCopy.lead}</p>
+
+      <div class="hm-folders__unsure">
+        <p class="hm-folders__unsure-title">{foldersCopy.unsure.title}</p>
+        <p class="hm-folders__unsure-text">{foldersCopy.unsure.text}</p>
+        <div class="hm-folders__unsure-actions">
+          <a class="hm-wa" {...unsureWa}><FaWhatsapp aria-hidden="true" /> WhatsApp</a>
+          <a class="hm-arrow" href="/contact">{foldersCopy.unsure.cta} <span class="hm-arrow__glyph" aria-hidden="true">→</span></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="drawer" style={`--n: ${folders.length}; --steps: ${steps};`}>
+      {folders.map((f, i) => (
+        <details class="folder" name="hm-folders" open={i === 0} style={`--i: ${i};`} data-tone={i % 4}>
+          <summary class="folder__head">
+            <span class="folder__tab" aria-hidden="true"><span class="folder__tab-shape"><b>{f.tab}</b></span></span>
+            <span class="folder__num" aria-hidden="true">{f.index}</span>
+            <h3 class="folder__title">{f.title}</h3>
+            <span class="folder__meta" aria-hidden="true">{f.total} papers</span>
+            <span class="folder__toggle" aria-hidden="true"></span>
+          </summary>
+          <div class="folder__body">
+            <div class="folder__sheet">
+              <p class="folder__summary">{f.summary}</p>
+              <p class="folder__label" id={`hm-docs-${f.slug}`}>{foldersCopy.keepReady}</p>
+              <ul class="folder__docs" role="list" aria-labelledby={`hm-docs-${f.slug}`}>
+                {f.docs.map((d) => <li>{d}</li>)}
+              </ul>
+              <div class="folder__actions">
+                <a class="hm-arrow" href={`/services/${f.slug}`}>
+                  {foldersCopy.more}<span class="hm-sr"> for {f.title} ({f.total} items)</span>
+                  <span class="hm-arrow__glyph" aria-hidden="true">→</span>
+                </a>
+                <a class="folder__wa" {...f.wa}>
+                  <FaWhatsapp aria-hidden="true" /> Ask about {f.tab} on WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        </details>
+      ))}
+      <div class="drawer__lip" aria-hidden="true">
+        <span class="drawer__card">{foldersCopy.drawerLabel}</span>
+        <span class="drawer__handle"></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .hm-folders { background: var(--paper-100); color: var(--graphite-900); }
+
+  .hm-folders__grid {
+    display: grid;
+    gap: var(--space-xl);
+  }
+  @media (min-width: 62rem) {
+    .hm-folders__grid { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-2xl); align-items: start; }
+    .hm-folders__intro { position: sticky; top: var(--space-xl); padding-top: var(--space-l); }
+  }
+
+  .hm-folders__unsure {
+    margin-top: var(--space-l);
+    padding-top: var(--space-m);
+    border-top: 1px dashed var(--paper-300);
+    max-width: 30rem;
+  }
+  .hm-folders__unsure-title {
+    margin: 0 0 var(--space-3xs);
+    font-family: var(--font-display);
+    font-weight: 650;
+    font-size: var(--step-1);
+    letter-spacing: -0.015em;
+  }
+  .hm-folders__unsure-text { margin: 0 0 var(--space-s); color: var(--graphite-700); }
+  .hm-folders__unsure-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs) var(--space-m); }
+
+  /* ---------- the drawer ----------
+     Tuning: --tab-h (tab height), --tab-w (tab width), --lip (drawer front height). */
+  .drawer {
+    --tab-h: 2.4rem;
+    --tab-w: clamp(5.75rem, 26%, 9.5rem);
+    --lip: 3.5rem;
+    position: relative;
+    padding-top: var(--tab-h);
+  }
+
+  .folder {
+    --tone: var(--paper-300);
+    --tab-tone: var(--tone);
+    position: relative;
+    border-radius: 0 0 var(--radius-paper) var(--radius-paper);
+    /* bottom padding leaves room for the next folder's tab, which sits over this folder */
+    padding-bottom: calc(var(--tab-h) + var(--space-2xs));
+    background:
+      linear-gradient(to bottom, color-mix(in oklch, var(--tone), var(--paper-50) 60%) 0 1px, transparent 1px),
+      linear-gradient(to top, color-mix(in oklch, var(--tone), var(--graphite-900) 7%), transparent 2.5rem),
+      var(--hm-grain-dark),
+      var(--tone);
+    background-blend-mode: normal, normal, multiply, normal;
+    box-shadow:
+      0 -1px 0 color-mix(in oklch, var(--tone), var(--graphite-900) 14%),
+      0 -14px 24px -18px color-mix(in oklch, var(--graphite-900) 55%, transparent);
+    transition: transform var(--dur) var(--ease-out);
+  }
+  .folder[data-tone='1'] { --tone: var(--mint-100); }
+  .folder[data-tone='2'] { --tone: color-mix(in oklch, var(--paper-300), var(--paper-200) 55%); }
+  .folder[data-tone='3'] { --tone: color-mix(in oklch, var(--mint-100), var(--paper-300) 55%); }
+  .folder:last-of-type { padding-bottom: calc(var(--lip) * 0.5 + var(--space-s)); }
+
+  /* ---------- tab + summary row ---------- */
+  .folder__head {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: var(--space-xs);
+    min-height: 4.25rem;
+    padding: var(--space-xs) var(--space-m);
+    cursor: pointer;
+    list-style: none;
+    border-radius: var(--radius-paper);
+  }
+  .folder__head::-webkit-details-marker { display: none; }
+  .folder__head::marker { content: ''; }
+  .folder__head:focus-visible { outline: 3px solid var(--carbon-600); outline-offset: -3px; }
+
+  .folder__tab {
+    position: absolute;
+    top: calc(-1 * var(--tab-h) + 1px);
+    left: calc(0.5rem + var(--i) * (100% - var(--tab-w) - 1rem) / var(--steps));
+    width: var(--tab-w);
+    height: var(--tab-h);
+    filter: drop-shadow(0 -3px 3px color-mix(in oklch, var(--graphite-900) 14%, transparent));
+  }
+  .folder__tab-shape {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    background: linear-gradient(to bottom, color-mix(in oklch, var(--tone), var(--paper-50) 45%) 0 1px, var(--tone) 1px);
+    clip-path: polygon(12% 0, 88% 0, 100% 100%, 0 100%);
+  }
+  .folder__tab b {
+    padding: 0.2rem 0.5rem 0.15rem;
+    background: var(--paper-50);
+    border-radius: 1px;
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--graphite-900) 10%, transparent);
+    font-family: var(--font-paper);
+    font-weight: 600;
+    font-stretch: 87.5%;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--graphite-900);
+    white-space: nowrap;
+  }
+
+  .folder__num {
+    font-family: var(--font-paper);
+    font-size: 0.8125rem;
+    color: var(--graphite-700);
+  }
+  .folder__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 650;
+    font-stretch: 92%;
+    font-size: clamp(1.15rem, 1rem + 0.8vw, 1.5rem);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .folder__meta {
+    font-family: var(--font-paper);
+    font-size: 0.75rem;
+    color: var(--graphite-700);
+    white-space: nowrap;
+  }
+  @media (max-width: 26rem) { .folder__meta { display: none; } }
+
+  /* plus that becomes a minus */
+  .folder__toggle {
+    position: relative;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid color-mix(in oklch, var(--graphite-900) 35%, transparent);
+  }
+  .folder__toggle::before,
+  .folder__toggle::after {
+    content: '';
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 0.8rem;
+    height: 1.5px;
+    background: var(--graphite-900);
+    translate: -50% -50%;
+    transition: transform var(--dur) var(--ease-out);
+  }
+  .folder__toggle::after { transform: rotate(90deg); }
+  .folder[open] .folder__toggle::after { transform: rotate(90deg) scaleX(0); }
+  .folder[open] .folder__toggle { background: var(--graphite-900); }
+  .folder[open] .folder__toggle::before,
+  .folder[open] .folder__toggle::after { background: var(--paper-50); }
+
+  /* ---------- open contents: a checklist sheet pulled out of the folder ---------- */
+  .folder__body { padding: 0 var(--space-m) var(--space-2xs); }
+  .folder__sheet {
+    position: relative;
+    padding: var(--space-m) var(--space-m) var(--space-s);
+    background:
+      repeating-linear-gradient(to bottom, transparent 0 calc(1.75rem - 1px), var(--paper-200) calc(1.75rem - 1px) 1.75rem),
+      var(--paper-50);
+    background-position: 0 0.6rem;
+    border-radius: var(--radius-paper);
+    box-shadow: var(--shadow-paper);
+    transform: rotate(-0.35deg);
+  }
+  .folder__summary {
+    margin: 0 0 var(--space-s);
+    font-size: var(--step-0);
+    line-height: 1.55;
+    max-width: 52ch;
+  }
+  .folder__label {
+    margin: 0 0 var(--space-2xs);
+    font-family: var(--font-paper);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--graphite-700);
+  }
+  .folder__docs {
+    list-style: none;
+    margin: 0 0 var(--space-s);
+    padding: 0;
+    display: grid;
+    gap: var(--space-3xs);
+  }
+  .folder__docs li {
+    position: relative;
+    margin: 0;
+    padding-left: 1.9rem;
+    line-height: 1.5;
+  }
+  /* a pencil-drawn tick box */
+  .folder__docs li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.2em;
+    width: 1.05rem;
+    height: 1.05rem;
+    border: 1.5px solid var(--graphite-500);
+    border-radius: 2px;
+  }
+  .folder__docs li::after {
+    content: '';
+    position: absolute;
+    left: 0.34rem;
+    top: 0.3em;
+    width: 0.38rem;
+    height: 0.7rem;
+    border: solid var(--forest-700);
+    border-width: 0 2px 2px 0;
+    transform: rotate(40deg);
+  }
+  .folder__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 var(--space-m);
+    border-top: 1px dashed var(--paper-300);
+    padding-top: var(--space-2xs);
+  }
+  .folder__wa {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    min-height: var(--tap);
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--forest-700);
+    text-decoration: none;
+  }
+  .folder__wa:hover { text-decoration: underline; text-underline-offset: 0.2em; color: var(--forest-600); }
+  .folder__wa :global(svg) { width: 1.15em; height: 1.15em; color: var(--whatsapp); }
+
+  /* ---------- drawer front ---------- */
+  .drawer__lip {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--lip);
+    margin-top: calc(var(--lip) * -0.5);
+    padding: 0 var(--space-m);
+    border-radius: var(--radius-paper) var(--radius-paper) var(--radius-ui) var(--radius-ui);
+    background: var(--grain), var(--forest-800);
+    background-blend-mode: soft-light, normal;
+    box-shadow: 0 -8px 18px -10px color-mix(in oklch, var(--graphite-900) 60%, transparent), var(--shadow-lift);
+  }
+  .drawer__card {
+    padding: 0.25rem 0.6rem;
+    background: var(--paper-50);
+    border-radius: 1px;
+    font-family: var(--font-paper);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--graphite-900);
+  }
+  .drawer__handle {
+    width: clamp(4rem, 18%, 7rem);
+    height: 0.65rem;
+    border-radius: var(--radius-pill);
+    background: var(--forest-950);
+    box-shadow: inset 0 2px 3px color-mix(in oklch, var(--forest-950) 80%, transparent), 0 1px 0 color-mix(in oklch, var(--mint-300) 25%, transparent);
+  }
+
+  /* ---------- motion ---------- */
+  @media (prefers-reduced-motion: no-preference) {
+    @media (hover: hover) {
+      .folder:has(> .folder__head:hover) { transform: translateY(-7px); }
+    }
+    .folder:has(> .folder__head:focus-visible) { transform: translateY(-7px); }
+    .folder[open] .folder__sheet { animation: hm-sheet-out var(--dur-slow) var(--ease-out) both; }
+  }
+  @keyframes hm-sheet-out {
+    from { opacity: 0; transform: translateY(18px) rotate(-1.4deg); }
+    to { opacity: 1; transform: translateY(0) rotate(-0.35deg); }
+  }
+</style>
