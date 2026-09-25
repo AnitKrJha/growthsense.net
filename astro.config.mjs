@@ -11,4 +11,21 @@ export default defineConfig({
   trailingSlash: 'never',
   build: { format: 'directory' },
   integrations: [react(), sitemap()],
+  vite: {
+    // Pre-bundle client deps up front so the dev server doesn't re-optimise (and force a reload) mid-session.
+    optimizeDeps: {
+      include: [
+        'react',
+        'react-dom',
+        'react-dom/client',
+        'react/jsx-runtime',
+        'lucide-react',
+        'react-icons/fa',
+        'three',
+        '@react-three/fiber',
+        'gsap',
+        'gsap/ScrollTrigger',
+      ],
+    },
+  },
 });

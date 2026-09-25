@@ -27,6 +27,9 @@ export const folderTabs: Partial<Record<ServiceSlug, string>> = {
   'gst-registration-and-returns': 'GST',
   tds: 'TDS',
   'challan-payments': 'Challans',
+  'pan-and-aadhaar': 'PAN',
+  'tax-notices-and-refunds': 'Notices',
+  'business-registrations': 'Udyam',
   financing: 'Loans',
 };
 

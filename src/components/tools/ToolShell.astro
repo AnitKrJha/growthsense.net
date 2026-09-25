@@ -42,6 +42,15 @@ const hasAfter = Astro.slots.has('after');
   jsonLd={[breadcrumbLd(siteUrl, crumbs), webAppLd(siteUrl, { name: title, path, description })]}
 >
   <PageHeader title={title} lead={lead} crumbs={crumbs} meta={meta} />
+  <!--
+    Guard: a calculator form must never do a native submit (that reloads the page and wipes the inputs).
+    React's onSubmit also calls preventDefault; this covers clicks before hydration or if the island fails to load.
+  -->
+  <script is:inline>
+    document.addEventListener('submit', (e) => {
+      if (e.target instanceof HTMLFormElement && e.target.closest('.tool-body')) e.preventDefault();
+    }, true);
+  </script>
   <section class="tool-body" aria-label={`${title} worksheet`}>
     <div class="container">
       <slot />

@@ -11,6 +11,9 @@ export type ServiceSlug =
   | 'gst-registration-and-returns'
   | 'tds'
   | 'challan-payments'
+  | 'pan-and-aadhaar'
+  | 'tax-notices-and-refunds'
+  | 'business-registrations'
   | 'financing';
 
 export const site = {
@@ -71,6 +74,10 @@ export const site = {
     'gst-registration-and-returns': true,
     tds: true,
     'challan-payments': true,
+    // TODO(owner): confirm these three common services (added as general Indian tax-practice offerings).
+    'pan-and-aadhaar': true,
+    'tax-notices-and-refunds': true,
+    'business-registrations': true,
     financing: false, // TODO(owner): confirm what "financing" means before enabling.
   } satisfies Record<ServiceSlug, boolean>,
 

@@ -1,6 +1,6 @@
 ---
 /** Consistent icon per service slug. `badge` (default) renders inside an .icon-badge; `bare` renders the icon alone. */
-import { FileText, Receipt, Landmark, CreditCard, HandCoins } from 'lucide-react';
+import { FileText, Receipt, Landmark, CreditCard, HandCoins, IdCard, MailWarning, Store } from 'lucide-react';
 import type { ServiceSlug } from '@/config/site';
 
 interface Props { slug: ServiceSlug | string; class?: string; variant?: 'badge' | 'bare' }
@@ -10,6 +10,9 @@ const icons = {
   'gst-registration-and-returns': Receipt,
   tds: Landmark,
   'challan-payments': CreditCard,
+  'pan-and-aadhaar': IdCard,
+  'tax-notices-and-refunds': MailWarning,
+  'business-registrations': Store,
   financing: HandCoins,
 } as const;
 const Icon = icons[slug as keyof typeof icons] ?? FileText;

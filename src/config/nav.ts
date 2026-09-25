@@ -22,6 +22,21 @@ export const serviceMeta: Record<ServiceSlug, { title: string; short: string; wh
     short: 'Help paying income tax and GST challans, and vehicle e-challans on official portals.',
     whatsappTopic: 'a challan payment',
   },
+  'pan-and-aadhaar': {
+    title: 'PAN & Aadhaar help',
+    short: 'New PAN, corrections, e-PAN and PAN-Aadhaar linking, on official portals.',
+    whatsappTopic: 'PAN / Aadhaar',
+  },
+  'tax-notices-and-refunds': {
+    title: 'Income tax notices & refunds',
+    short: 'Understanding and replying to notices, rectifications, and chasing stuck refunds.',
+    whatsappTopic: 'an income tax notice / refund',
+  },
+  'business-registrations': {
+    title: 'Business registrations',
+    short: 'Udyam (MSME), TAN and GST registration for new and small businesses.',
+    whatsappTopic: 'a business registration (Udyam / TAN / GST)',
+  },
   financing: {
     title: 'Financing help',
     short: 'TODO(owner): confirm what this service covers.',

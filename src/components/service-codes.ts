@@ -7,6 +7,9 @@ export const serviceCodes: Record<string, { code: string; tab: string }> = {
   'gst-registration-and-returns': { code: 'GST', tab: 'GST' },
   tds: { code: 'TDS', tab: 'TDS' },
   'challan-payments': { code: 'CHL', tab: 'Challans' },
+  'pan-and-aadhaar': { code: 'PAN', tab: 'PAN' },
+  'tax-notices-and-refunds': { code: 'NTC', tab: 'Notices' },
+  'business-registrations': { code: 'REG', tab: 'Registrations' },
   financing: { code: 'FIN', tab: 'Finance' },
 };
 
