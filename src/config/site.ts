@@ -19,14 +19,21 @@ export type ServiceSlug =
 export const site = {
   owner: {
     name: 'Avinash Thakur',
-    /** Neutral wording until credentials are confirmed. Never "CA", "GSTP", "ERI", "consultant firm". */
-    role: 'Tax filing assistance',
-    /** TODO(owner): exact credentials, e.g. GST Practitioner enrolment no. Leave empty if none. */
+    /** Neutral wording: never "CA", "GSTP", "ERI", "consultant firm" unless a registration is confirmed. */
+    role: 'Tax & accounts practitioner',
+    /**
+     * Formal professional registrations ONLY (e.g. a GST Practitioner enrolment no.). Leave empty if none:
+     * /disclaimer relies on this to state what is not claimed. Experience goes in `highlights` instead.
+     */
     credentials: [] as string[],
-    /** TODO(owner): years of experience. */
-    yearsOfExperience: null as number | null,
-    /** TODO(owner): short bio for /about. */
-    bio: null as string | null,
+    /** Track record, as provided by the owner. Shown on /about. Keep to facts the owner can stand behind. */
+    highlights: [
+      '10+ years in accounting and finance',
+      'Previously worked with Havas Media, part of the global Havas advertising and communications group',
+      '200+ income tax returns filed',
+    ] as string[],
+    yearsOfExperience: 10 as number | null,
+    bio: 'Avinash Thakur has spent more than ten years in accounting and finance, including time with Havas Media, part of the global Havas group. Through GrowthSense he brings that corporate discipline to individuals and small businesses: income tax returns, GST, TDS and the everyday paperwork in between. He has filed more than 200 income tax returns, and he explains every step in plain language before anything is submitted.' as string | null,
     /** Portrait (4:5-ish, 912×1149 source) in /public/owner. `avatar` is a 192px square face crop. */
     photo: {
       src: '/owner/avinash-thakur-480.webp',
@@ -45,27 +52,29 @@ export const site = {
   tagline: 'Income tax, GST and TDS filing help, done right and on time.',
 
   contact: {
-    /** TODO(owner): E.164 without "+", e.g. "919876543210". */
-    phone: null as string | null,
-    /** TODO(owner): WhatsApp number, E.164 without "+". Often same as phone. */
-    whatsapp: null as string | null,
+    /** E.164 without "+". */
+    phone: '918585909044' as string | null,
+    /** WhatsApp number, E.164 without "+". Same as phone. */
+    whatsapp: '918585909044' as string | null,
     /** TODO(owner) */
-    email: null as string | null,
-    /** TODO(owner): e.g. "Mon–Sat, 10:00 am – 7:00 pm". */
-    hoursLabel: null as string | null,
-    /** schema.org openingHours, e.g. ["Mo-Sa 10:00-19:00"]. TODO(owner) */
-    openingHours: [] as string[],
+    email: 'info@growthsense.net' as string | null,
+    hoursLabel: 'Every day, 9 am to 9 pm IST' as string | null,
+    /** Shown next to the hours where there is room. */
+    hoursNote: 'Messages are welcome anytime and answered as soon as possible.' as string | null,
+    /** schema.org openingHours. */
+    openingHours: ['Mo-Su 09:00-21:00'] as string[],
   },
 
   location: {
-    /** TODO(owner): city / areas served. */
-    city: null as string | null,
-    state: null as string | null,
-    areasServed: [] as string[],
+    /** Base location (used in local-search copy such as "ITR filing in Delhi NCR"). */
+    city: 'Delhi NCR' as string | null,
+    state: 'Delhi' as string | null,
+    /** Clients are served across India; "India" is emitted as a Country in JSON-LD. */
+    areasServed: ['Delhi NCR', 'India'] as string[],
     /** Only fill if the owner wants a public address. */
     streetAddress: null as string | null,
     postalCode: null as string | null,
-    mode: 'TODO: in person, online, or both' as string,
+    mode: 'Online over phone, WhatsApp and email, or in person in Delhi NCR' as string,
   },
 
   /** Which services are live. Set to false to hide a page + nav link until confirmed. */

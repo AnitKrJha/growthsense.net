@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowDown, ArrowRight, Calculator, CircleCheck as Check2, ChevronDown, Minus, Phone, Plus, RotateCcw } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowRight, Calculator, CircleCheck as Check2, ChevronDown, Minus, Phone, Plus, RotateCcw } from 'lucide-react';
 import FiledCta from '@/components/tools/FiledCta';
+import { TabList, tabId, tabPanelProps, type TabItem } from '@/components/tools/Tabs';
 import { Check, MoneyField, Notice, PartLegend, Segmented, ShareOptIn } from '@/components/tools/sc-fields';
 import { prefersReducedMotion, Receipt, RcLine, RcLines, RcTotal, Stamp, useSettled, vars } from '@/components/tools/receipt';
 import { telUrl } from '@/lib/contact';
@@ -242,6 +243,11 @@ function MoreToggle({
   );
 }
 
+type InTab = 'you' | 'income' | 'ded';
+type OutTab = 'compare' | 'old' | 'new';
+const IN_ORDER: InTab[] = ['you', 'income', 'ded'];
+const IN_NAME: Record<InTab, string> = { you: 'About you', income: 'Income', ded: 'Deductions' };
+
 export default function IncomeTaxCalculator() {
   const uid = useId();
   const [yearId, setYearId] = useState<YearId>(defaultYearId);
@@ -249,7 +255,6 @@ export default function IncomeTaxCalculator() {
   const [parentsSenior, setParentsSenior] = useState(false);
   const [optIn, setOptIn] = useState(false);
   const [openHeads, setOpenHeads] = useState<Record<string, boolean>>({});
-  const [showItems, setShowItems] = useState(false);
   const [moreIncome, setMoreIncome] = useState(false);
   const [moreDed, setMoreDed] = useState(false);
   const [calculated, setCalculated] = useState(false);
@@ -257,6 +262,10 @@ export default function IncomeTaxCalculator() {
   const [focusTick, setFocusTick] = useState(0);
   const [updated, setUpdated] = useState(false);
   const [pill, setPill] = useState(false);
+  const [inTab, setInTab] = useState<InTab>('you');
+  const [outTab, setOutTab] = useState<OutTab>('compare');
+  /** An input to focus once its tab panel is visible (validation, reset). */
+  const [focusField, setFocusField] = useState<string | null>(null);
   const resultRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [v, setV] = useState<Record<AmountKey, string>>(EMPTY);
@@ -265,6 +274,8 @@ export default function IncomeTaxCalculator() {
   const L = rules.sectionLabels;
   const senior = age !== 'below60';
   const id = (k: AmountKey) => `${uid}-${k}`;
+  const inBase = `${uid}-in`;
+  const outBase = `${uid}-out`;
 
   const field = (key: AmountKey, label: ReactNode, hint?: ReactNode) => (
     <MoneyField
@@ -311,9 +322,12 @@ export default function IncomeTaxCalculator() {
   const showResult = calculated && hasIncome;
   const regimes: Regime[] = ['old', 'new'];
   const ageLong = AGES.find((a) => a.value === age)?.long ?? '';
+  const ageShort = AGES.find((a) => a.value === age)?.label ?? '';
   const filled = (keys: AmountKey[]) => keys.filter((k) => parseAmount(v[k]) > 0).length;
   const moreIncomeOpen = moreIncome || filled(incomeMore) > 0;
   const moreDedOpen = moreDed || filled(dedMore) > 0;
+  const dedKeys: AmountKey[] = ['hraExemption', 'c80', 'd80Self', 'd80Parents', 'homeLoanInterest', ...dedMore];
+  const dedFilled = filled(dedKeys);
 
   // Figures settle once typing pauses, so the verdict, stamp and "updated" cue land once per change.
   const settled = useSettled(cmp, 450);
@@ -347,6 +361,13 @@ export default function IncomeTaxCalculator() {
     h.focus({ preventScroll: true });
   }, [focusTick]);
 
+  // Focus a field after its tab panel has been un-hidden.
+  useEffect(() => {
+    if (!focusField) return;
+    document.getElementById(focusField)?.focus();
+    setFocusField(null);
+  }, [focusField, inTab]);
+
   // Mobile: a compact result pill while the result is out of view.
   useEffect(() => {
     const el = resultRef.current;
@@ -362,11 +383,13 @@ export default function IncomeTaxCalculator() {
   const calculate = () => {
     if (!hasIncome) {
       setError('Enter your salary or at least one other income to calculate.');
-      document.getElementById(id('salary'))?.focus();
+      setInTab('income');
+      setFocusField(id('salary'));
       return;
     }
     setError('');
     setCalculated(true);
+    setOutTab('compare');
     setFocusTick((t) => t + 1);
   };
 
@@ -378,12 +401,22 @@ export default function IncomeTaxCalculator() {
     setOptIn(false);
     setMoreIncome(false);
     setMoreDed(false);
-    setShowItems(false);
     setOpenHeads({});
     setCalculated(false);
     setError('');
-    document.getElementById(id('salary'))?.focus();
+    setOutTab('compare');
+    setInTab('income');
+    setFocusField(id('salary'));
   };
+
+  const goTab = (t: InTab) => {
+    setInTab(t);
+    // Keep the tab row in view when stepping with Back / Next on small screens.
+    document.getElementById(tabId(inBase, t))?.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  };
+  const inIdx = IN_ORDER.indexOf(inTab);
+  const prevTab = inIdx > 0 ? IN_ORDER[inIdx - 1] : null;
+  const nextTab = inIdx < IN_ORDER.length - 1 ? IN_ORDER[inIdx + 1] : null;
 
   const verdict =
     settled.better === 'equal'
@@ -428,25 +461,56 @@ export default function IncomeTaxCalculator() {
     { key: 'home', label: 'Monthly take-home, estimate', old: takeHome(cmp.old), new: takeHome(cmp.new), better: 'high', fmt: (n) => formatINR(Math.round(n)) },
   ];
 
-  // Section folds of the itemised receipts.
-  const headKeys = regimes.flatMap((rg) =>
+  // Section folds of one itemised receipt.
+  const headKeysFor = (rg: Regime) =>
     groupHeads(cmp[rg].lines)
       .map((h, i) => (h.head && h.body.length ? `${rg}:${h.head.key ?? i}` : null))
-      .filter((k): k is string => k !== null),
-  );
-  const allOpen = headKeys.length > 0 && headKeys.every((k) => openHeads[k]);
+      .filter((k): k is string => k !== null);
+  const allOpenFor = (rg: Regime) => {
+    const keys = headKeysFor(rg);
+    return keys.length > 0 && keys.every((k) => openHeads[k]);
+  };
   const toggleHead = (k: string) => setOpenHeads((s) => ({ ...s, [k]: !s[k] }));
-  const setAll = (open: boolean) => setOpenHeads(Object.fromEntries(headKeys.map((k) => [k, open])));
+  const setAllFor = (rg: Regime, open: boolean) =>
+    setOpenHeads((s) => ({ ...s, ...Object.fromEntries(headKeysFor(rg).map((k) => [k, open])) }));
 
   const tel = telUrl();
   const resultId = `${uid}-result`;
-  const itemsId = `${uid}-items`;
   const cap = (n: number) => `max ${formatINR(n)}`;
   const oldOnly = 'Only affects the old regime';
 
+  const inTabs: TabItem<InTab>[] = [
+    { key: 'you', no: '1', label: IN_NAME.you, meta: `${rules.shortLabel} · ${ageShort}` },
+    { key: 'income', no: '2', label: IN_NAME.income, meta: hasIncome ? formatINR(incomeEntered) : 'Start here', done: hasIncome },
+    { key: 'ded', no: '3', label: IN_NAME.ded, meta: dedFilled ? `${dedFilled} filled` : 'Old regime · optional', done: dedFilled > 0 },
+  ];
+
+  const outTabs: TabItem<OutTab>[] = [
+    { key: 'compare', label: 'Comparison' },
+    { key: 'old', label: 'Old regime lines' },
+    { key: 'new', label: 'New regime lines' },
+  ];
+
+  const stepNav = (
+    <div className="itc-stepnav">
+      {prevTab ? (
+        <button type="button" className="btn btn--ghost itc-stepnav__back" onClick={() => goTab(prevTab)}>
+          <ArrowLeft aria-hidden="true" /> Back
+        </button>
+      ) : (
+        <span />
+      )}
+      {nextTab && (
+        <button type="button" className="btn btn--ghost itc-stepnav__next" onClick={() => goTab(nextTab)}>
+          Next: {IN_NAME[nextTab]} <ArrowRight aria-hidden="true" />
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <div className="itc">
-      <div className="ws-calc ws-calc--wide">
+      <div className="ws-calc ws-calc--wide itc-calcgrid">
         <form
           className="ws-sheet itc-sheet"
           aria-label="Income tax inputs"
@@ -458,118 +522,126 @@ export default function IncomeTaxCalculator() {
         >
           <div className="ws-sheet__head">
             <span className="ws-sheet__tag">Worksheet · Annual figures</span>
-            <p className="ws-sheet__hint">Three steps. Leave blank anything that does not apply.</p>
+            <p className="ws-sheet__hint">Salary alone is enough to start. Leave blank anything that does not apply.</p>
           </div>
 
-          <fieldset className="ws-part itc-step">
-            <PartLegend part="1">About you</PartLegend>
-            <p className="ws-part__intro">The year decides which slabs apply. Age changes the old-regime exemption limit.</p>
-            <div className="itc-choices">
-              <Segmented
-                legend="Year"
-                name={`${uid}-year`}
-                options={taxYears.map((y) => ({ value: y.id, label: y.shortLabel, sub: `${y.act} Act` }))}
-                value={yearId}
-                onChange={setYearId}
-              />
-              <Segmented legend="Your age" name={`${uid}-age`} options={AGES} value={age} onChange={setAge} />
-              <p className="ws-note itc-year-label">
-                {rules.label}, under the Income-tax Act, {rules.act}.
-              </p>
-            </div>
-          </fieldset>
+          <TabList base={inBase} label="Calculator steps" tabs={inTabs} active={inTab} onSelect={setInTab} className="itc-intabs" />
 
-          <fieldset className="ws-part itc-step">
-            <PartLegend part="2">Your income</PartLegend>
-            <p className="ws-part__intro">Yearly amounts, before tax. Salary is enough for most people.</p>
-            <div className="itc-salary">
-              {field('salary', 'Gross salary for the year', 'From Form 16 or your payslips: total pay before HRA exemption and standard deduction.')}
+          <div className="itc-panels">
+            <div {...tabPanelProps(inBase, 'you', inTab)} className="itc-panel">
+              <fieldset className="ws-part">
+                <legend className="ws-sr">About you</legend>
+                <p className="ws-part__intro">The year decides which slabs apply. Age changes the old-regime exemption limit.</p>
+                <div className="itc-choices">
+                  <Segmented
+                    legend="Year"
+                    name={`${uid}-year`}
+                    options={taxYears.map((y) => ({ value: y.id, label: y.shortLabel, sub: `${y.act} Act` }))}
+                    value={yearId}
+                    onChange={setYearId}
+                  />
+                  <Segmented legend="Your age" name={`${uid}-age`} options={AGES} value={age} onChange={setAge} />
+                  <p className="ws-note itc-year-label">
+                    {rules.label}, under the Income-tax Act, {rules.act}.
+                  </p>
+                </div>
+              </fieldset>
+              {stepNav}
             </div>
-            <div className="ws-grid">
-              {field('savingsInterest', 'Savings account interest')}
-              {field('depositInterest', 'FD and other interest')}
-              {field('rentalIncome', 'Rent from a let-out property', 'Rent received less municipal tax. 30% is deducted for you.')}
-              {field('otherIncome', 'Any other income')}
-            </div>
-            <MoreToggle
-              open={moreIncomeOpen}
-              onToggle={() => setMoreIncome(!moreIncomeOpen)}
-              controls={`${uid}-more-income`}
-              count={filled(incomeMore)}
-            >
-              More income types: dividends, family pension, capital gains
-            </MoreToggle>
-            <div id={`${uid}-more-income`} className="ws-grid itc-more-panel" hidden={!moreIncomeOpen}>
-              {field('dividends', 'Dividends')}
-              {field('familyPension', 'Family pension')}
-              {field('stcg111A', `Short-term gains on listed shares (${L.stcg})`, `Taxed at ${pct(rules.special.stcg111ARate)}.`)}
-              {field(
-                'ltcg112A',
-                `Long-term gains on listed shares (${L.ltcg})`,
-                `${pct(rules.special.ltcg112ARate)} above ${formatINR(rules.special.ltcg112AExemption)}.`,
-              )}
-            </div>
-          </fieldset>
 
-          <fieldset className="ws-part itc-step">
-            <PartLegend part="3">Deductions (old regime only)</PartLegend>
-            <p className="ws-part__intro">
-              The new regime ignores these. Fill them to see if the old regime works out cheaper. Limits are applied for you.
-            </p>
-            <div className="ws-grid">
-              {field(
-                'hraExemption',
-                'HRA exemption',
-                <>
-                  {L.hra} · {oldOnly}. Work it out with the <a href="/tools/hra-calculator">HRA calculator</a>.
-                </>,
-              )}
-              {field('c80', 'PPF, ELSS, EPF, life insurance', `${L.c80} · ${cap(rules.caps.c80)} · ${oldOnly}.`)}
-              {field(
-                'd80Self',
-                'Health insurance: self and family',
-                `${L.d80} · ${cap(senior ? rules.caps.d80SelfSenior : rules.caps.d80SelfBelow60)} at your age · ${oldOnly}.`,
-              )}
-              {field(
-                'd80Parents',
-                'Health insurance: parents',
-                `${L.d80} · ${cap(parentsSenior ? rules.caps.d80ParentsSenior : rules.caps.d80ParentsBelow60)} · ${oldOnly}.`,
-              )}
-              {field(
-                'homeLoanInterest',
-                'Home-loan interest, self-occupied house',
-                `${L.selfOccupiedInterest} · ${cap(rules.caps.selfOccupiedInterest)} · ${oldOnly}.`,
-              )}
-              <div className="itc-check">
-                <Check checked={parentsSenior} onChange={setParentsSenior}>
-                  My parents are 60 or older
-                </Check>
-              </div>
+            <div {...tabPanelProps(inBase, 'income', inTab)} className="itc-panel">
+              <fieldset className="ws-part">
+                <legend className="ws-sr">Your income</legend>
+                <p className="ws-part__intro">Yearly amounts, before tax.</p>
+                <div className="itc-salary">
+                  {field('salary', 'Gross salary for the year', 'From Form 16 or payslips: total pay before HRA exemption and standard deduction.')}
+                </div>
+                <div className="ws-grid itc-grid">
+                  {field('savingsInterest', 'Savings account interest')}
+                  {field('depositInterest', 'FD and other interest')}
+                  {field('rentalIncome', 'Rent from a let-out property', 'Less municipal tax. 30% is deducted for you.')}
+                  {field('otherIncome', 'Any other income')}
+                </div>
+                <MoreToggle
+                  open={moreIncomeOpen}
+                  onToggle={() => setMoreIncome(!moreIncomeOpen)}
+                  controls={`${uid}-more-income`}
+                  count={filled(incomeMore)}
+                >
+                  More income types: dividends, family pension, capital gains
+                </MoreToggle>
+                <div id={`${uid}-more-income`} className="ws-grid itc-grid itc-more-panel" hidden={!moreIncomeOpen}>
+                  {field('dividends', 'Dividends')}
+                  {field('familyPension', 'Family pension')}
+                  {field('stcg111A', `Short-term gains, listed shares (${L.stcg})`, `Taxed at ${pct(rules.special.stcg111ARate)}.`)}
+                  {field(
+                    'ltcg112A',
+                    `Long-term gains, listed shares (${L.ltcg})`,
+                    `${pct(rules.special.ltcg112ARate)} above ${formatINR(rules.special.ltcg112AExemption)}.`,
+                  )}
+                </div>
+              </fieldset>
+              {stepNav}
             </div>
-            <MoreToggle
-              open={moreDedOpen}
-              onToggle={() => setMoreDed(!moreDedOpen)}
-              controls={`${uid}-more-ded`}
-              count={filled(dedMore)}
-            >
-              More deductions: own NPS, employer NPS
-            </MoreToggle>
-            <div id={`${uid}-more-ded`} className="itc-more-panel" hidden={!moreDedOpen}>
-              <div className="ws-grid">
-                {field('ccd1b', 'Own NPS contribution', `${L.ccd1b} · ${cap(rules.caps.ccd1b)} · ${oldOnly}.`)}
-                {field(
-                  'employerNps',
-                  'Employer NPS contribution',
-                  `${L.ccd2} · Counts in both regimes: up to ${pct(rules.regimes.new.employerNpsPct)} (new) or ${pct(rules.regimes.old.employerNpsPct)} (old) of basic + DA.`,
-                )}
-                {field('basicPlusDA', 'Basic + DA', 'Used only for the employer NPS limit. Leave blank to use gross salary.')}
-              </div>
+
+            <div {...tabPanelProps(inBase, 'ded', inTab)} className="itc-panel">
+              <fieldset className="ws-part">
+                <legend className="ws-sr">Deductions, old regime only</legend>
+                <p className="ws-part__intro">
+                  The new regime ignores these. Fill them to see if the old regime works out cheaper. Limits are applied for you.
+                </p>
+                <div className="ws-grid itc-grid">
+                  {field(
+                    'hraExemption',
+                    'HRA exemption',
+                    <>
+                      {L.hra} · {oldOnly}. Use the <a href="/tools/hra-calculator">HRA calculator</a>.
+                    </>,
+                  )}
+                  {field('c80', 'PPF, ELSS, EPF, life insurance', `${L.c80} · ${cap(rules.caps.c80)} · ${oldOnly}.`)}
+                  {field(
+                    'd80Self',
+                    'Health insurance: self and family',
+                    `${L.d80} · ${cap(senior ? rules.caps.d80SelfSenior : rules.caps.d80SelfBelow60)} at your age · ${oldOnly}.`,
+                  )}
+                  {field(
+                    'd80Parents',
+                    'Health insurance: parents',
+                    `${L.d80} · ${cap(parentsSenior ? rules.caps.d80ParentsSenior : rules.caps.d80ParentsBelow60)} · ${oldOnly}.`,
+                  )}
+                  {field(
+                    'homeLoanInterest',
+                    'Home-loan interest, self-occupied',
+                    `${L.selfOccupiedInterest} · ${cap(rules.caps.selfOccupiedInterest)} · ${oldOnly}.`,
+                  )}
+                  <div className="itc-check">
+                    <Check checked={parentsSenior} onChange={setParentsSenior}>
+                      My parents are 60 or older
+                    </Check>
+                  </div>
+                </div>
+                <MoreToggle open={moreDedOpen} onToggle={() => setMoreDed(!moreDedOpen)} controls={`${uid}-more-ded`} count={filled(dedMore)}>
+                  More deductions: own NPS, employer NPS
+                </MoreToggle>
+                <div id={`${uid}-more-ded`} className="itc-more-panel" hidden={!moreDedOpen}>
+                  <div className="ws-grid itc-grid">
+                    {field('ccd1b', 'Own NPS contribution', `${L.ccd1b} · ${cap(rules.caps.ccd1b)} · ${oldOnly}.`)}
+                    {field(
+                      'employerNps',
+                      'Employer NPS contribution',
+                      `${L.ccd2} · Both regimes: up to ${pct(rules.regimes.new.employerNpsPct)} (new) or ${pct(rules.regimes.old.employerNpsPct)} (old) of basic + DA.`,
+                    )}
+                    {field('basicPlusDA', 'Basic + DA', 'Only for the employer NPS limit. Blank uses gross salary.')}
+                  </div>
+                </div>
+                <p className="ws-note itc-interest-note">
+                  Savings interest deduction ({senior ? L.ttb : L.tta}) is applied automatically in the old regime, up to{' '}
+                  {formatINR(senior ? rules.caps.ttb : rules.caps.tta)}.
+                </p>
+              </fieldset>
+              {stepNav}
             </div>
-            <p className="ws-note itc-interest-note">
-              Savings interest deduction ({senior ? L.ttb : L.tta}) is applied automatically in the old regime, up to{' '}
-              {formatINR(senior ? rules.caps.ttb : rules.caps.tta)}.
-            </p>
-          </fieldset>
+          </div>
 
           <div className={`itc-actions${showResult ? '' : ' is-sticky'}`}>
             {error && (
@@ -588,10 +660,22 @@ export default function IncomeTaxCalculator() {
           </div>
         </form>
 
-        <section className="ws-result itc-result" ref={resultRef} id={resultId} aria-labelledby={`${uid}-result-h`}>
-          <h2 className="itc-result__title" id={`${uid}-result-h`} ref={headingRef} tabIndex={-1}>
-            Your estimate
-          </h2>
+        <section
+          className="ws-result ws-result--sticky itc-result"
+          ref={resultRef}
+          id={resultId}
+          aria-labelledby={`${uid}-result-h`}
+        >
+          <div className="itc-result__head">
+            <h2 className="itc-result__title" id={`${uid}-result-h`} ref={headingRef} tabIndex={-1}>
+              Your estimate
+            </h2>
+            {showResult && (
+              <span className={`itc-updated${updated ? ' is-shown' : ''}`} aria-hidden="true">
+                Updated
+              </span>
+            )}
+          </div>
           {rules.verified.status !== 'verified' && (
             <Notice tone="warn" className="itc-verify">
               <strong>Not yet verified.</strong> {rules.verified.note}
@@ -600,82 +684,102 @@ export default function IncomeTaxCalculator() {
 
           {showResult ? (
             <>
-              <div className="itc-verdict">
-                <p className="itc-verdict__meta">
-                  <span>
+              <TabList base={outBase} label="Result views" tabs={outTabs} active={outTab} onSelect={setOutTab} variant="slip" />
+
+              <div {...tabPanelProps(outBase, 'compare', outTab)} className="itc-outpanel">
+                <div className="itc-verdict">
+                  <p className="itc-verdict__meta">
                     Verdict · {rules.shortLabel} · Age {ageLong}
-                  </span>
-                  <span className={`itc-updated${updated ? ' is-shown' : ''}`} aria-hidden="true">
-                    Updated
-                  </span>
-                </p>
-                <p className="itc-verdict__text" aria-live="polite" aria-atomic="true">
-                  {verdict}
-                </p>
-                {settled.better !== 'equal' && (
-                  <Stamp key={stampKey} top="Better" main={`${settled.better === 'new' ? 'New' : 'Old'} regime`} />
-                )}
+                  </p>
+                  <p className="itc-verdict__text" aria-live="polite" aria-atomic="true">
+                    {verdict}
+                  </p>
+                  {settled.better !== 'equal' && (
+                    <Stamp key={stampKey} top="Better" main={`${settled.better === 'new' ? 'New' : 'Old'} regime`} />
+                  )}
+                </div>
+
+                <TaxBars cmp={settled} />
+
+                <div className="itc-table-wrap">
+                  <table className="itc-table">
+                    <caption className="ws-sr">Old and new regime, side by side</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">
+                          <span className="ws-sr">Item</span>
+                        </th>
+                        <th scope="col" className={settled.better === 'old' ? 'is-best' : undefined}>
+                          Old regime
+                        </th>
+                        <th scope="col" className={settled.better === 'new' ? 'is-best' : undefined}>
+                          New regime
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((r) => {
+                        const w = winner(r);
+                        const f = r.fmt ?? formatINR;
+                        return (
+                          <tr key={r.key} className={r.total ? 'itc-table__total' : r.less ? 'is-less' : undefined}>
+                            <th scope="row">{r.label}</th>
+                            {regimes.map((rg) => (
+                              <td key={rg} className={w === rg ? 'is-better' : undefined}>
+                                {f(r[rg])}
+                                {w === rg && <span className="ws-sr"> (better)</span>}
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <ul className="ws-fine itc-notes">
+                  <li>Take-home is the income you entered less tax, divided by 12. PF, professional tax and other payroll deductions are not included.</li>
+                  {notes.map((n) => (
+                    <li key={n}>{n}</li>
+                  ))}
+                </ul>
               </div>
 
-              <TaxBars cmp={settled} />
+              {regimes.map((rg) => (
+                <div key={rg} {...tabPanelProps(outBase, rg, outTab)} className="itc-outpanel">
+                  <div className="itc-items__head">
+                    <p className="ws-note">Every step of the calculation, head by head. Open a head to see its lines.</p>
+                    <button type="button" className="itc-all" onClick={() => setAllFor(rg, !allOpenFor(rg))}>
+                      {allOpenFor(rg) ? 'Fold all' : 'Show every line'}
+                    </button>
+                  </div>
+                  <ItemisedSlip rg={rg} b={cmp[rg]} rules={rules} isOpen={(k) => !!openHeads[k]} toggle={toggleHead} />
+                </div>
+              ))}
 
-              <div className="itc-table-wrap">
-                <table className="itc-table">
-                  <caption className="ws-sr">Old and new regime, side by side</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">
-                        <span className="ws-sr">Item</span>
-                      </th>
-                      <th scope="col" className={settled.better === 'old' ? 'is-best' : undefined}>
-                        Old regime
-                      </th>
-                      <th scope="col" className={settled.better === 'new' ? 'is-best' : undefined}>
-                        New regime
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((r) => {
-                      const w = winner(r);
-                      const f = r.fmt ?? formatINR;
-                      return (
-                        <tr key={r.key} className={r.total ? 'itc-table__total' : r.less ? 'is-less' : undefined}>
-                          <th scope="row">{r.label}</th>
-                          {regimes.map((rg) => (
-                            <td key={rg} className={w === rg ? 'is-better' : undefined}>
-                              {f(r[rg])}
-                              {w === rg && <span className="ws-sr"> (better)</span>}
-                            </td>
-                          ))}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              <ul className="ws-fine itc-notes">
-                <li>Take-home is the income you entered less tax, divided by 12. PF, professional tax and other payroll deductions are not included.</li>
-                {notes.map((n) => (
-                  <li key={n}>{n}</li>
-                ))}
-              </ul>
-
-              <button
-                type="button"
-                className="itc-items-toggle"
-                aria-expanded={showItems}
-                aria-controls={itemsId}
-                onClick={() => setShowItems(!showItems)}
-              >
-                <span>{showItems ? 'Hide the itemised receipts' : 'See every line: itemised receipts for both regimes'}</span>
-                <ChevronDown aria-hidden="true" />
-              </button>
+              <section className="itc-next" aria-labelledby={`${uid}-next-h`}>
+                <h3 id={`${uid}-next-h`} className="itc-next__title">
+                  Want this filed? Send it on WhatsApp.
+                </h3>
+                <p className="itc-next__text">
+                  {site.owner.name} checks the figures, tells you which regime to pick and files your return. You get a quote before
+                  any work starts.
+                </p>
+                <ShareOptIn checked={optIn} onChange={setOptIn} label="Include my figures in the WhatsApp message" />
+                <div className="itc-next__actions">
+                  <FiledCta tool="income tax calculator" details={optIn ? summary : undefined} />
+                  <a className="btn btn--ghost" href={tel ?? '/contact'}>
+                    <Phone aria-hidden="true" /> Call
+                  </a>
+                </div>
+                <a className="link-arrow itc-next__link" href="/services/income-tax-return-filing">
+                  See the ITR filing checklist <ArrowRight aria-hidden="true" />
+                </a>
+              </section>
             </>
           ) : (
             <div className="itc-waiting">
               <Receipt className="itc-blank" heading={<h3 className="rc__title">Your two receipts print here</h3>} meta={rules.label}>
-                <p className="rc-caption itc-empty">Fill in step 2, then press Calculate my tax.</p>
+                <p className="rc-caption itc-empty">Enter your salary in step 2, then press Calculate my tax.</p>
                 <div className="itc-blank__lines" aria-hidden="true">
                   <span />
                   <span />
@@ -697,51 +801,6 @@ export default function IncomeTaxCalculator() {
           )}
         </section>
       </div>
-
-      {showResult && (
-        <section id={itemsId} className="itc-items" aria-labelledby={`${uid}-items-h`} hidden={!showItems}>
-          <div className="itc-items__head">
-            <div>
-              <h2 id={`${uid}-items-h`} className="itc-items__title">
-                Itemised receipts
-              </h2>
-              <p className="ws-note">Every step of the calculation, head by head. Open a head to see its lines.</p>
-            </div>
-            <button type="button" className="itc-all" onClick={() => setAll(!allOpen)}>
-              {allOpen ? 'Fold all heads' : 'Show every line'}
-            </button>
-          </div>
-          <div className="itc-items__grid">
-            {regimes.map((rg) => (
-              <ItemisedSlip key={rg} rg={rg} b={cmp[rg]} rules={rules} isOpen={(k) => !!openHeads[k]} toggle={toggleHead} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {showResult && (
-        <section className="itc-next" aria-labelledby={`${uid}-next-h`}>
-          <div className="itc-next__copy">
-            <h2 id={`${uid}-next-h`} className="itc-next__title">
-              Want this filed? Send it on WhatsApp.
-            </h2>
-            <p className="itc-next__text">
-              {site.owner.name} checks the figures, tells you which regime to pick and files your return. You get a quote
-              before any work starts.
-            </p>
-            <ShareOptIn checked={optIn} onChange={setOptIn} label="Include my figures in the WhatsApp message" />
-          </div>
-          <div className="itc-next__actions">
-            <FiledCta tool="income tax calculator" details={optIn ? summary : undefined} />
-            <a className="btn btn--ghost" href={tel ?? '/contact'}>
-              <Phone aria-hidden="true" /> Call
-            </a>
-            <a className="link-arrow itc-next__link" href="/services/income-tax-return-filing">
-              See the ITR filing checklist <ArrowRight aria-hidden="true" />
-            </a>
-          </div>
-        </section>
-      )}
 
       {showResult && (
         <a className={`itc-pill${pill ? ' is-shown' : ''}`} href={`#${resultId}`} inert={!pill}>

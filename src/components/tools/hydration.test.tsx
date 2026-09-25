@@ -75,3 +75,78 @@ describe.each(calculators)('%s', (_name, Component) => {
     expect(errors).toEqual([]);
   });
 });
+
+describe('IncomeTaxCalculator tabs', () => {
+  it('keeps values across tab switches and calculates from the Income tab', async () => {
+    const errors: unknown[] = [];
+    const container = document.createElement('div');
+    container.innerHTML = renderToString(createElement(IncomeTaxCalculator));
+    document.body.appendChild(container);
+    await act(async () => {
+      root = hydrateRoot(container, createElement(IncomeTaxCalculator), {
+        onRecoverableError: (e) => errors.push(e),
+        onUncaughtError: (e) => errors.push(e),
+      });
+    });
+    expect(errors).toEqual([]);
+
+    const tabs = [...container.querySelectorAll<HTMLButtonElement>('[role="tablist"][aria-label="Calculator steps"] [role="tab"]')];
+    expect(tabs.map((t) => t.textContent)).toEqual([
+      expect.stringContaining('About you'),
+      expect.stringContaining('Income'),
+      expect.stringContaining('Deductions'),
+    ]);
+    // Every tab button is type="button" so it can never submit the form.
+    expect(tabs.every((t) => t.type === 'button')).toBe(true);
+
+    const panelOf = (tab: HTMLButtonElement) => container.querySelector<HTMLElement>(`#${CSS.escape(tab.getAttribute('aria-controls')!)}`)!;
+    const [you, income, ded] = tabs;
+    expect(you.getAttribute('aria-selected')).toBe('true');
+    expect(panelOf(income).hidden).toBe(true);
+
+    await act(async () => income.click());
+    expect(income.getAttribute('aria-selected')).toBe('true');
+    expect(panelOf(income).hidden).toBe(false);
+    const salary = panelOf(income).querySelector<HTMLInputElement>('input')!;
+    await act(async () => setValue(salary, '1500000'));
+
+    await act(async () => ded.click());
+    expect(panelOf(income).hidden).toBe(true);
+    // Inputs stay mounted while hidden.
+    expect(container.contains(salary)).toBe(true);
+
+    await act(async () => income.click());
+    expect(salary.value.replace(/[^\d]/g, '')).toBe('1500000');
+
+    // Arrow keys move between tabs (roving tabindex).
+    await act(async () => income.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })));
+    expect(ded.getAttribute('aria-selected')).toBe('true');
+    expect(ded.tabIndex).toBe(0);
+    expect(income.tabIndex).toBe(-1);
+
+    const form = container.querySelector('form')!;
+    const submit = new Event('submit', { bubbles: true, cancelable: true });
+    await act(async () => form.dispatchEvent(submit));
+    expect(submit.defaultPrevented).toBe(true);
+    const resultTabs = container.querySelector('[role="tablist"][aria-label="Result views"]');
+    expect(resultTabs, 'result tabs appear after calculating').not.toBeNull();
+    expect(container.textContent).toContain('Want this filed?');
+    expect(errors).toEqual([]);
+  });
+
+  it('empty submit jumps to the Income tab with an error instead of reloading', async () => {
+    const container = document.createElement('div');
+    container.innerHTML = renderToString(createElement(IncomeTaxCalculator));
+    document.body.appendChild(container);
+    await act(async () => {
+      root = hydrateRoot(container, createElement(IncomeTaxCalculator));
+    });
+    const form = container.querySelector('form')!;
+    const submit = new Event('submit', { bubbles: true, cancelable: true });
+    await act(async () => form.dispatchEvent(submit));
+    expect(submit.defaultPrevented).toBe(true);
+    expect(container.querySelector('[role="alert"]')?.textContent).toMatch(/salary/i);
+    const income = [...container.querySelectorAll<HTMLButtonElement>('[role="tab"]')].find((t) => t.textContent?.includes('Income'))!;
+    expect(income.getAttribute('aria-selected')).toBe('true');
+  });
+});

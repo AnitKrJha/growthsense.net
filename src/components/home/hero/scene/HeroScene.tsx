@@ -39,7 +39,12 @@ export interface HeroHost {
   copy: HTMLElement;
 }
 
-export const STORY_QUERY = `${HERO.desktopQuery} and (min-height: ${HERO.story.minPinHeight}px) and (prefers-reduced-motion: no-preference)`;
+/** Pinned scroll story: desktop windows tall enough, and every phone/tablet (which holds the stage at its bottom). */
+export const STORY_QUERY =
+  `${HERO.desktopQuery} and (min-height: ${HERO.story.minPinHeight}px) and (prefers-reduced-motion: no-preference), ` +
+  `(max-width: 59.99rem) and (prefers-reduced-motion: no-preference)`;
+/** Desktop windows too short to pin: scrubbed without pinning. */
+const UNPINNED_QUERY = `${HERO.desktopQuery} and (max-height: ${HERO.story.minPinHeight - 0.02}px)`;
 
 export default function HeroScene({ host }: { host: HeroHost }) {
   const coarse = useMemo(() => matchMedia('(pointer: coarse)').matches, []);
@@ -240,7 +245,7 @@ function World({ host }: { host: HeroHost }) {
   useEffect(() => {
     if (!assets) return;
     const mm = gsap.matchMedia();
-    mm.add({ story: STORY_QUERY, auto: `not all and ${STORY_QUERY}` }, (ctx) => {
+    mm.add({ story: STORY_QUERY, auto: UNPINNED_QUERY }, (ctx) => {
       const { story: pinned } = ctx.conditions as { story: boolean; auto: boolean };
       if (pinned && host.section.dataset.story === 'on') {
         const stickyTop = () => parseFloat(getComputedStyle(host.stage).top) || 0;
@@ -257,24 +262,22 @@ function World({ host }: { host: HeroHost }) {
         });
         return;
       }
-      // Auto: settle → stamp → acknowledgement, once, when the visitor starts reading or after a pause.
-      let played = false;
-      const play = () => {
-        if (played) return;
-        played = true;
-        gsap.to(story.current, { P: 1, duration: HERO.auto.duration, ease: 'power2.inOut' });
-        removeEventListener('scroll', onScroll);
-      };
-      const onScroll = () => {
-        const r = host.section.getBoundingClientRect();
-        if (-r.top > r.height * HERO.auto.scrollFraction) play();
-      };
-      const timer = setTimeout(play, HERO.auto.delayMs);
-      addEventListener('scroll', onScroll, { passive: true });
-      return () => {
-        clearTimeout(timer);
-        removeEventListener('scroll', onScroll);
-      };
+      // Narrow or short screens: no pin, but the story is still scrubbed by scroll (scattered → stacked → filed)
+      // as the hero scrolls up, so it never "jumps" to the stacked state on its own.
+      console.info(
+        `[GrowthSense hero] Window is under ${HERO.story.minPinHeight}px tall: scroll story runs without pinning.`,
+      );
+      gsap.to(story.current, {
+        P: 1,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: host.section,
+          start: 'top top',
+          end: () => `+=${Math.max(host.section.offsetHeight * HERO.auto.scrollSpan, 320)}`,
+          scrub: HERO.story.scrub,
+          invalidateOnRefresh: true,
+        },
+      });
     });
     // Fonts or late layout can move the track; keep trigger positions honest.
     const refresh = () => ScrollTrigger.refresh();

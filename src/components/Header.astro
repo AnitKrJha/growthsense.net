@@ -297,6 +297,10 @@ const wa = whatsappUrl(defaultWhatsappMessage());
       transform 460ms var(--ease-out),
       visibility 0s linear 460ms;
   }
+  /* While open, the header (and its sheet) sits above every fixed overlay: mobile bar (60), result pills (55). */
+  .site-header[data-menu-open] {
+    z-index: 100;
+  }
   [data-menu-open] .menu {
     visibility: visible;
     transform: none;
@@ -322,6 +326,8 @@ const wa = whatsappUrl(defaultWhatsappMessage());
   .menu-inner {
     display: grid;
     gap: var(--space-l);
+    /* Content starts to the right of the ledger margin line, which sits at --margin-line from the left edge. */
+    padding-left: max(0px, calc(var(--margin-line) + 0.9rem - (100vw - min(100vw - 2.5rem, var(--container))) / 2));
   }
   .menu-list {
     margin: 0;

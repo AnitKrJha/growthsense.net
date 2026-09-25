@@ -32,7 +32,7 @@ const poster = posterSvg();
   data-hero
   data-story="pending"
   aria-labelledby="hero-title"
-  style={`--pin: ${HERO.story.pinVh}vh`}
+  style={`--pin: ${HERO.story.pinVh}vh; --pin-m: ${HERO.story.pinVhMobile}vh`}
 >
   <div class="hero__track" data-hero-track>
     <div class="hero__stage" data-hero-stage>
@@ -92,6 +92,22 @@ const poster = posterSvg();
     if (!s) return;
     var rm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     s.dataset.story = !rm && 'WebGLRenderingContext' in window ? 'on' : 'off';
+    if (s.dataset.story !== 'on') return;
+
+    // Mobile hold: stick the stage when its bottom meets the screen bottom (below the sticky header if it fits).
+    var stage = s.querySelector('[data-hero-stage]');
+    var mq = matchMedia('(max-width: 59.99rem)');
+    function measure() {
+      if (!stage || !mq.matches) return;
+      var h = stage.offsetHeight;
+      var header = document.querySelector('.site-header');
+      var headerH = header ? header.getBoundingClientRect().height : 0;
+      s.style.setProperty('--stage-natural', h + 'px');
+      s.style.setProperty('--stage-sticky', Math.min(headerH, window.innerHeight - h) + 'px');
+    }
+    measure();
+    addEventListener('resize', measure, { passive: true });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
   })();
 </script>
 
@@ -124,7 +140,7 @@ const poster = posterSvg();
     }
   }
   /* Scroll story: the stage pins while the track scrolls past (desktop, motion allowed, tall enough). */
-  @media (min-width: 60rem) and (min-height: 640px) and (prefers-reduced-motion: no-preference) {
+  @media (min-width: 60rem) and (min-height: 560px) and (prefers-reduced-motion: no-preference) {
     .hero[data-story='on'] .hero__track {
       height: calc(var(--stage-h) + var(--pin));
     }
@@ -306,11 +322,24 @@ const poster = posterSvg();
     opacity: 0;
   }
 
+  /* Mobile / tablet: the stage is taller than the screen, so it scrolls normally until its bottom (the papers)
+     reaches the screen bottom, then holds for --pin-m while the story plays. --stage-natural and --stage-sticky
+     are measured by the inline script below. */
+  @media (max-width: 59.99rem) and (prefers-reduced-motion: no-preference) {
+    .hero[data-story='on'] .hero__track {
+      height: calc(var(--stage-natural, 100svh) + var(--pin-m));
+    }
+    .hero[data-story='on'] .hero__stage {
+      position: sticky;
+      top: var(--stage-sticky, 0px);
+    }
+  }
+
   /* ── scroll cue (desktop story only; fades as the story starts) ── */
   .hero__cue {
     display: none;
   }
-  @media (min-width: 60rem) and (min-height: 640px) and (prefers-reduced-motion: no-preference) {
+  @media (min-width: 60rem) and (min-height: 560px) and (prefers-reduced-motion: no-preference) {
     .hero[data-story='on'] .hero__cue {
       position: absolute;
       z-index: 2;

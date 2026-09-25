@@ -23,7 +23,8 @@ class SceneBoundary extends Component<{ onError: () => void; children: ReactNode
   static getDerivedStateFromError() {
     return { failed: true };
   }
-  componentDidCatch() {
+  componentDidCatch(error: unknown) {
+    console.error('[GrowthSense hero] 3D scene failed; showing the still poster instead.', error);
     this.props.onError();
   }
   render() {
@@ -48,6 +49,11 @@ export default function HeroCanvas() {
     const reduce = matchMedia('(prefers-reduced-motion: reduce)');
     const decide = () => {
       if (reduce.matches || !hasWebGL()) {
+        console.info(
+          reduce.matches
+            ? '[GrowthSense hero] "Reduce motion" is on in system settings: showing the still poster.'
+            : '[GrowthSense hero] WebGL is unavailable: showing the still poster.',
+        );
         section.dataset.story = 'off';
         delete section.dataset.live;
         setHost(null);

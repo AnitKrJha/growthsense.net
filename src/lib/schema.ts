@@ -28,7 +28,10 @@ export function professionalServiceLd(siteUrl: URL): Json {
   if (contact.email) ld.email = contact.email;
   if (contact.openingHours.length) ld.openingHours = contact.openingHours;
   const areas = [...location.areasServed, ...(location.city ? [location.city] : [])];
-  if (areas.length) ld.areaServed = [...new Set(areas)].map((name) => ({ '@type': 'City', name }));
+  if (areas.length)
+    ld.areaServed = [...new Set(areas)].map((name) =>
+      name === 'India' ? { '@type': 'Country', name } : { '@type': 'Place', name },
+    );
   if (location.streetAddress) {
     ld.address = {
       '@type': 'PostalAddress',

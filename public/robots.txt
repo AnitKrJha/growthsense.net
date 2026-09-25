@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
 
-# TODO(owner): update the domain once known.
-Sitemap: https://example.com/sitemap-index.xml
+Sitemap: https://growthsense.net/sitemap-index.xml

@@ -45,6 +45,10 @@ const tel = telUrl();
     background: repeating-linear-gradient(to right, var(--line-strong) 0 6px, transparent 6px 11px);
     opacity: 0.55;
   }
+  /* Slides away while the mobile menu is open (the menu marks it inert). */
+  .mobile-bar[inert] {
+    transform: translateY(110%);
+  }
   .mobile-bar .btn {
     width: 100%;
     min-height: 48px;

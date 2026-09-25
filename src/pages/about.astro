@@ -76,18 +76,24 @@ const city = location.city;
               <dd>{owner.role}</dd>
             </div>
             <div class="form-row form-row--wide">
-              <dt>Credentials</dt>
+              <dt>Track record</dt>
               <dd>
-                {owner.credentials.length > 0 ? (
-                  <ul>{owner.credentials.map((c) => <li>{c}</li>)}</ul>
+                {owner.highlights.length > 0 ? (
+                  <ul>{owner.highlights.map((c) => <li>{c}</li>)}</ul>
                 ) : (
-                  <Todo label="exact credentials, or remove this row if none" />
+                  <Todo label="track record" />
                 )}
               </dd>
             </div>
+            {owner.credentials.length > 0 && (
+              <div class="form-row form-row--wide">
+                <dt>Registrations</dt>
+                <dd><ul>{owner.credentials.map((c) => <li>{c}</li>)}</ul></dd>
+              </div>
+            )}
             <div class="form-row">
               <dt>Experience</dt>
-              <dd>{owner.yearsOfExperience ? `${owner.yearsOfExperience} years` : <Todo label="years of experience" />}</dd>
+              <dd>{owner.yearsOfExperience ? `${owner.yearsOfExperience}+ years` : <Todo label="years of experience" />}</dd>
             </div>
             <div class="form-row">
               <dt>Based in</dt>
@@ -109,7 +115,7 @@ const city = location.city;
           </div>
 
           <p class="honest">
-            Only the credentials listed on this page are claimed. {site.brandName} is not affiliated with any government department.
+            Only the experience and registrations listed on this page are claimed. {site.brandName} is not affiliated with any government department.
           </p>
         </div>
       </div>

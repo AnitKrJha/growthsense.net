@@ -158,9 +158,11 @@ export const HERO = {
 
   story: {
     /** Pinned scroll distance on desktop (vh). The hero stays sticky for exactly this much scroll. */
-    pinVh: 110,
+    pinVh: 240,
+    /** Mobile hold (vh): the stage sticks once its bottom (the papers) reaches the screen bottom. */
+    pinVhMobile: 220,
     /** GSAP scrub smoothing in seconds. */
-    scrub: 0.7,
+    scrub: 1.2,
     /** Scroll progress windows (0–1 over the pin). */
     gather: { start: 0.04, end: 0.48, each: 0.22 },
     stampAt: 0.5,
@@ -172,16 +174,13 @@ export const HERO = {
     /** Morph waits until the stamp clock passes this (stamp is lifting away). */
     morphGate: 0.78,
     /** Skip the pin on short screens where the copy would not fit under the header. */
-    minPinHeight: 640,
+    minPinHeight: 560,
   },
 
-  /** Mobile / non-pinned: an auto-played settle → stamp → acknowledgement sequence. */
+  /** Mobile / non-pinned: the same story, scrubbed by scroll without pinning. */
   auto: {
-    /** Plays when this fraction of the hero has scrolled past the top… */
-    scrollFraction: 0.35,
-    /** …or this long after the canvas became live, whichever comes first. */
-    delayMs: 5200,
-    duration: 3.8,
+    /** Scroll distance over which the story completes, as a fraction of the hero's height. */
+    scrollSpan: 1.6,
   },
 
   /** Time-based stamp action (seconds), so the drop always feels physical whatever the scroll speed. */
