@@ -201,7 +201,8 @@ export const HERO = {
     thud: 0.006,
   },
 
-  parallax: { rotY: 0.07, rotX: 0.04, damping: 2.6, filedFactor: 0.5 },
+  /** Pointer/finger lean, plus a gentle turn as the hero scrolls away (radians at full scroll-out). */
+  parallax: { rotY: 0.16, rotX: 0.1, damping: 2.6, filedFactor: 0.5, scrollTurn: 0.35, scrollTilt: 0.12, scrollRoll: -0.06 },
 
   lights: {
     hemi: { intensity: 1.25 },

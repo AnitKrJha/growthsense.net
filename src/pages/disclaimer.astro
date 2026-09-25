@@ -2,7 +2,6 @@
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import PageHeader from '@/components/PageHeader.astro';
 import LongformDoc from '@/components/LongformDoc.astro';
-import Todo from '@/components/Todo.astro';
 import { site } from '@/config/site';
 import { breadcrumbLd } from '@/lib/schema';
 
@@ -62,7 +61,7 @@ const lastUpdated = '26 September 2026';
         {site.brandName} is run by {owner.name}, an individual offering tax filing assistance.
         {hasCredentials
           ? <>Credentials: {owner.credentials.join(', ')}.</>
-          : <>{owner.name} does not claim to be a Chartered Accountant, a firm, or to hold any professional registration unless it is stated on the <a href="/about">About page</a>. <Todo label="owner to confirm credentials, then revise this paragraph" /></>}
+          : <>{owner.name} does not claim to be a Chartered Accountant, a firm, or to hold any professional registration unless it is stated on the <a href="/about">About page</a>.</>}
       </p>
       <p>
         Work is carried out on the basis of the information and documents you provide. You remain responsible for the accuracy and
@@ -83,7 +82,7 @@ const lastUpdated = '26 September 2026';
           <p>
             Financing-related help is limited to preparing and organising your income and tax documents. {site.brandName} does not
             lend money, and makes no promise or claim about loan approval, interest rates or terms, which are decided only by the
-            lender. <Todo label="if acting as a loan DSA / agent, disclose it here and name the lenders" />
+            lender.{/* If acting as a loan DSA / agent, disclose it here and name the lenders. */}
           </p>
         </>
       )}
@@ -110,6 +109,6 @@ const lastUpdated = '26 September 2026';
         general information or calculators on this website. Liability for paid work is limited to what is agreed with you for that work.
       </p>
 
-      <p class="doc-end">See also the <a href="/privacy">privacy notice</a>. <Todo label="owner to review this disclaimer" /></p>
+      <p class="doc-end">See also the <a href="/privacy">privacy notice</a>.</p>
   </LongformDoc>
 </BaseLayout>

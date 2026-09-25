@@ -2,7 +2,7 @@
  * The live hero scene (client only, code-split). See engine/config.ts for every tunable and the framing maths.
  *
  *   HeroScene   <Canvas> + visibility-driven frameloop
- *   World       textures, meshes, layout sync, GSAP story wiring, and the per-frame apply step
+ *   World       textures, meshes, layout sync, pointer/touch/scroll lean, and the per-frame apply step
  */
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -20,8 +20,6 @@ import {
   type ShaderMaterial,
   type Texture,
 } from 'three';
-import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { HERO, type DocKind } from '../engine/config';
 import { BOUNDS } from '../engine/composition';
 import { docLayout, impressionLayout, IMPRESSION_H, IMPRESSION_W } from '../docs/layouts';
@@ -29,9 +27,6 @@ import { loadDocFonts, renderBack, renderDoc, renderInkNoise, renderPrims } from
 import { createInkMaterial, createPaperMaterial, type PaperMaterial } from './materials';
 import { Choreographer } from './choreo';
 
-gsap.registerPlugin(ScrollTrigger);
-// Mobile address-bar show/hide fires resize events; don't recompute trigger positions for those (prevents jitter).
-ScrollTrigger.config({ ignoreMobileResize: true });
 
 export interface HeroHost {
   section: HTMLElement;
@@ -41,12 +36,6 @@ export interface HeroHost {
   copy: HTMLElement;
 }
 
-/** Pinned scroll story: desktop windows tall enough, and every phone/tablet (which holds the stage at its bottom). */
-export const STORY_QUERY =
-  `${HERO.desktopQuery} and (min-height: ${HERO.story.minPinHeight}px) and (prefers-reduced-motion: no-preference), ` +
-  `(max-width: 59.99rem) and (prefers-reduced-motion: no-preference)`;
-/** Desktop windows too short to pin: scrubbed without pinning. */
-const UNPINNED_QUERY = `${HERO.desktopQuery} and (max-height: ${HERO.story.minPinHeight - 0.02}px)`;
 
 export default function HeroScene({ host }: { host: HeroHost }) {
   const coarse = useMemo(() => matchMedia('(pointer: coarse)').matches, []);
@@ -151,7 +140,9 @@ function World({ host }: { host: HeroHost }) {
   const assets = useAssets(mobile);
   const count = (mobile ? HERO.papers.mobile : HERO.papers.desktop).length;
   const choreo = useMemo(() => new Choreographer(count), [count]);
+  /** The filing story is retired: P stays 0 (free-floating swirl). */
   const story = useRef({ P: 0 });
+  const scroll = useRef({ target: 0, value: 0 });
   const layout = useRef({ pos: new Vector3(), s: 1 });
   const pointer = useRef({ x: 0, y: 0, sx: 0, sy: 0 });
   const live = useRef({ frames: 0, started: false, lastP: -1 });
@@ -232,60 +223,46 @@ function World({ host }: { host: HeroHost }) {
     return () => ro.disconnect();
   }, [host, choreo, assets]);
 
-  /* ── pointer parallax (fine pointers only) ── */
+  /* ── interaction: the papers lean toward a mouse pointer, or a finger dragging/scrolling over the hero ── */
   useEffect(() => {
-    if (matchMedia('(pointer: coarse)').matches) return;
+    const aim = (x: number, y: number) => {
+      pointer.current.x = MathUtils.clamp((x / innerWidth) * 2 - 1, -1, 1);
+      pointer.current.y = MathUtils.clamp((y / innerHeight) * 2 - 1, -1, 1);
+    };
     const onMove = (e: PointerEvent) => {
-      pointer.current.x = (e.clientX / innerWidth) * 2 - 1;
-      pointer.current.y = (e.clientY / innerHeight) * 2 - 1;
+      if (e.pointerType === 'mouse' || e.pointerType === 'pen') aim(e.clientX, e.clientY);
+    };
+    // Touch: follow the finger while it is on the hero (fires during scroll too; passive, never blocks scrolling).
+    const onTouch = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (t) aim(t.clientX, t.clientY);
+    };
+    const onTouchEnd = () => {
+      pointer.current.x = 0;
+      pointer.current.y = 0;
     };
     addEventListener('pointermove', onMove, { passive: true });
-    return () => removeEventListener('pointermove', onMove);
-  }, []);
+    host.section.addEventListener('touchstart', onTouch, { passive: true });
+    host.section.addEventListener('touchmove', onTouch, { passive: true });
+    host.section.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      removeEventListener('pointermove', onMove);
+      host.section.removeEventListener('touchstart', onTouch);
+      host.section.removeEventListener('touchmove', onTouch);
+      host.section.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [host]);
 
-  /* ── story: scroll-scrubbed on desktop, auto-played elsewhere ── */
+  /* ── scroll: no story, just a gentle turn of the swirl as the hero scrolls away (0 → 1 over its height) ── */
   useEffect(() => {
-    if (!assets) return;
-    const mm = gsap.matchMedia();
-    mm.add({ story: STORY_QUERY, auto: UNPINNED_QUERY }, (ctx) => {
-      const { story: pinned } = ctx.conditions as { story: boolean; auto: boolean };
-      if (pinned && host.section.dataset.story === 'on') {
-        const stickyTop = () => parseFloat(getComputedStyle(host.stage).top) || 0;
-        gsap.to(story.current, {
-          P: 1,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: host.track,
-            start: () => `top ${stickyTop()}px`,
-            end: 'bottom bottom',
-            scrub: HERO.story.scrub,
-            invalidateOnRefresh: true,
-          },
-        });
-        return;
-      }
-      // Narrow or short screens: no pin, but the story is still scrubbed by scroll (scattered → stacked → filed)
-      // as the hero scrolls up, so it never "jumps" to the stacked state on its own.
-      console.info(
-        `[GrowthSense hero] Window is under ${HERO.story.minPinHeight}px tall: scroll story runs without pinning.`,
-      );
-      gsap.to(story.current, {
-        P: 1,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: host.section,
-          start: 'top top',
-          end: () => `+=${Math.max(host.section.offsetHeight * HERO.auto.scrollSpan, 320)}`,
-          scrub: HERO.story.scrub,
-          invalidateOnRefresh: true,
-        },
-      });
-    });
-    // Fonts or late layout can move the track; keep trigger positions honest.
-    const refresh = () => ScrollTrigger.refresh();
-    document.fonts?.ready.then(refresh);
-    return () => mm.revert();
-  }, [assets, host]);
+    const onScroll = () => {
+      const r = host.section.getBoundingClientRect();
+      scroll.current.target = MathUtils.clamp(-r.top / Math.max(r.height, 1), 0, 1);
+    };
+    onScroll();
+    addEventListener('scroll', onScroll, { passive: true });
+    return () => removeEventListener('scroll', onScroll);
+  }, [host]);
 
   /* ── the key light aims at the desk origin (its target must live in the scene graph) ── */
   useEffect(() => {
@@ -323,7 +300,13 @@ function World({ host }: { host: HeroHost }) {
     pm.sx = MathUtils.damp(pm.sx, pm.x, HERO.parallax.damping, dt);
     pm.sy = MathUtils.damp(pm.sy, pm.y, HERO.parallax.damping, dt);
     const calm = MathUtils.lerp(1, HERO.parallax.filedFactor, choreo.filed);
-    r.rotation.set(pm.sy * HERO.parallax.rotX * calm, pm.sx * HERO.parallax.rotY * calm, 0);
+    const sc = scroll.current;
+    sc.value = MathUtils.damp(sc.value, sc.target, 3, dt);
+    r.rotation.set(
+      pm.sy * HERO.parallax.rotX * calm + sc.value * HERO.parallax.scrollTilt,
+      pm.sx * HERO.parallax.rotY * calm + sc.value * HERO.parallax.scrollTurn,
+      sc.value * HERO.parallax.scrollRoll,
+    );
     // The stamp "thud" nudges the whole scene; keep it subtle on phones, where it read as screen shake.
     r.position.y -= choreo.thud * L.s * (mobile ? 0.25 : 1);
 

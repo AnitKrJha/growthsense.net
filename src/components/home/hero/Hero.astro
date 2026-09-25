@@ -4,8 +4,8 @@
  *
  * Structure
  *   section.hero[data-hero]     forest desk; data-story = pending | on | off, data-live once the canvas has taken over
- *     .hero__track               tall (stage + HERO.story.pinVh) only when the scroll story runs (desktop, motion OK)
- *       .hero__stage             sticky viewport-height stage
+ *     .hero__track               wraps the stage (kept as a hook; no scroll story)
+ *       .hero__stage             viewport-height stage (no pinning; the swirl floats and leans)
  *         .hero__canvas          transparent WebGL canvas, full stage, behind the copy (masked where copy sits)
  *         .hero__grid            copy (h1 + CTAs, real HTML: this is the LCP) and the anchor box
  *           .hero__anchor        the filed composition is fitted to this box; holds the static poster
@@ -16,7 +16,6 @@ import { Check, Phone } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import HeroCanvas from './HeroCanvas';
 import { posterSvg } from './poster';
-import { HERO } from './engine/config';
 import { site } from '@/config/site';
 import { hero } from '@/content/home';
 import { defaultWhatsappMessage, telUrl, whatsappUrl } from '@/lib/contact';
@@ -32,7 +31,6 @@ const poster = posterSvg();
   data-hero
   data-story="pending"
   aria-labelledby="hero-title"
-  style={`--pin: ${HERO.story.pinVh}vh; --pin-m: ${HERO.story.pinVhMobile}vh`}
 >
   <div class="hero__track" data-hero-track>
     <div class="hero__stage" data-hero-stage>
@@ -76,7 +74,6 @@ const poster = posterSvg();
         </div>
       </div>
 
-      <p class="hero__cue" aria-hidden="true"><span class="hero__cue-line"></span> Scroll to file it</p>
       <p class="visually-hidden">
         Illustration: tax papers such as Form 16, the Annual Information Statement, a GSTR-3B return, invoices and
         challans settle into a neat stack, a rubber stamp marks it FILED, and an acknowledgement slip slides forward.
@@ -92,26 +89,6 @@ const poster = posterSvg();
     if (!s) return;
     var rm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
     s.dataset.story = !rm && 'WebGLRenderingContext' in window ? 'on' : 'off';
-    if (s.dataset.story !== 'on') return;
-
-    // Mobile hold: stick the stage when its bottom meets the screen bottom (below the sticky header if it fits).
-    var stage = s.querySelector('[data-hero-stage]');
-    var mq = matchMedia('(max-width: 59.99rem)');
-    // Only re-measure when the WIDTH changes: mobile browsers fire resize on every address-bar show/hide while
-    // scrolling, and re-pinning on those made the whole hero jitter.
-    var lastW = 0;
-    function measure(force) {
-      if (!stage || !mq.matches) return;
-      var w = window.innerWidth;
-      if (!force && w === lastW) return;
-      lastW = w;
-      var header = document.querySelector('.site-header');
-      s.style.setProperty('--stage-natural', stage.offsetHeight + 'px');
-      s.style.setProperty('--hdr-h', (header ? header.offsetHeight : 0) + 'px');
-    }
-    measure(true);
-    addEventListener('resize', function () { measure(false); }, { passive: true });
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { measure(true); });
   })();
 </script>
 
@@ -143,19 +120,6 @@ const poster = posterSvg();
       min-height: clamp(36rem, var(--stage-h), 60rem);
     }
   }
-  /* Scroll story: the stage pins while the track scrolls past (desktop, motion allowed, tall enough). */
-  @media (min-width: 60rem) and (min-height: 560px) and (prefers-reduced-motion: no-preference) {
-    .hero[data-story='on'] .hero__track {
-      height: calc(var(--stage-h) + var(--pin));
-    }
-    .hero[data-story='on'] .hero__stage {
-      position: sticky;
-      top: var(--stage-top);
-      height: var(--stage-h);
-      min-height: 0;
-    }
-  }
-
   /* ── canvas ── */
   .hero__canvas {
     position: absolute;
@@ -213,7 +177,7 @@ const poster = posterSvg();
   .hero__l1,
   .hero__l2 {
     display: block;
-    /* Capped by viewport height too, so the pinned stage never overflows on short laptop screens. */
+    /* Capped by viewport height too, so the stage never overflows on short laptop screens. */
     font-size: min(var(--step-5), 12.5svh);
     font-stretch: 76%;
     font-variation-settings: 'opsz' 96;
@@ -326,60 +290,4 @@ const poster = posterSvg();
     opacity: 0;
   }
 
-  /* Mobile / tablet: the stage is taller than the screen, so it scrolls normally until its bottom (the papers)
-     reaches the screen bottom, then holds for --pin-m while the story plays. --stage-natural and --stage-sticky
-     are measured by the inline script below. */
-  @media (max-width: 59.99rem) and (prefers-reduced-motion: no-preference) {
-    .hero[data-story='on'] .hero__track {
-      height: calc(var(--stage-natural, 100svh) + var(--pin-m));
-    }
-    .hero[data-story='on'] .hero__stage {
-      position: sticky;
-      /* svh (small viewport) doesn't change when the mobile address bar shows/hides, so the hold point is stable. */
-      top: min(var(--hdr-h, 0px), calc(100svh - var(--stage-natural, 100svh)));
-    }
-  }
-
-  /* ── scroll cue (desktop story only; fades as the story starts) ── */
-  .hero__cue {
-    display: none;
-  }
-  @media (min-width: 60rem) and (min-height: 560px) and (prefers-reduced-motion: no-preference) {
-    .hero[data-story='on'] .hero__cue {
-      position: absolute;
-      z-index: 2;
-      left: 50%;
-      bottom: var(--space-m);
-      display: inline-flex;
-      align-items: center;
-      gap: 0.6rem;
-      margin: 0;
-      transform: translateX(-50%);
-      font-size: var(--step--1);
-      font-weight: 600;
-      color: var(--ink-desk-2);
-      opacity: calc(1 - var(--hero-p, 0) * 8);
-      transition: opacity 200ms linear;
-    }
-    .hero__cue-line {
-      position: relative;
-      width: 1px;
-      height: 2.25rem;
-      overflow: hidden;
-      background: var(--line-desk);
-    }
-    .hero__cue-line::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--mint-300);
-      transform: translateY(-100%);
-      animation: hero-cue 2.2s var(--ease-in-out) infinite;
-    }
-  }
-  @keyframes hero-cue {
-    to {
-      transform: translateY(100%);
-    }
-  }
 </style>

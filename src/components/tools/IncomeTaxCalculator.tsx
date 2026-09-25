@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'rea
 import { ArrowDown, ArrowLeft, ArrowRight, Calculator, CircleCheck as Check2, ChevronDown, Minus, Phone, Plus, RotateCcw } from 'lucide-react';
 import FiledCta from '@/components/tools/FiledCta';
 import { TabList, tabId, tabPanelProps, type TabItem } from '@/components/tools/Tabs';
-import { Check, MoneyField, Notice, PartLegend, Segmented, ShareOptIn } from '@/components/tools/sc-fields';
+import { Check, MoneyField, Notice, Segmented, ShareOptIn } from '@/components/tools/sc-fields';
 import { prefersReducedMotion, Receipt, RcLine, RcLines, RcTotal, Stamp, useSettled, vars } from '@/components/tools/receipt';
 import { telUrl } from '@/lib/contact';
 import { site } from '@/config/site';
