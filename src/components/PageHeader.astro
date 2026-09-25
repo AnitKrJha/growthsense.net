@@ -1,0 +1,18 @@
+---
+import Breadcrumbs from './Breadcrumbs.astro';
+interface Props { title: string; lead?: string; eyebrow?: string; crumbs?: { name: string; path: string }[] }
+const { title, lead, eyebrow, crumbs } = Astro.props;
+---
+<header class="page-header">
+  <div class="container">
+    {crumbs && <Breadcrumbs items={crumbs} />}
+    {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+    <h1>{title}</h1>
+    {lead && <p class="lead">{lead}</p>}
+    <slot />
+  </div>
+</header>
+<style>
+  .page-header { padding-block: var(--space-6) var(--space-5); border-bottom: 1px solid var(--line); background: var(--surface); }
+  @media (min-width: 48rem) { .page-header { padding-block: var(--space-7) var(--space-6); } }
+</style>

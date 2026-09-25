@@ -1,0 +1,68 @@
+---
+import { site } from '@/config/site';
+import { serviceNav, toolNav } from '@/config/nav';
+import { formatPhone, telUrl, mailtoUrl, whatsappUrl } from '@/lib/contact';
+import Todo from './Todo.astro';
+const year = new Date().getFullYear();
+const { contact, location } = site;
+---
+<footer class="site-footer">
+  <div class="container cols">
+    <div>
+      <p class="f-brand"><img src={site.logo.white} width={site.logo.width} height={site.logo.height} alt={site.brandName} loading="lazy" /></p>
+      <p class="muted small">{site.owner.name} · {site.owner.role}{location.city ? `, ${location.city}` : ''}</p>
+      <ul class="f-list small">
+        <li>Phone: {contact.phone ? <a href={telUrl()!}>{formatPhone(contact.phone)}</a> : <Todo label="phone" />}</li>
+        <li>WhatsApp: {contact.whatsapp ? <a href={whatsappUrl()!} target="_blank" rel="noopener">{formatPhone(contact.whatsapp)}</a> : <Todo label="WhatsApp" />}</li>
+        <li>Email: {contact.email ? <a href={mailtoUrl()!}>{contact.email}</a> : <Todo label="email" />}</li>
+        <li>Hours: {contact.hoursLabel ?? <Todo label="working hours" />}</li>
+      </ul>
+    </div>
+    <nav aria-label="Services">
+      <p class="f-head">Services</p>
+      <ul class="f-list">{serviceNav.map((s) => <li><a href={s.href}>{s.title}</a></li>)}</ul>
+    </nav>
+    <nav aria-label="Calculators">
+      <p class="f-head">Calculators</p>
+      <ul class="f-list">{toolNav.map((t) => <li><a href={t.href}>{t.title}</a></li>)}</ul>
+    </nav>
+    <nav aria-label="Site">
+      <p class="f-head">Site</p>
+      <ul class="f-list">
+        <li><a href="/about">About</a></li>
+        <li><a href="/faq">FAQ</a></li>
+        <li><a href="/contact">Contact</a></li>
+        <li><a href="/privacy">Privacy</a></li>
+        <li><a href="/disclaimer">Disclaimer</a></li>
+      </ul>
+    </nav>
+  </div>
+  <div class="container legal small muted">
+    <p>
+      Calculators and articles on this site are for general information only and are not tax, legal or financial advice.
+      See the <a href="/disclaimer">disclaimer</a>. Official portals: <a href="https://www.incometax.gov.in" rel="noopener">incometax.gov.in</a>,
+      <a href="https://www.gst.gov.in" rel="noopener">gst.gov.in</a>, <a href="https://echallan.parivahan.gov.in" rel="noopener">echallan.parivahan.gov.in</a>.
+    </p>
+    <p class="legal-row">
+      <span>© {year} {site.brandName} · {site.owner.name}</span>
+      <span>Website designed with <span aria-label="love">♥</span> by <a href={site.credit.url} rel="noopener">{site.credit.label}</a></span>
+    </p>
+  </div>
+</footer>
+<style>
+  .site-footer { background: var(--ink); color: #e8ece9; padding-block: var(--space-7) calc(var(--space-6) + 4.5rem); }
+  @media (min-width: 60rem) { .site-footer { padding-bottom: var(--space-6); } }
+  .site-footer a { color: #cfe8dc; }
+  .site-footer a:hover { color: #fff; }
+  .site-footer .muted { color: #b5beb9; }
+  .site-footer .todo { color: var(--warn-ink); }
+  .cols { display: grid; gap: var(--space-6); grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); }
+  .f-brand { margin-bottom: var(--space-2); }
+  .f-brand img { height: 1.75rem; width: auto; }
+  .f-head { font-weight: 600; color: #fff; margin-bottom: var(--space-2); }
+  .f-list { list-style: none; padding: 0; margin: 0; }
+  .f-list li { margin-top: var(--space-2); }
+  .f-list a { display: inline-block; padding-block: 0.3rem; }
+  .legal { margin-top: var(--space-6); padding-top: var(--space-5); border-top: 1px solid rgb(255 255 255 / 0.12); }
+  .legal-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); margin: 0; }
+</style>

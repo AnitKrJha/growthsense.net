@@ -1,0 +1,13 @@
+---
+/** Accessible FAQ list using native <details>. Pair with faqLd() for FAQPage JSON-LD. */
+interface Props { faqs: { question: string; answer: string }[]; headingLevel?: 'h2' | 'h3' }
+const { faqs } = Astro.props;
+---
+<div class="faq">
+  {faqs.map((f) => (
+    <details>
+      <summary>{f.question}</summary>
+      <div><p set:html={f.answer} /></div>
+    </details>
+  ))}
+</div>

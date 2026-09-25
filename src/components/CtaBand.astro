@@ -1,0 +1,24 @@
+---
+import ContactButtons from './ContactButtons.astro';
+interface Props { title?: string; text?: string; topic?: string }
+const {
+  title = 'Want this handled for you?',
+  text = 'Send a message on WhatsApp or call. You will get a clear list of what is needed and a quote before any work starts.',
+  topic,
+} = Astro.props;
+---
+<section class="section cta-band" aria-labelledby="cta-title">
+  <div class="container cta-inner">
+    <div>
+      <h2 id="cta-title">{title}</h2>
+      <p class="muted">{text}</p>
+    </div>
+    <ContactButtons topic={topic} showEmail />
+  </div>
+</section>
+<style>
+  .cta-band { background: var(--accent-soft); }
+  .cta-inner { display: grid; gap: var(--space-5); align-items: center; }
+  .cta-inner p { margin: 0; }
+  @media (min-width: 48rem) { .cta-inner { grid-template-columns: 1fr auto; } }
+</style>

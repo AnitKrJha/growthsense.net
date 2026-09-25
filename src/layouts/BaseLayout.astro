@@ -1,0 +1,71 @@
+---
+import '@fontsource-variable/inter';
+import '@fontsource-variable/source-serif-4';
+import '@/styles/global.css';
+import Header from '@/components/Header.astro';
+import Footer from '@/components/Footer.astro';
+import MobileContactBar from '@/components/MobileContactBar.astro';
+import { site } from '@/config/site';
+import { professionalServiceLd } from '@/lib/schema';
+
+interface Props {
+  /** Page title without the brand suffix. Omit on the home page. */
+  title?: string;
+  description: string;
+  /** Extra JSON-LD objects (FAQPage, BreadcrumbList, WebApplication, Service...). */
+  jsonLd?: Record<string, unknown>[];
+  /** Absolute or root-relative OG image. */
+  ogImage?: string;
+  /** Topic for the sticky mobile WhatsApp message. */
+  whatsappTopic?: string;
+  noindex?: boolean;
+}
+
+const { title, description, jsonLd = [], ogImage = '/og-default.png', whatsappTopic, noindex = false } = Astro.props;
+const siteUrl = Astro.site ?? new URL('https://example.com');
+const fullTitle = title ? `${title} | ${site.brandName}` : `${site.brandName}: ${site.tagline}`;
+const canonical = new URL(Astro.url.pathname.replace(/\/$/, '') || '/', siteUrl).toString();
+const ogUrl = new URL(ogImage, siteUrl).toString();
+const ld = [professionalServiceLd(siteUrl), ...jsonLd];
+---
+<!doctype html>
+<html lang="en-IN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#0b6e4f" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.brandName} />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogUrl} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogUrl} />
+
+    {ld.map((obj) => <script type="application/ld+json" set:html={JSON.stringify(obj)} />)}
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    <MobileContactBar topic={whatsappTopic} />
+  </body>
+</html>

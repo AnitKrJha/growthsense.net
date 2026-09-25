@@ -1,0 +1,15 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import CtaBand from '@/components/CtaBand.astro';
+import { site } from '@/config/site';
+---
+<BaseLayout description={site.tagline}>
+  <section class="section">
+    <div class="container">
+      <p class="eyebrow">{site.owner.role}</p>
+      <h1>{site.tagline}</h1>
+      <p class="lead">Placeholder home page. Content agent replaces this.</p>
+    </div>
+  </section>
+  <CtaBand />
+</BaseLayout>

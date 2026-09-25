@@ -1,0 +1,67 @@
+---
+import { Menu, X } from 'lucide-react';
+import { site } from '@/config/site';
+import { mainNav } from '@/config/nav';
+import { whatsappUrl, defaultWhatsappMessage } from '@/lib/contact';
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const isActive = (href: string) => path === href || path.startsWith(`${href}/`);
+const wa = whatsappUrl(defaultWhatsappMessage());
+---
+<header class="site-header">
+  <div class="container bar">
+    <a class="brand" href="/">
+      <img src={site.logo.src} width={site.logo.width} height={site.logo.height} alt={`${site.brandName}, home`} />
+    </a>
+
+    <nav aria-label="Main" class="nav-desktop">
+      <ul>
+        {mainNav.map((n) => (
+          <li><a href={n.href} aria-current={isActive(n.href) ? 'page' : undefined}>{n.label}</a></li>
+        ))}
+      </ul>
+      <a class="btn btn--primary" href={wa ?? '/contact'} target={wa ? '_blank' : undefined} rel={wa ? 'noopener' : undefined}>Get help</a>
+    </nav>
+
+    <details class="nav-mobile">
+      <summary aria-label="Menu">
+        <Menu className="i-open" aria-hidden="true" />
+        <X className="i-close" aria-hidden="true" />
+      </summary>
+      <nav aria-label="Main mobile">
+        <ul>
+          {mainNav.map((n) => (
+            <li><a href={n.href} aria-current={isActive(n.href) ? 'page' : undefined}>{n.label}</a></li>
+          ))}
+        </ul>
+      </nav>
+    </details>
+  </div>
+</header>
+
+<style>
+  .site-header { position: sticky; top: 0; z-index: 50; background: rgb(251 250 247 / 0.92); backdrop-filter: saturate(1.4) blur(8px); border-bottom: 1px solid var(--line); }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 4rem; }
+  .brand { display: flex; align-items: center; gap: var(--space-3); color: var(--ink); text-decoration: none; min-height: var(--tap); }
+  .brand img { height: 1.75rem; width: auto; }
+  @media (min-width: 48rem) { .brand img { height: 2rem; } }
+
+  .nav-desktop { display: none; align-items: center; gap: var(--space-5); }
+  .nav-desktop ul, .nav-mobile ul { list-style: none; margin: 0; padding: 0; }
+  .nav-desktop ul { display: flex; gap: var(--space-1); }
+  .nav-desktop li, .nav-mobile li { margin: 0; }
+  nav a:not(.btn) { display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 var(--space-3); color: var(--ink-2); text-decoration: none; font-weight: 500; border-radius: 8px; }
+  nav a:not(.btn):hover { color: var(--ink); background: var(--surface-2); }
+  nav a[aria-current='page'] { color: var(--accent); }
+
+  .nav-mobile summary { list-style: none; display: grid; place-items: center; width: var(--tap); height: var(--tap); cursor: pointer; border-radius: 8px; }
+  .nav-mobile summary::-webkit-details-marker { display: none; }
+  .nav-mobile .i-close, .nav-mobile[open] .i-open { display: none; }
+  .nav-mobile[open] .i-close { display: block; }
+  .nav-mobile nav { position: absolute; left: 0; right: 0; top: 100%; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: var(--shadow); padding: var(--space-2) 1.25rem var(--space-4); }
+  .nav-mobile nav a { width: 100%; font-size: 1.0625rem; }
+
+  @media (min-width: 60rem) {
+    .nav-desktop { display: flex; }
+    .nav-mobile { display: none; }
+  }
+</style>

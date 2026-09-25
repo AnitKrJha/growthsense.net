@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 0 156 130" role="img" aria-label="GrowthSense">
+  <g fill="none" stroke="#0b6e4f" stroke-linecap="round">
+    <path d="M26 117Q92 94 136 31" stroke-width="8"/>
+    <path d="M87.5 93v31M115 86v38M142.5 77v47M169 64v60" stroke-width="6"/>
+  </g>
+  <path d="M107 18 155 2l10 38z" fill="#0b6e4f" stroke="#0b6e4f" stroke-width="2" stroke-linejoin="round"/>
+</svg>
