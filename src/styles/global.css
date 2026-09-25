@@ -38,6 +38,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* Safety net: nothing (rotated stamps, 3D bleed, long tokens) may create sideways scroll on phones.
+     `clip` (not `hidden`) so it doesn't create a scroll container and sticky elements keep working. */
+  overflow-x: clip;
+}
+main {
+  overflow-x: clip;
 }
 
 ::selection {
@@ -1121,7 +1127,7 @@ input[type='radio'] {
   object-position: left top;
 }
 ::view-transition-group(site-header),
-::view-transition-group(mobile-bar) {
+::view-transition-group(wa-fab) {
   animation-duration: 0s;
 }
 
@@ -1159,7 +1165,7 @@ input[type='radio'] {
   }
   .site-header,
   .site-footer,
-  .mobile-bar,
+  .wa-fab,
   .skip-link,
   .no-print,
   .btn {

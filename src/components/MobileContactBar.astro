@@ -1,60 +1,87 @@
 ---
-/** Sticky Call + WhatsApp bar, below 60rem only. Slides away while the header menu sheet is open. */
-import { Phone } from 'lucide-react';
+/**
+ * Floating WhatsApp button, below 60rem only (desktop has the header's WhatsApp pill).
+ * WhatsApp is the primary channel; Call stays available in the header menu and on every page's contact blocks.
+ * Slides away while the header menu sheet is open (the menu marks it inert).
+ */
 import { FaWhatsapp } from 'react-icons/fa';
-import { whatsappUrl, telUrl, defaultWhatsappMessage } from '@/lib/contact';
+import { whatsappUrl, defaultWhatsappMessage } from '@/lib/contact';
 interface Props { topic?: string }
 const wa = whatsappUrl(defaultWhatsappMessage(Astro.props.topic));
-const tel = telUrl();
 ---
-<div class="mobile-bar no-print" role="region" aria-label="Quick contact" data-inert-when-menu>
-  <a class="btn btn--primary mb-call" href={tel ?? '/contact'} title={tel ? undefined : 'TODO: phone number not set'}>
-    <Phone aria-hidden="true" /> Call
-  </a>
-  <a
-    class="btn btn--whatsapp mb-wa"
-    href={wa ?? '/contact'}
-    target={wa ? '_blank' : undefined}
-    rel={wa ? 'noopener' : undefined}
-    title={wa ? undefined : 'TODO: WhatsApp number not set'}
-  >
-    <FaWhatsapp aria-hidden="true" /> WhatsApp
-  </a>
-</div>
+<a
+  class="wa-fab no-print"
+  href={wa ?? '/contact'}
+  target={wa ? '_blank' : undefined}
+  rel={wa ? 'noopener' : undefined}
+  aria-label="Chat on WhatsApp"
+  data-inert-when-menu
+>
+  <FaWhatsapp aria-hidden="true" />
+  <span class="wa-fab__label" aria-hidden="true">WhatsApp</span>
+</a>
 <style>
-  .mobile-bar {
+  .wa-fab {
     position: fixed;
-    inset: auto 0 0 0;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: calc(1rem + env(safe-area-inset-bottom));
     z-index: 60;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr);
-    gap: var(--space-2xs);
-    padding: 0.625rem max(0.75rem, env(safe-area-inset-right)) calc(0.625rem + env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
-    background: var(--paper-50);
-    border-top: 1px solid var(--paper-300);
-    box-shadow: 0 -10px 24px -14px oklch(0.3 0.03 85 / 0.35);
-    view-transition-name: mobile-bar;
-    transition: transform var(--dur) var(--ease-out);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 56px;
+    padding: 0 1.25rem 0 1.05rem;
+    border-radius: var(--radius-pill);
+    background: var(--whatsapp);
+    color: var(--paper-50);
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    box-shadow:
+      0 2px 4px oklch(0.2 0.03 150 / 0.2),
+      0 12px 28px -8px oklch(0.2 0.05 150 / 0.55);
+    view-transition-name: wa-fab;
+    transition:
+      transform var(--dur) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
   }
-  /* A perforated tear line along the top edge: the bar reads as a slip, not a toolbar. */
-  .mobile-bar::before {
-    content: '';
-    position: absolute;
-    inset: -1px 0 auto 0;
-    height: 1px;
-    background: repeating-linear-gradient(to right, var(--line-strong) 0 6px, transparent 6px 11px);
-    opacity: 0.55;
+  .wa-fab :global(svg) {
+    width: 1.6rem;
+    height: 1.6rem;
   }
-  /* Slides away while the mobile menu is open (the menu marks it inert). */
-  .mobile-bar[inert] {
-    transform: translateY(110%);
+  .wa-fab:hover {
+    background: var(--whatsapp-hover);
+    color: var(--paper-50);
   }
-  .mobile-bar .btn {
-    width: 100%;
-    min-height: 48px;
+  .wa-fab:active {
+    transform: scale(0.97);
+  }
+  .wa-fab:focus-visible {
+    outline: 3px solid var(--carbon-600);
+    outline-offset: 3px;
+  }
+  /* A soft attention ring once after load; off under reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    .wa-fab::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      box-shadow: 0 0 0 0 oklch(0.52 0.13 150 / 0.45);
+      animation: wa-ring 1.6s var(--ease-out) 2.5s 2;
+      pointer-events: none;
+    }
+  }
+  @keyframes wa-ring {
+    to {
+      box-shadow: 0 0 0 14px oklch(0.52 0.13 150 / 0);
+    }
+  }
+  .wa-fab[inert] {
+    transform: translateY(calc(100% + 2rem));
   }
   @media (min-width: 60rem) {
-    .mobile-bar {
+    .wa-fab {
       display: none;
     }
   }

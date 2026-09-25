@@ -249,7 +249,9 @@
   .tds-ledger td.tds-cell-nature, .tds-ledger td.tds-cell-threshold, .tds-ledger td.tds-cell-pan { grid-column: 1 / -1; }
   .tds-ledger td.tds-cell-use { grid-column: 1 / -1; padding-top: 0.5rem; }
   .tds-ledger td.tds-cell-use .tds-use { width: 100%; }
-  .tds-sec { grid-auto-flow: column; justify-content: start; align-items: baseline; gap: 0.625rem; }
+  .tds-sec { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0.625rem; min-width: 0; }
+  .tds-sec__new { overflow-wrap: anywhere; }
+  .tds-ledger tbody tr > * { min-width: 0; overflow-wrap: anywhere; }
   .tds-ledger tbody tr.is-selected > :first-child { box-shadow: none; }
   .tds-ledger tbody tr.is-selected { box-shadow: inset 3px 0 0 0 transparent, inset 0 0 0 1.5px var(--forest-700); border-radius: var(--radius-paper); }
 }

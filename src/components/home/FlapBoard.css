@@ -1,6 +1,7 @@
 /* Split-flap deadline board. Plain CSS; only transform animates. */
 .flapboard {
-  --cell-w: clamp(1.28rem, 0.9rem + 1.6vw, 1.9rem);
+  /* The 12-character title row must fit the container on the narrowest phones (320px): cap by available width. */
+  --cell-w: min(clamp(1.28rem, 0.9rem + 1.6vw, 1.9rem), calc((100vw - 2.5rem - 1rem) / 12 - 2px));
   --cell-h: calc(var(--cell-w) * 1.42);
   --tile: oklch(0.15 0.02 162);
   --tile-top: oklch(0.19 0.025 162);
