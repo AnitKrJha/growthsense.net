@@ -1,0 +1,92 @@
+/* GrowthSense design tokens. See DESIGN.md. Imported before global.css. */
+:root {
+  /* colour: forest desk */
+  --forest-950: oklch(0.19 0.035 162);
+  --forest-900: oklch(0.24 0.045 162);
+  --forest-800: oklch(0.31 0.06 160);
+  --forest-700: oklch(0.40 0.08 158);
+  --forest-600: oklch(0.48 0.09 158);
+  --mint-300: oklch(0.86 0.09 158);
+  --mint-100: oklch(0.95 0.035 158);
+
+  /* colour: paper + graphite */
+  --paper-50: oklch(0.985 0.008 85);
+  --paper-100: oklch(0.965 0.014 85);
+  --paper-200: oklch(0.93 0.02 85);
+  --paper-300: oklch(0.87 0.022 85);
+  --graphite-900: oklch(0.22 0.015 160);
+  --graphite-700: oklch(0.38 0.015 160);
+  --graphite-500: oklch(0.50 0.012 160);
+
+  /* colour: signals */
+  --stamp-600: oklch(0.55 0.19 29);
+  --stamp-700: oklch(0.48 0.17 29);
+  --carbon-600: oklch(0.47 0.12 268);
+  --whatsapp: oklch(0.52 0.13 150);
+  --whatsapp-hover: oklch(0.46 0.12 150);
+
+  /* type */
+  --font-display: 'Bricolage Grotesque Variable', 'Hanken Grotesk Variable', system-ui, sans-serif;
+  --font-text: 'Hanken Grotesk Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-paper: 'Martian Mono Variable', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --step--1: 0.875rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.33rem;
+  --step-2: 1.77rem;
+  --step-3: clamp(2.1rem, 1.6rem + 2.2vw, 2.9rem);
+  --step-4: clamp(2.6rem, 1.8rem + 3.6vw, 4.2rem);
+  --step-5: clamp(3.2rem, 2rem + 6vw, 7rem);
+
+  /* space (fluid) */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-s: 1rem;
+  --space-m: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  --space-l: clamp(2rem, 1.5rem + 2vw, 3rem);
+  --space-xl: clamp(3rem, 2rem + 4vw, 5.5rem);
+  --space-2xl: clamp(4.5rem, 3rem + 6vw, 8.5rem);
+  --space-3xl: clamp(6rem, 4rem + 9vw, 12rem);
+
+  /* shape + depth */
+  --radius-paper: 2px;
+  --radius-ui: 12px;
+  --radius-pill: 999px;
+  --shadow-paper:
+    0 1px 1px oklch(0.3 0.03 85 / 0.06),
+    0 2px 4px oklch(0.3 0.03 85 / 0.06),
+    0 8px 24px -6px oklch(0.3 0.03 85 / 0.14);
+  --shadow-lift:
+    0 2px 2px oklch(0.3 0.03 85 / 0.06),
+    0 12px 32px -8px oklch(0.3 0.03 85 / 0.22);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  /* motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 160ms;
+  --dur: 320ms;
+  --dur-slow: 700ms;
+
+  --tap: 44px;
+  --container: 76rem;
+  --measure: 66ch;
+
+  /* legacy aliases so pre-redesign components keep working until restyled */
+  --font-sans: var(--font-text);
+  --font-serif: var(--font-display);
+  --ink: var(--graphite-900);
+  --ink-2: var(--graphite-700);
+  --muted: var(--graphite-500);
+  --bg: var(--paper-100);
+  --surface: var(--paper-50);
+  --surface-2: var(--paper-200);
+  --line: var(--paper-300);
+  --accent: var(--forest-700);
+  --accent-ink: var(--paper-50);
+  --accent-soft: var(--mint-100);
+  --accent-strong: var(--forest-800);
+  --focus: var(--carbon-600);
+  --ease: var(--ease-out);
+}
