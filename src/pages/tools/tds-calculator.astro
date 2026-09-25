@@ -1,0 +1,68 @@
+---
+import ToolShell from '@/components/tools/ToolShell.astro';
+import TdsRateFinder from '@/components/tools/TdsRateFinder';
+import Faq from '@/components/Faq.astro';
+import { faqLd } from '@/lib/schema';
+import { site } from '@/config/site';
+
+const near = site.location.city ? ` in ${site.location.city}` : '';
+
+const faqs = [
+  {
+    question: 'What happens if the payee does not give a PAN?',
+    answer:
+      'Under section 206AA, TDS is deducted at the higher of the normal rate or 20%. For e-commerce payments (194O) and purchase of goods (194Q) the higher rate is 5%. The payee also cannot see the credit properly in Form 26AS.',
+  },
+  {
+    question: 'Will these section numbers change?',
+    answer:
+      'Yes. The Income-tax Act, 2025 replaces the 1961 Act from 1 April 2026 and renumbers the TDS provisions. This table shows the FY 2025-26 sections. New-Act equivalents are still to be confirmed.',
+  },
+  {
+    question: 'Can I avoid TDS on my fixed deposit interest?',
+    answer:
+      'If your total income is below the taxable limit, you can give Form 15G (or Form 15H if you are 60 or older) to the bank so it does not deduct TDS on interest. Giving a false declaration is an offence.',
+  },
+  {
+    question: 'When is TDS paid and filed?',
+    answer:
+      'Tax deducted is generally deposited by the 7th of the next month (30 April for March), and quarterly TDS returns are filed in Form 24Q, 26Q or 27Q. Property purchases and certain rent payments use Form 26QB or 26QC instead.',
+  },
+];
+---
+<ToolShell
+  title="TDS rate finder"
+  seoTitle="TDS rate chart FY 2025-26: sections, thresholds and rates"
+  description={`Search TDS rates and thresholds for FY 2025-26 by section (192, 194C, 194J, 194I and more), and work out the TDS on a payment. Need TDS returns filed${near}? Ask for help.`}
+  lead="Look up common TDS sections, thresholds and rates for FY 2025-26, then work out the TDS on a payment."
+  verifiedNote="TDS rates and thresholds are unverified as of 26 Sep 2026. They are for FY 2025-26 under the Income-tax Act, 1961. Section numbers change under the Income-tax Act, 2025 from 1 April 2026. Check on incometax.gov.in."
+  ctaTopic="TDS returns / payments"
+>
+  <TdsRateFinder client:visible />
+  <Fragment slot="after">
+    <div class="prose tool-after">
+      <h2>Using this table</h2>
+      <p>
+        TDS (tax deducted at source) is deducted by the payer when a payment crosses the threshold for its section.
+        The rate can depend on whether the payee is an individual or HUF, or a firm or company. Surcharge and cess
+        are not included here.
+      </p>
+      <p>
+        Thresholds work differently by section: some apply per payment, some to the total for the year and some per
+        month. For payments to non-residents (section 195), the rate depends on the type of income and any tax treaty,
+        so get it checked.
+      </p>
+      <p>
+        Official TDS rates and forms:
+        <a href="https://www.incometax.gov.in" rel="noopener" target="_blank">incometax.gov.in</a>.
+      </p>
+      <h2>Frequently asked questions</h2>
+      <Faq faqs={faqs} />
+    </div>
+    <script type="application/ld+json" set:html={JSON.stringify(faqLd(faqs))} />
+  </Fragment>
+</ToolShell>
+
+<style>
+  .tool-after { margin-top: var(--space-7); }
+</style>

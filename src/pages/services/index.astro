@@ -1,0 +1,83 @@
+---
+import { getCollection } from 'astro:content';
+import { ArrowRight, MessageCircle } from 'lucide-react';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import CtaBand from '@/components/CtaBand.astro';
+import ContactButtons from '@/components/ContactButtons.astro';
+import ServiceIcon from '@/components/ServiceIcon.astro';
+import { site, type ServiceSlug } from '@/config/site';
+import { serviceMeta } from '@/config/nav';
+import { breadcrumbLd } from '@/lib/schema';
+
+const siteUrl = Astro.site ?? new URL('https://example.com');
+const city = site.location.city;
+const entries = (
+  await getCollection('services', ({ id, data }) => !data.draft && site.services[id as ServiceSlug] === true)
+).sort((a, b) => a.data.order - b.data.order);
+
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Services', path: '/services' },
+];
+const description = `Tax filing assistance${city ? ` in ${city}` : ''}: income tax return filing, GST registration and returns, TDS returns and challan payments. Pricing on request.`;
+---
+<BaseLayout title="Services: ITR, GST, TDS and challans" description={description} jsonLd={[breadcrumbLd(siteUrl, crumbs)]}>
+  <PageHeader
+    title="Services"
+    eyebrow={site.owner.role}
+    lead={`Help with income tax, GST and TDS filing and payments, for individuals, freelancers and small businesses${city ? ` in and around ${city}` : ''}. Every service starts with a checklist and a quote. Pricing is on request.`}
+    crumbs={crumbs}
+  />
+
+  <section class="section" aria-labelledby="list-title">
+    <div class="container">
+      <h2 id="list-title" class="visually-hidden">All services</h2>
+      <ul class="svc-list" role="list">
+        {entries.map((e) => (
+          <li>
+            <a class="card card--link svc-row" href={`/services/${e.id}`}>
+              <ServiceIcon slug={e.id} />
+              <div class="svc-body">
+                <h3>{serviceMeta[e.id as ServiceSlug]?.title ?? e.data.title}</h3>
+                <p class="muted">{e.data.description}</p>
+                <ul class="checklist small svc-points">
+                  {e.data.included.slice(0, 3).map((item) => <li>{item}</li>)}
+                </ul>
+              </div>
+              <span class="link-arrow">Details <ArrowRight aria-hidden="true" /></span>
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      <div class="card unsure">
+        <span class="icon-badge" aria-hidden="true"><MessageCircle /></span>
+        <div>
+          <h2 class="unsure-title">Not sure which service you need?</h2>
+          <p class="muted">Describe your situation in a message and you will be told what applies to you, what documents are needed and what it will cost.</p>
+          <ContactButtons />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand />
+</BaseLayout>
+
+<style>
+  .svc-list { list-style: none; padding: 0; margin: 0 0 var(--space-7); display: grid; gap: var(--space-4); }
+  .svc-list > li { margin: 0; }
+  .svc-row { display: grid; gap: var(--space-4); grid-template-columns: auto 1fr; align-items: start; }
+  .svc-row .icon-badge { margin: 0; }
+  .svc-row .link-arrow { grid-column: 2; color: var(--accent); }
+  @media (min-width: 48rem) {
+    .svc-row { grid-template-columns: auto 1fr auto; padding: var(--space-6); gap: var(--space-5); }
+    .svc-row .link-arrow { grid-column: 3; align-self: center; }
+  }
+  .svc-body p { margin-bottom: var(--space-3); }
+  .svc-points { margin: 0; color: var(--ink-2); }
+  .unsure { display: grid; gap: var(--space-4); grid-template-columns: auto 1fr; align-items: start; background: var(--surface-2); box-shadow: none; }
+  .unsure .icon-badge { margin: 0; }
+  .unsure-title { font-size: 1.375rem; }
+</style>

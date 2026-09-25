@@ -1,0 +1,245 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { ArrowRight, Clock, ExternalLink, FileText, Send, TriangleAlert } from 'lucide-react';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import ContactButtons from '@/components/ContactButtons.astro';
+import CtaBand from '@/components/CtaBand.astro';
+import Faq from '@/components/Faq.astro';
+import { site, type ServiceSlug } from '@/config/site';
+import { serviceMeta } from '@/config/nav';
+import { breadcrumbLd, faqLd, serviceLd } from '@/lib/schema';
+
+export async function getStaticPaths() {
+  const entries = await getCollection(
+    'services',
+    ({ id, data }) => !data.draft && site.services[id as ServiceSlug] === true,
+  );
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+interface Props { entry: CollectionEntry<'services'> }
+const { entry } = Astro.props;
+const { data } = entry;
+const slug = entry.id as ServiceSlug;
+const meta = serviceMeta[slug];
+const topic = meta?.whatsappTopic ?? data.title;
+const { Content } = await render(entry);
+
+const siteUrl = Astro.site ?? new URL('https://example.com');
+const path = `/services/${slug}`;
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Services', path: '/services' },
+  { name: data.title, path },
+];
+const city = site.location.city;
+const seoTitle = city ? `${data.seoTitle} in ${city}` : data.seoTitle;
+const enquiryHref = `/contact?service=${encodeURIComponent(slug)}`;
+
+const jsonLd = [
+  serviceLd(siteUrl, { name: data.title, path, description: data.description }),
+  breadcrumbLd(siteUrl, crumbs),
+  ...(data.faqs.length ? [faqLd(data.faqs)] : []),
+];
+
+const toc = [
+  { id: 'who', label: 'Who it’s for' },
+  { id: 'included', label: 'What’s included' },
+  { id: 'documents', label: 'Documents needed' },
+  { id: 'process', label: 'Process and timeline' },
+  { id: 'pricing', label: 'Pricing' },
+  ...(data.faqs.length ? [{ id: 'faqs', label: 'Questions' }] : []),
+  ...(data.officialLinks.length ? [{ id: 'links', label: 'Official links' }] : []),
+];
+---
+<BaseLayout title={seoTitle} description={data.description} jsonLd={jsonLd} whatsappTopic={topic}>
+  <PageHeader title={data.title} eyebrow="Service" lead={data.description} crumbs={crumbs}>
+    <div class="head-actions">
+      <ContactButtons topic={topic} />
+      <span class="pill">Pricing: {site.pricing}</span>
+    </div>
+  </PageHeader>
+
+  <div class="container layout">
+    <article class="main">
+      <section class="block" aria-labelledby="overview">
+        <h2 id="overview" class="visually-hidden">Overview</h2>
+        <div class="prose intro"><Content /></div>
+      </section>
+
+      <section class="block" aria-labelledby="who">
+        <h2 id="who">Who it’s for</h2>
+        <ul class="checklist">
+          {data.whoFor.map((item) => <li>{item}</li>)}
+        </ul>
+      </section>
+
+      <section class="block" aria-labelledby="included">
+        <h2 id="included">What’s included</h2>
+        <ul class="checklist cols-2">
+          {data.included.map((item) => <li>{item}</li>)}
+        </ul>
+        <p class="small muted">Scope is agreed with you before work starts. Anything outside it is quoted separately.</p>
+      </section>
+
+      <section class="block" aria-labelledby="documents">
+        <h2 id="documents">Documents you’ll need</h2>
+        <p class="muted">A starting checklist. You’ll get a list tailored to your case, so you only collect what applies.</p>
+        <div class="doc-grid">
+          {data.documents.map((group) => (
+            <div class="card doc-card">
+              {group.heading && (
+                <h3><FileText aria-hidden="true" /> {group.heading}</h3>
+              )}
+              <ul class="checklist small">
+                {group.items.map((item) => <li>{item}</li>)}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <p class="notice doc-note">
+          <TriangleAlert aria-hidden="true" />
+          <span>Please don’t send PAN, Aadhaar or other documents through the website form. Share them on WhatsApp or in person once you decide to go ahead.</span>
+        </p>
+      </section>
+
+      <section class="block" aria-labelledby="process">
+        <h2 id="process">Process and timeline</h2>
+        <ol class="steps">
+          {data.process.map((s) => (
+            <li>
+              <h3>{s.step}</h3>
+              <p>{s.detail}</p>
+            </li>
+          ))}
+        </ol>
+        <div class="timeline notice notice--info">
+          <Clock aria-hidden="true" />
+          <p><strong>Timeline.</strong> {data.timeline}</p>
+        </div>
+      </section>
+
+      <section class="block" aria-labelledby="pricing">
+        <h2 id="pricing">Pricing: {site.pricing}</h2>
+        <div class="card price-card">
+          <p>
+            The fee depends on your case: how many income sources or invoices there are, how organised the documents are and how often
+            the work repeats. Share a few details and you’ll get a clear quote before any work starts.
+          </p>
+          <div class="cluster">
+            <ContactButtons topic={topic} />
+            <a class="btn btn--ghost" href={enquiryHref}><Send aria-hidden="true" /> Send an enquiry</a>
+          </div>
+        </div>
+      </section>
+
+      {data.faqs.length > 0 && (
+        <section class="block" aria-labelledby="faqs">
+          <h2 id="faqs">Questions about {meta?.title ?? data.title}</h2>
+          <Faq faqs={data.faqs} />
+          <p class="small more-faq"><a class="link-arrow" href="/faq">More questions <ArrowRight aria-hidden="true" /></a></p>
+        </section>
+      )}
+
+      {data.officialLinks.length > 0 && (
+        <section class="block" aria-labelledby="links">
+          <h2 id="links">Official links</h2>
+          <p class="muted small">Government portals for your reference. {site.brandName} is not affiliated with any government department.</p>
+          <ul class="links">
+            {data.officialLinks.map((l) => (
+              <li>
+                <a href={l.url} rel="noopener">
+                  <span>{l.label}</span>
+                  <span class="host small">{new URL(l.url).hostname.replace(/^www\./, '')}</span>
+                  <ExternalLink aria-hidden="true" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+    </article>
+
+    <aside class="aside" aria-label="Get help with this service">
+      <div class="aside-inner">
+      <div class="card aside-card">
+        <p class="aside-title">{meta?.title ?? data.title}</p>
+        <p class="small muted">Pricing: <strong class="price">{site.pricing}</strong>. You get a checklist and quote first.</p>
+        <ContactButtons topic={topic} showEmail />
+        <a class="link-arrow small" href={enquiryHref}>Or send an enquiry <ArrowRight aria-hidden="true" /></a>
+      </div>
+      <nav class="toc small" aria-label="On this page">
+        <p class="toc-title">On this page</p>
+        <ul>
+          {toc.map((t) => <li><a href={`#${t.id}`}>{t.label}</a></li>)}
+        </ul>
+      </nav>
+      </div>
+    </aside>
+  </div>
+
+  <CtaBand title={`Get help with ${meta?.title ?? data.title}`} topic={topic} />
+</BaseLayout>
+
+<style>
+  .head-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); margin-top: var(--space-5); }
+
+  .layout { display: grid; gap: var(--space-6); padding-block: var(--space-6) var(--space-7); }
+  @media (min-width: 60rem) {
+    .layout { grid-template-columns: minmax(0, 1fr) 19rem; gap: var(--space-8); padding-block: var(--space-7) var(--space-8); }
+  }
+  .main { min-width: 0; }
+  .block { padding-block: var(--space-6); border-bottom: 1px solid var(--line); scroll-margin-top: 5rem; }
+  .block:first-child { padding-top: 0; }
+  .block:last-child { border-bottom: 0; }
+  .block h2 { scroll-margin-top: 5.5rem; }
+  .intro :global(p) { font-size: 1.125rem; color: var(--ink-2); }
+  .intro :global(p:last-child) { margin-bottom: 0; }
+
+  .cols-2 { display: grid; gap: var(--space-2) var(--space-6); }
+  .cols-2 li { margin: 0; }
+  @media (min-width: 48rem) { .cols-2 { grid-template-columns: 1fr 1fr; } }
+
+  .doc-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); margin-bottom: var(--space-4); }
+  .doc-card { box-shadow: none; }
+  .doc-card h3 { display: flex; align-items: center; gap: var(--space-2); font-size: 1.0625rem; font-family: var(--font-sans); margin-bottom: var(--space-3); }
+  .doc-card h3 :global(svg) { width: 1.125rem; height: 1.125rem; color: var(--accent); }
+  .doc-card ul { margin: 0; }
+  .doc-note, .timeline { display: flex; gap: var(--space-3); align-items: flex-start; margin: 0; }
+  .doc-note :global(svg), .timeline :global(svg) { width: 1.25rem; height: 1.25rem; margin-top: 0.15rem; }
+  .timeline { margin-top: var(--space-5); }
+  .timeline p { margin: 0; }
+
+  .price-card { background: var(--gradient-soft); border-color: #d3e6dc; box-shadow: none; }
+  .more-faq { margin: var(--space-4) 0 0; }
+
+  .links { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-2); }
+  .links li { margin: 0; }
+  .links a {
+    display: grid; grid-template-columns: 1fr auto; column-gap: var(--space-3); align-items: center; min-height: var(--tap);
+    padding: var(--space-3) var(--space-4); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+    color: var(--ink); text-decoration: none; transition: border-color 150ms var(--ease);
+  }
+  .links a:hover { border-color: var(--accent); color: var(--ink); }
+  .links .host { grid-column: 1; color: var(--muted); }
+  .links a :global(svg) { grid-row: 1 / span 2; grid-column: 2; width: 1rem; height: 1rem; color: var(--accent); }
+
+  .aside { display: none; }
+  @media (min-width: 60rem) {
+    .aside { display: block; }
+    .aside-inner { position: sticky; top: 5.5rem; }
+  }
+  .aside-card { display: grid; gap: var(--space-3); box-shadow: var(--shadow-lg); }
+  .toc { margin-top: var(--space-5); padding-left: var(--space-2); }
+  .aside-card p { margin: 0; }
+  .aside-card :global(.cluster) { display: grid; }
+  .aside-card :global(.btn) { width: 100%; }
+  .aside-title { font-family: var(--font-serif); font-size: 1.25rem; font-weight: 600; }
+  .price { color: var(--ink); }
+  .toc-title { font-weight: 600; margin-bottom: var(--space-2); }
+  .toc ul { list-style: none; padding: 0; margin: 0; border-left: 2px solid var(--line); }
+  .toc li { margin: 0; }
+  .toc a { display: block; padding: 0.35rem var(--space-3); color: var(--ink-2); text-decoration: none; margin-left: -2px; border-left: 2px solid transparent; }
+  .toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+</style>

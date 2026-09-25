@@ -1,0 +1,125 @@
+/*
+ * Functional styling for the secondary calculators (GST, HRA, advance tax, TDS). Imported by those islands only.
+ * Kept to layout and state hooks; a later design pass is expected to restyle these `sc-` classes.
+ * Builds on global.css + tools.css; every class is prefixed `sc-` so nothing leaks into other tools.
+ * Motion: short fades and colour transitions, all switched off under prefers-reduced-motion.
+ */
+
+/* ---------- form bits ---------- */
+.sc-form { align-content: start; }
+.sc-group { display: grid; gap: var(--space-2); }
+.sc-group > .sc-group-label { font-weight: 600; font-size: 0.9375rem; margin: 0; padding: 0; }
+.sc-row2 { display: grid; gap: var(--space-4); }
+@media (min-width: 30rem) { .sc-row2 { grid-template-columns: 1fr 1fr; } }
+
+.sc-affix { position: relative; }
+.sc-affix > .sc-prefix {
+  position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%);
+  color: var(--muted); font-weight: 500; pointer-events: none;
+}
+.sc-affix > .input { padding-left: 1.85rem; font-variant-numeric: tabular-nums; }
+
+/* Segmented control: full width, equal segments, smooth selection. */
+.sc-seg { display: flex; width: 100%; }
+.sc-seg label { flex: 1 1 0; min-width: 0; }
+.sc-seg span {
+  width: 100%; justify-content: center; text-align: center; line-height: 1.2;
+  transition: background-color 180ms var(--ease), color 180ms var(--ease), box-shadow 180ms var(--ease);
+}
+.sc-seg input:not(:checked) + span:hover { color: var(--ink); }
+
+.sc-check {
+  display: flex; gap: var(--space-3); align-items: center; min-height: var(--tap);
+  font-size: 0.9375rem; cursor: pointer;
+}
+.sc-check input { width: 1.25rem; height: 1.25rem; accent-color: var(--accent); flex-shrink: 0; }
+
+.sc-details { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.sc-details > summary {
+  cursor: pointer; list-style: none; min-height: var(--tap); display: flex; align-items: center;
+  justify-content: space-between; gap: var(--space-3); padding: 0 var(--space-4); font-weight: 600;
+}
+.sc-details > summary::-webkit-details-marker { display: none; }
+.sc-details > summary::after { content: '+'; color: var(--accent); font-size: 1.375rem; font-weight: 400; }
+.sc-details[open] > summary::after { content: '–'; }
+.sc-details > .sc-details-body { padding: 0 var(--space-4) var(--space-4); display: grid; gap: var(--space-4); }
+
+/* ---------- result card ---------- */
+.sc-result {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow); overflow: hidden;
+}
+.sc-result-head {
+  padding: var(--space-5); background: var(--accent-soft);
+  border-bottom: 1px solid var(--line);
+}
+.sc-result-head .result-figure { color: var(--accent-strong); line-height: 1.1; }
+.sc-result-sub { margin: var(--space-2) 0 0; color: var(--ink-2); font-size: 0.9375rem; }
+.sc-result-body { padding: var(--space-5); display: grid; gap: var(--space-5); }
+.sc-result-foot {
+  padding: var(--space-4) var(--space-5) var(--space-5); border-top: 1px solid var(--line);
+  display: grid; gap: var(--space-3); background: var(--surface-2);
+}
+.sc-result-foot .btn { justify-self: start; }
+
+.sc-empty { padding: var(--space-6) var(--space-5); color: var(--muted); text-align: center; }
+
+.sc-fade { animation: sc-fade 260ms var(--ease) both; }
+@keyframes sc-fade { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+.sc-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: var(--space-3); }
+.sc-stat { border: 1px solid var(--line); border-radius: var(--radius); padding: var(--space-3) var(--space-4); }
+.sc-stat .result-label { font-size: 0.8125rem; }
+.sc-stat strong { font-family: var(--font-serif); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+
+.sc-badge {
+  display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.125rem 0.5rem; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 600; background: var(--accent-soft); color: var(--accent-strong); white-space: nowrap;
+}
+.sc-badge--warn { background: var(--warn-bg); color: var(--warn-ink); }
+.sc-badge--muted { background: var(--surface-2); color: var(--ink-2); }
+
+/* ---------- tables ---------- */
+.sc-table { font-size: 0.9375rem; }
+.sc-table caption { text-align: left; font-weight: 600; padding-bottom: var(--space-2); color: var(--ink); }
+.sc-table thead th { background: var(--surface-2); border-bottom-color: var(--line); white-space: nowrap; }
+.sc-table thead th:first-child { border-top-left-radius: 8px; }
+.sc-table thead th:last-child { border-top-right-radius: 8px; }
+.sc-table tbody tr { transition: background-color 150ms var(--ease); }
+.sc-table tbody tr:hover { background: color-mix(in srgb, var(--accent-soft) 45%, transparent); }
+.sc-table tfoot td, .sc-table tr.sc-total td {
+  border-top: 2px solid var(--ink); border-bottom: 0; font-weight: 700; color: var(--ink);
+}
+.sc-table tr.is-applied td { background: var(--accent-soft); }
+.sc-table tr.is-applied td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.sc-table td.num, .sc-table th.num { white-space: nowrap; }
+
+.sc-note { font-size: 0.875rem; color: var(--muted); margin: 0; }
+.sc-list { margin: 0; padding-left: 1.1rem; font-size: 0.9375rem; color: var(--ink-2); }
+
+/* ---------- TDS finder ---------- */
+.sc-form-title { font-size: 1.25rem; margin: 0; }
+.sc-table-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
+.sc-table-card .sc-table thead th:first-child, .sc-table-card .sc-table thead th:last-child { border-radius: 0; }
+#tds-helper { scroll-margin-top: 5rem; }
+.sc-finder { display: grid; gap: var(--space-5); }
+.sc-toolbar { display: grid; gap: var(--space-3); }
+@media (min-width: 48rem) { .sc-toolbar { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); align-items: end; } }
+.sc-search { position: relative; }
+.sc-search svg { position: absolute; left: 0.8rem; top: 50%; transform: translateY(-50%); width: 1.125rem; height: 1.125rem; color: var(--muted); pointer-events: none; }
+.sc-search .input { padding-left: 2.4rem; }
+.sc-tds-table th[scope="row"] { white-space: nowrap; }
+.sc-section {
+  display: inline-block; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent-strong);
+  background: var(--accent-soft); border-radius: 6px; padding: 0.125rem 0.45rem; white-space: nowrap;
+}
+.sc-tds-table .sc-rate { font-weight: 600; white-space: nowrap; }
+.sc-tds-table td { min-width: 8rem; }
+.sc-tds-table td.sc-nature { min-width: 13rem; }
+.sc-tds-table .sc-pick { min-height: var(--tap); min-width: var(--tap); padding-inline: 0.75rem; font-size: 0.875rem; }
+.sc-tds-table tr.is-selected td { background: var(--accent-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-fade { animation: none; }
+  .sc-seg span, .sc-table tbody tr { transition: none; }
+}

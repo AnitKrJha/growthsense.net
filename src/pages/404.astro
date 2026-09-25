@@ -1,0 +1,43 @@
+---
+import { ArrowRight } from 'lucide-react';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import ContactButtons from '@/components/ContactButtons.astro';
+import { serviceNav, toolNav } from '@/config/nav';
+---
+<BaseLayout title="Page not found" description="The page you were looking for doesn’t exist or has moved." noindex>
+  <section class="section nf">
+    <div class="container nf-inner">
+      <p class="eyebrow">Error 404</p>
+      <h1>This page doesn’t exist</h1>
+      <p class="lead">The link may be old, or the address may have a typo. Try one of these instead, or get in touch directly.</p>
+      <div class="cluster nf-actions">
+        <a class="btn btn--primary" href="/">Go to the home page</a>
+        <ContactButtons />
+      </div>
+      <div class="grid grid--2 nf-links">
+        <nav aria-labelledby="nf-services">
+          <h2 id="nf-services">Services</h2>
+          <ul>
+            {serviceNav.map((s) => <li><a class="link-arrow" href={s.href}>{s.title} <ArrowRight aria-hidden="true" /></a></li>)}
+          </ul>
+        </nav>
+        <nav aria-labelledby="nf-tools">
+          <h2 id="nf-tools">Calculators</h2>
+          <ul>
+            {toolNav.map((t) => <li><a class="link-arrow" href={t.href}>{t.title} <ArrowRight aria-hidden="true" /></a></li>)}
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .nf { background: var(--gradient-soft); min-height: 60vh; }
+  .nf-inner { max-width: 48rem; }
+  .nf-actions { margin-bottom: var(--space-7); }
+  .nf-links h2 { font-size: 1.25rem; }
+  .nf-links ul { list-style: none; padding: 0; margin: 0; }
+  .nf-links li { margin: 0; }
+  .nf-links a { min-height: var(--tap); }
+</style>

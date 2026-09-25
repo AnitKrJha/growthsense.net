@@ -1,0 +1,105 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import Todo from '@/components/Todo.astro';
+import { site } from '@/config/site';
+import { breadcrumbLd } from '@/lib/schema';
+
+const siteUrl = Astro.site ?? new URL('https://example.com');
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Disclaimer', path: '/disclaimer' },
+];
+const { owner } = site;
+const hasCredentials = owner.credentials.length > 0;
+// TODO(owner): update when the disclaimer changes.
+const lastUpdated = '26 September 2026';
+---
+<BaseLayout
+  title="Disclaimer"
+  description={`Important information about the calculators and content on the ${site.brandName} website: estimates only, not tax, legal or financial advice.`}
+  jsonLd={[breadcrumbLd(siteUrl, crumbs)]}
+>
+  <PageHeader
+    title="Disclaimer"
+    lead="Please read this before relying on anything on this website."
+    crumbs={crumbs}
+  />
+
+  <section class="section">
+    <div class="container prose">
+      <p class="small muted">Last updated: {lastUpdated}</p>
+
+      <h2>Information only, not advice</h2>
+      <p>
+        The content on this website, including service descriptions, FAQs and checklists, is general information. It is not tax,
+        legal or financial advice, and it may not cover your particular situation. Tax law, rates, forms and due dates change often,
+        and the Income-tax Act, 2025 replaces the Income-tax Act, 1961 from 1 April 2026, which changes many section numbers and
+        terms. Always check the current position on the official portals or with a qualified professional before acting.
+      </p>
+
+      <h2>Calculators give estimates</h2>
+      <p>
+        The calculators on this site give <strong>estimates for information only</strong>. They are based on the rules for the year
+        shown on each calculator, and on the figures you enter. They do not take every rule, exception or recent change into account.
+        Your actual tax, interest or liability depends on your full facts and the law in force, and may differ from the estimate.
+        Don’t file a return or make a payment based only on a calculator result.
+      </p>
+
+      <h2>Who provides the services</h2>
+      <p>
+        {site.brandName} is run by {owner.name}, an individual offering tax filing assistance.
+        {hasCredentials
+          ? <>Credentials: {owner.credentials.join(', ')}.</>
+          : <>{owner.name} does not claim to be a Chartered Accountant, a firm, or to hold any professional registration unless it is stated on the <a href="/about">About page</a>. <Todo label="owner to confirm credentials, then revise this paragraph" /></>}
+      </p>
+      <p>
+        Work is carried out on the basis of the information and documents you provide. You remain responsible for the accuracy and
+        completeness of that information, and for reviewing and approving anything filed in your name.
+      </p>
+
+      <h2>Challan payments</h2>
+      <p>
+        Help with challans means <strong>assistance with making payments through official government portals only</strong>, such as
+        the income tax portal, the GST portal and Parivahan or state transport portals. Payments are made by you, directly to the
+        government. {site.brandName} cannot reduce, waive, cancel or settle any traffic fine, penalty or tax demand, and does not
+        represent you before traffic authorities or courts. Please never send challan money to any individual.
+      </p>
+
+      {site.services.financing && (
+        <>
+          <h2>Financing</h2>
+          <p>
+            Financing-related help is limited to preparing and organising your income and tax documents. {site.brandName} does not
+            lend money, and makes no promise or claim about loan approval, interest rates or terms, which are decided only by the
+            lender. <Todo label="if acting as a loan DSA / agent, disclose it here and name the lenders" />
+          </p>
+        </>
+      )}
+
+      <h2>No affiliation with the government</h2>
+      <p>
+        {site.brandName} is an independent service. It is not affiliated with, endorsed by or acting on behalf of the Income Tax
+        Department, the GST Network, CBIC, the Ministry of Road Transport and Highways or any other government body. Links to official
+        portals are provided for convenience.
+      </p>
+
+      <h2>No guarantee of outcomes</h2>
+      <p>
+        Refund timelines, processing of returns and registrations, and responses to notices depend on the government departments
+        concerned. No particular outcome, refund amount or timeline can be guaranteed.
+      </p>
+
+      <h2>External links</h2>
+      <p>This site links to government and other external websites. Their content and availability are outside {site.brandName}’s control.</p>
+
+      <h2>Limitation of liability</h2>
+      <p>
+        To the extent permitted by law, {site.brandName} and {owner.name} are not liable for any loss arising from reliance on the
+        general information or calculators on this website. Liability for paid work is limited to what is agreed with you for that work.
+      </p>
+
+      <p class="small muted">See also the <a href="/privacy">privacy notice</a>. <Todo label="owner to review this disclaimer" /></p>
+    </div>
+  </section>
+</BaseLayout>

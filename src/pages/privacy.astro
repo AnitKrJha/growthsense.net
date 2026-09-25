@@ -1,0 +1,130 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import Todo from '@/components/Todo.astro';
+import { site } from '@/config/site';
+import { mailtoUrl } from '@/lib/contact';
+import { breadcrumbLd } from '@/lib/schema';
+
+const siteUrl = Astro.site ?? new URL('https://example.com');
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Privacy', path: '/privacy' },
+];
+const { owner, contact } = site;
+const mail = mailtoUrl('Privacy request');
+// TODO(owner): update when the notice changes.
+const lastUpdated = '26 September 2026';
+---
+<BaseLayout
+  title="Privacy notice"
+  description={`How ${site.brandName} handles the personal data you share through this website, WhatsApp, phone or email, and your rights under India's DPDP Act, 2023.`}
+  jsonLd={[breadcrumbLd(siteUrl, crumbs)]}
+>
+  <PageHeader
+    title="Privacy notice"
+    lead="What information is collected, why, where it goes, and how to ask for it to be corrected or deleted."
+    crumbs={crumbs}
+  />
+
+  <section class="section">
+    <div class="container prose">
+      <p class="small muted">Last updated: {lastUpdated}</p>
+
+      <p class="notice"><strong>Please don’t send PAN, Aadhaar, bank details or other documents through the website contact form.</strong> If you decide to go ahead, share documents on WhatsApp or in person.</p>
+
+      <h2>Who is responsible for your data</h2>
+      <p>
+        This website is run by {owner.name}, trading as {site.brandName} (“{site.brandName}”, “I”, “me”). For the purposes of the
+        Digital Personal Data Protection Act, 2023 (DPDP Act), {owner.name} is the <em>data fiduciary</em> for personal data you
+        share through this website or when you get in touch.
+      </p>
+      <p>Contact for privacy questions: {mail ? <a href={mail}>{contact.email}</a> : <Todo label="privacy contact email" />}</p>
+
+      <h2>What is collected</h2>
+      <h3>When you use the contact form</h3>
+      <ul>
+        <li>your name</li>
+        <li>your mobile number</li>
+        <li>the service you are asking about, and your preferred language if you choose one</li>
+        <li>the message you type</li>
+        <li>the page you sent the form from</li>
+      </ul>
+      <p>The form does not ask for, and you should not enter, PAN, Aadhaar, bank account numbers, passwords or copies of documents.</p>
+
+      <h3>When you contact directly</h3>
+      <p>
+        If you message on WhatsApp, call or email, the details you choose to share (such as your name, number, messages and any
+        documents you send once you engage the service) are received through that channel.
+      </p>
+
+      <h3>When you use the calculators</h3>
+      <p>The calculators run entirely in your browser. The figures you type are not sent to or stored by {site.brandName}.</p>
+
+      <h3>Technical data</h3>
+      <p>
+        Like any website, the hosting provider automatically processes basic technical information such as your IP address, browser
+        type and the pages requested, in order to deliver the site and keep it secure. This site does not set advertising or
+        tracking cookies and does not use analytics at present. <Todo label="update this line if analytics are added" />
+      </p>
+
+      <h2>Why it is used</h2>
+      <ul>
+        <li>to reply to your enquiry and give you a checklist and a quote</li>
+        <li>to provide the service you ask for, if you decide to go ahead</li>
+        <li>to keep records required by law, for example for tax purposes</li>
+      </ul>
+      <p>Your information is used only for these purposes. It is processed on the basis of the consent you give by contacting me, and, where applicable, for purposes permitted by law.</p>
+
+      <h2>Where it goes</h2>
+      <ul>
+        <li>
+          <strong>Form provider.</strong> Contact-form submissions are delivered through a third-party form service
+          (<Todo label="name of form provider, e.g. Formspree" />), which forwards them by email.
+          If the form service is unavailable, the form opens your own email app instead, and your message is sent by your email provider.
+        </li>
+        <li><strong>Hosting.</strong> The website is hosted on Vercel, which processes the technical data described above.</li>
+        <li><strong>Messaging and email.</strong> If you use WhatsApp, phone or email, those providers process your messages under their own privacy policies.</li>
+        <li><strong>Government portals.</strong> When you engage a service, the information needed for your return or payment is entered on the official portal concerned (for example incometax.gov.in or gst.gov.in).</li>
+      </ul>
+      <p><strong>Your data is never sold, rented or shared for marketing.</strong></p>
+
+      <h2>How long it is kept</h2>
+      <p>
+        Enquiries that don’t lead to any work are deleted within a reasonable period once they are no longer needed.
+        <Todo label="confirm retention period, e.g. 12 months" /> Records of work done are kept for as long as the law requires,
+        and then deleted.
+      </p>
+
+      <h2>How it is protected</h2>
+      <p>
+        Reasonable security measures are used to protect your information, such as keeping records on password-protected devices and
+        accounts and limiting access to what is needed for your work. No method of transmission over the internet is completely
+        secure, which is another reason not to send identity documents through the website form.
+      </p>
+
+      <h2>Your rights</h2>
+      <p>Under the DPDP Act, 2023, you can:</p>
+      <ul>
+        <li>ask for a summary of the personal data held about you and how it is used</li>
+        <li>ask for inaccurate or incomplete data to be corrected or updated</li>
+        <li>ask for your data to be erased when it is no longer needed, subject to legal record-keeping requirements</li>
+        <li>withdraw your consent at any time (this won’t affect anything done before you withdraw it)</li>
+        <li>nominate another person to exercise these rights on your behalf in case of death or incapacity</li>
+        <li>raise a grievance and receive a response</li>
+      </ul>
+      <p>
+        To use any of these rights, contact {mail ? <a href={mail}>{contact.email}</a> : <Todo label="privacy contact email" />}.
+        If you are not satisfied with the response, you may complain to the Data Protection Board of India.
+      </p>
+
+      <h2>Children</h2>
+      <p>This website is not directed at children. If you are under 18, please ask a parent or guardian to get in touch on your behalf.</p>
+
+      <h2>Changes to this notice</h2>
+      <p>This notice may be updated from time to time. The date at the top shows when it last changed.</p>
+
+      <p class="small muted">This notice is written in plain language and is not legal advice. <Todo label="owner to review this notice, ideally with a lawyer" /></p>
+    </div>
+  </section>
+</BaseLayout>

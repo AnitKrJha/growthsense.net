@@ -1,0 +1,60 @@
+/* Income tax calculator: minimal functional styles. Scoped under .itc; a later design pass restyles these hooks.
+   Hooks: .itc-choices .itc-seg .itc-grid .itc-amount .itc-more(.itc-bd) .itc-result .itc-save .itc-badge
+          .itc-table .itc-row--{heading,item,less,subtotal,total} .itc-row__note .itc-fade */
+
+.itc-choices { display: grid; gap: var(--space-4); }
+.itc-seg-field { border: 0; padding: 0; margin: 0; min-width: 0; }
+.itc .calc-form .itc-seg-legend { font-family: var(--font-sans); font-size: 0.9375rem; margin-bottom: var(--space-2); }
+.itc-seg { display: flex; flex-wrap: wrap; width: fit-content; max-width: 100%; }
+.itc-year-label { margin: 0; }
+
+.itc-grid { display: grid; gap: var(--space-4); }
+@media (min-width: 30rem) { .itc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
+.itc-amount { position: relative; }
+.itc-amount__prefix { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.itc-amount .input { padding-left: 1.75rem; font-variant-numeric: tabular-nums; }
+
+.itc-more { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.itc-more > summary {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  min-height: var(--tap); padding: var(--space-2) var(--space-4); cursor: pointer; list-style: none;
+}
+.itc-more > summary::-webkit-details-marker { display: none; }
+.itc-more__title { display: block; font-weight: 600; }
+.itc-more__sub { display: block; font-size: 0.8125rem; color: var(--muted); }
+.itc-more__icon { width: 1.25rem; height: 1.25rem; }
+.itc-more[open] > summary .itc-more__icon { transform: rotate(180deg); }
+.itc-more__body { display: grid; gap: var(--space-4); padding: var(--space-3) var(--space-4) var(--space-4); border-top: 1px solid var(--line); }
+.itc-more__body > p { margin: 0; }
+.itc-check { min-height: var(--tap); align-items: center; }
+.itc-check input { margin-top: 0; flex-shrink: 0; }
+
+.itc-result { display: grid; gap: var(--space-4); }
+.itc-result__title { font-size: 1.25rem; margin: 0; }
+.itc-verify { display: flex; gap: var(--space-2); align-items: flex-start; margin: 0; }
+.itc-verify svg { width: 1.125rem; height: 1.125rem; margin-top: 0.2rem; }
+.itc .compare .result-label { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.itc .compare .result-figure { font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.25rem); }
+.itc-badge { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; font-weight: 600; color: var(--accent-strong); }
+.itc-badge svg { width: 0.875rem; height: 0.875rem; }
+.itc-sub { margin: 0; font-size: 0.8125rem; color: var(--muted); }
+.itc-save { margin: var(--space-4) 0 0; }
+.itc-notes { margin: var(--space-3) 0 0; color: var(--muted); }
+.itc-empty { margin: 0; }
+.itc-cta { display: grid; gap: var(--space-3); margin-top: var(--space-4); }
+
+.itc-fade { animation: itc-fade 200ms var(--ease) both; }
+@keyframes itc-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.itc-breakdowns { margin-top: var(--space-7); }
+.itc-breakdowns__grid { display: grid; gap: var(--space-4); }
+@media (min-width: 60rem) { .itc-breakdowns__grid { grid-template-columns: 1fr 1fr; align-items: start; } }
+.itc-bd__body { border-top: 1px solid var(--line); }
+.itc-table td.num { white-space: nowrap; }
+.itc-row__note { display: block; font-size: 0.8125rem; color: var(--muted); }
+.itc-row--heading th { padding-top: var(--space-4); color: var(--ink); font-size: 1rem; }
+.itc-row--subtotal td { font-weight: 600; }
+.itc-row--total td { font-weight: 700; }
+
+@media (max-width: 26rem) { .itc .compare { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .itc-fade { animation: none; } }

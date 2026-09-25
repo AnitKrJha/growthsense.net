@@ -1,0 +1,81 @@
+---
+import ToolShell from '@/components/tools/ToolShell.astro';
+import AdvanceTaxCalculator from '@/components/tools/AdvanceTaxCalculator';
+import Faq from '@/components/Faq.astro';
+import { faqLd } from '@/lib/schema';
+import { site } from '@/config/site';
+
+const near = site.location.city ? ` in ${site.location.city}` : '';
+
+const faqs = [
+  {
+    question: 'Who has to pay advance tax?',
+    answer:
+      'Anyone whose tax for the year, after TDS and TCS, is ₹10,000 or more. Resident senior citizens (60 or older) who have no business or professional income do not have to pay advance tax.',
+  },
+  {
+    question: 'What are the advance tax due dates?',
+    answer:
+      'At least 15% of the year’s tax by 15 June, 45% by 15 September, 75% by 15 December and 100% by 15 March. If you use presumptive taxation under section 44AD or 44ADA, you can pay the whole amount by 15 March.',
+  },
+  {
+    question: 'What is interest under section 234B and 234C?',
+    answer:
+      'Section 234C charges 1% a month for paying an instalment late or short: 3 months each for the June, September and December instalments and 1 month for March. Section 234B charges 1% a month from April after the year ends if you paid less than 90% of your tax as advance tax. This tool gives an estimate only.',
+  },
+  {
+    question: 'How do I pay advance tax?',
+    answer:
+      'Online through the e-Pay Tax service on incometax.gov.in, using challan ITNS 280 with the payment type set to advance tax. Keep the challan details for your return.',
+  },
+];
+---
+<ToolShell
+  title="Advance tax planner"
+  seoTitle="Advance tax calculator: due dates, instalments and 234B/234C interest"
+  description={`Plan your advance tax instalments for 15 June, September, December and March, and estimate interest under sections 234B and 234C. Get help with advance tax and ITR${near}.`}
+  lead="See how much advance tax to pay by each due date, and estimate interest if a payment was missed."
+  verifiedNote="Advance tax rules and interest calculations are unverified as of 26 Sep 2026. This is an estimate only. Section numbers change under the Income-tax Act, 2025 from 1 April 2026. Check on incometax.gov.in."
+  ctaTopic="advance tax"
+>
+  <AdvanceTaxCalculator client:visible />
+  <Fragment slot="after">
+    <div class="prose tool-after">
+      <h2>How advance tax works</h2>
+      <p>
+        Advance tax means paying income tax during the year instead of all at once when you file. It mostly affects
+        freelancers, business owners, landlords and investors whose TDS does not cover their full tax.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">Due date</th><th scope="col" class="num">Cumulative amount due</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>15 June</td><td class="num">15%</td></tr>
+            <tr><td>15 September</td><td class="num">45%</td></tr>
+            <tr><td>15 December</td><td class="num">75%</td></tr>
+            <tr><td>15 March</td><td class="num">100%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        With presumptive income under section 44AD or 44ADA, the whole amount can be paid by 15 March. The interest
+        estimate here rounds amounts down to the nearest ₹100 and counts part of a month as a full month. It does not
+        adjust for capital gains or other one-off income that arises later in the year. The Income-tax Act, 2025
+        replaces the section numbers used here from 1 April 2026.
+      </p>
+      <p>
+        Pay and check challans on <a href="https://www.incometax.gov.in" rel="noopener" target="_blank">incometax.gov.in</a>.
+      </p>
+      <h2>Frequently asked questions</h2>
+      <Faq faqs={faqs} />
+    </div>
+    <script type="application/ld+json" set:html={JSON.stringify(faqLd(faqs))} />
+  </Fragment>
+</ToolShell>
+
+<style>
+  .tool-after { margin-top: var(--space-7); }
+  .tool-after .table-wrap { margin-bottom: var(--space-4); max-width: 28rem; }
+</style>

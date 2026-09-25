@@ -1,0 +1,80 @@
+---
+import ToolShell from '@/components/tools/ToolShell.astro';
+import IncomeTaxCalculator from '@/components/tools/IncomeTaxCalculator';
+import Faq from '@/components/Faq.astro';
+import { faqLd } from '@/lib/schema';
+import { site } from '@/config/site';
+import { taxYears } from '@/lib/tax/rules';
+
+const near = site.location.city ? ` in ${site.location.city}` : '';
+
+// Built from the rules files so the note can never claim more than the data does.
+const unverified = taxYears.filter((y) => y.verified.status !== 'verified');
+const verifiedNote = unverified.length
+  ? `Tax rules not yet verified for ${unverified.map((y) => y.label).join(' and ')}. They were drafted from the Finance Act 2025, and Tax Year 2026-27 reuses the FY 2025-26 figures. Verify against the official Income Tax Department calculator before relying on them.`
+  : `Rules last verified: ${taxYears.map((y) => `${y.label} on ${y.verified.date}`).join('; ')}.`;
+
+const faqs = [
+  {
+    question: 'Which is better for me, the new regime or the old regime?',
+    answer:
+      'It depends on your deductions. The new regime has lower slab rates and a ₹75,000 standard deduction, but almost no deductions. The old regime has higher rates but allows 80C, 80D, HRA, home-loan interest and others. If your deductions are small, the new regime usually costs less. Enter your figures above to compare both.',
+  },
+  {
+    question: 'Is income up to ₹12 lakh tax-free under the new regime?',
+    answer:
+      'Under the FY 2025-26 figures used here (from the Finance Act 2025, still to be verified), a resident individual with total income up to ₹12,00,000 pays no tax under the new regime because of the rebate (s. 87A). For salaried people that is ₹12,75,000 of salary after the ₹75,000 standard deduction. Just above ₹12 lakh, marginal relief keeps the tax from exceeding the income above ₹12 lakh. The rebate does not cover tax on capital gains taxed at special rates.',
+  },
+  {
+    question: 'How are capital gains on shares and equity funds taxed here?',
+    answer:
+      'Short-term gains on listed equity (s. 111A) are taxed at 20%. Long-term gains (s. 112A) are taxed at 12.5% on the amount above ₹1,25,000. If your other income is below the basic exemption limit, the unused part reduces these gains. Other kinds of capital gains, such as property or debt funds, are not covered by this calculator.',
+  },
+  {
+    question: 'What is the difference between FY 2025-26 and Tax Year 2026-27?',
+    answer:
+      'The Income-tax Act, 2025 replaces the 1961 Act from 1 April 2026 and uses the term "tax year" instead of previous year and assessment year. FY 2025-26 (AY 2026-27) is the year whose returns are being filed now, under the 1961 Act. Tax Year 2026-27 is the current year, under the new Act. Section numbers change under the new Act, so this calculator shows the old section references for now.',
+  },
+];
+---
+<ToolShell
+  title="Income tax calculator"
+  seoTitle="Income tax calculator India: new vs old regime, FY 2025-26 and Tax Year 2026-27"
+  description={`Free income tax calculator for India. Compare the new and old regimes side by side with slab-wise tax, 87A rebate, surcharge, cess and capital gains. Help with ITR filing${near} too.`}
+  lead="Compare your tax under the new and old regimes, with every step of the calculation shown."
+  verifiedNote={verifiedNote}
+  ctaTopic="income tax return filing"
+>
+  <IncomeTaxCalculator client:visible />
+  <Fragment slot="after">
+    <div class="prose tool-after">
+      <h2>How the new and old regimes work</h2>
+      <p>
+        <strong>The new regime</strong> is the default. It has more slabs at lower rates (nil up to ₹4 lakh, then 5% to
+        30%), a ₹75,000 standard deduction for salary and a rebate that makes tax nil up to ₹12 lakh of total income.
+        In exchange, most deductions are not allowed. Employer NPS contributions are one of the few that are.
+      </p>
+      <p>
+        <strong>The old regime</strong> has fewer, higher slabs (nil up to ₹2.5 lakh, or more for senior citizens) and a
+        ₹50,000 standard deduction, and it allows deductions such as 80C investments, 80D health insurance, HRA and
+        home-loan interest. It suits people who claim large deductions.
+      </p>
+      <p>
+        Both regimes add a surcharge on high incomes (above ₹50 lakh), with marginal relief at each threshold, and a 4%
+        health and education cess. The calculator rounds total income and tax to the nearest ₹10, as the law requires.
+      </p>
+      <p>
+        This calculator assumes you are a resident individual. It does not cover business income, other capital gains,
+        losses carried forward or every deduction. Check your final figures on the official
+        <a href="https://www.incometax.gov.in" rel="noopener" target="_blank">incometax.gov.in</a> portal.
+      </p>
+      <h2>Frequently asked questions</h2>
+      <Faq faqs={faqs} />
+    </div>
+    <script type="application/ld+json" set:html={JSON.stringify(faqLd(faqs))} />
+  </Fragment>
+</ToolShell>
+
+<style>
+  .tool-after { margin-top: var(--space-7); }
+</style>

@@ -1,0 +1,17 @@
+---
+/** Consistent icon per service slug, rendered inside an .icon-badge. */
+import { FileText, Receipt, Landmark, CreditCard, HandCoins } from 'lucide-react';
+import type { ServiceSlug } from '@/config/site';
+
+interface Props { slug: ServiceSlug | string; class?: string }
+const { slug, class: cls } = Astro.props;
+const icons = {
+  'income-tax-return-filing': FileText,
+  'gst-registration-and-returns': Receipt,
+  tds: Landmark,
+  'challan-payments': CreditCard,
+  financing: HandCoins,
+} as const;
+const Icon = icons[slug as keyof typeof icons] ?? FileText;
+---
+<span class:list={['icon-badge', cls]} aria-hidden="true"><Icon /></span>

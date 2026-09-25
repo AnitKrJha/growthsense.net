@@ -1,0 +1,95 @@
+---
+import { getCollection } from 'astro:content';
+import { ArrowRight } from 'lucide-react';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import CtaBand from '@/components/CtaBand.astro';
+import Faq from '@/components/Faq.astro';
+import ServiceIcon from '@/components/ServiceIcon.astro';
+import { site, type ServiceSlug } from '@/config/site';
+import { serviceMeta } from '@/config/nav';
+import { allFaqs, faqGroups } from '@/content/faqs';
+import { breadcrumbLd, faqLd } from '@/lib/schema';
+
+const siteUrl = Astro.site ?? new URL('https://example.com');
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'FAQ', path: '/faq' },
+];
+const services = (
+  await getCollection('services', ({ id, data }) => !data.draft && site.services[id as ServiceSlug] === true)
+).sort((a, b) => a.data.order - b.data.order);
+---
+<BaseLayout
+  title="FAQ: ITR, GST, TDS and working together"
+  description="Answers to common questions about getting started, pricing, sharing documents safely, refunds, notices and the free tax calculators."
+  jsonLd={[breadcrumbLd(siteUrl, crumbs), faqLd(allFaqs)]}
+>
+  <PageHeader
+    title="Frequently asked questions"
+    eyebrow="FAQ"
+    lead="Quick answers about how the work is done. If your question isn’t here, send a message on WhatsApp."
+    crumbs={crumbs}
+  />
+
+  <section class="section">
+    <div class="container faq-layout">
+      <nav class="faq-toc small" aria-label="FAQ topics">
+        <p class="toc-title">Topics</p>
+        <ul>
+          {faqGroups.map((g) => <li><a href={`#${g.id}`}>{g.title}</a></li>)}
+          <li><a href="#by-service">Questions by service</a></li>
+        </ul>
+      </nav>
+      <div class="faq-body">
+        {faqGroups.map((g) => (
+          <section class="faq-group" aria-labelledby={g.id}>
+            <h2 id={g.id}>{g.title}</h2>
+            <Faq faqs={g.items} />
+          </section>
+        ))}
+
+        <section class="faq-group" aria-labelledby="by-service">
+          <h2 id="by-service">Questions by service</h2>
+          <p class="muted">Each service page has its own questions, along with the document checklist and process.</p>
+          <ul class="svc-links" role="list">
+            {services.map((e) => (
+              <li>
+                <a class="card card--link" href={`/services/${e.id}#faqs`}>
+                  <ServiceIcon slug={e.id} />
+                  <span class="svc-name">{serviceMeta[e.id as ServiceSlug]?.title ?? e.data.title}</span>
+                  <span class="small muted">{e.data.faqs.length} questions</span>
+                  <ArrowRight aria-hidden="true" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <CtaBand title="Still have a question?" text="Ask on WhatsApp or call. A short message is enough to get started." />
+</BaseLayout>
+
+<style>
+  .faq-layout { display: grid; gap: var(--space-6); }
+  @media (min-width: 60rem) { .faq-layout { grid-template-columns: 14rem minmax(0, 1fr); gap: var(--space-8); align-items: start; } }
+  .faq-toc { display: none; }
+  @media (min-width: 60rem) { .faq-toc { display: block; position: sticky; top: 6rem; } }
+  .toc-title { font-weight: 600; margin-bottom: var(--space-2); }
+  .faq-toc ul { list-style: none; padding: 0; margin: 0; border-left: 2px solid var(--line); }
+  .faq-toc li { margin: 0; }
+  .faq-toc a { display: block; padding: 0.35rem var(--space-3); color: var(--ink-2); text-decoration: none; margin-left: -2px; border-left: 2px solid transparent; }
+  .faq-toc a:hover { color: var(--accent); border-left-color: var(--accent); }
+  .faq-body { max-width: 48rem; }
+  .faq-group + .faq-group { margin-top: var(--space-7); }
+  .faq-group h2 { scroll-margin-top: 5.5rem; font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.75rem); }
+  .svc-links { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-3); }
+  .svc-links li { margin: 0; }
+  .svc-links a { display: grid; grid-template-columns: auto 1fr auto auto; gap: var(--space-4); align-items: center; padding: var(--space-4); box-shadow: none; }
+  .svc-links .icon-badge { margin: 0; }
+  .svc-links a > :global(svg) { width: 1.125rem; height: 1.125rem; color: var(--accent); }
+  .svc-name { font-weight: 600; }
+  @media (max-width: 30rem) { .svc-links a { grid-template-columns: auto 1fr auto; } .svc-links .small { display: none; } }
+</style>

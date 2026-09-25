@@ -241,3 +241,45 @@ tfoot td { font-weight: 700; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* ---------- additive utilities (content pages) ----------
+   Additive only. Existing classes above are unchanged. */
+:root {
+  --shadow-lg: 0 2px 4px rgb(20 30 25 / 0.05), 0 18px 40px -12px rgb(20 30 25 / 0.18);
+  --gradient-soft: linear-gradient(135deg, #e5f2ec 0%, #f3f8f5 55%, #fbfaf7 100%);
+}
+
+.tabular { font-variant-numeric: tabular-nums; }
+
+.pill {
+  display: inline-flex; align-items: center; gap: var(--space-2); min-height: 2rem; padding: 0.25rem 0.75rem;
+  border-radius: 999px; background: var(--accent-soft); color: var(--accent-strong); font-size: 0.875rem; font-weight: 600;
+}
+
+.link-arrow { display: inline-flex; align-items: center; gap: var(--space-1); font-weight: 600; text-decoration: none; }
+.link-arrow svg { width: 1rem; height: 1rem; }
+
+/* Numbered steps with a connecting line. Vertical on mobile, horizontal from 60rem with .steps--row. */
+.steps { list-style: none; padding: 0; margin: 0; counter-reset: step; display: grid; gap: var(--space-5); }
+.steps > li { position: relative; margin: 0; padding-left: 3.75rem; counter-increment: step; }
+.steps > li::before {
+  content: counter(step); position: absolute; left: 0; top: 0; z-index: 1;
+  display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 50%;
+  background: var(--surface); color: var(--accent); border: 2px solid var(--accent);
+  font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.steps > li:not(:last-child)::after {
+  content: ''; position: absolute; left: calc(1.375rem - 1px); top: 2.75rem; bottom: calc(-1 * var(--space-5));
+  width: 2px; background: linear-gradient(var(--accent), var(--line));
+}
+.steps h3 { font-size: 1.125rem; margin-bottom: var(--space-1); padding-top: 0.55rem; }
+.steps p { margin: 0; color: var(--ink-2); }
+@media (min-width: 60rem) {
+  .steps--row { grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--space-6); }
+  .steps--row > li { padding-left: 0; padding-top: 4rem; }
+  .steps--row > li:not(:last-child)::after {
+    left: 3.25rem; right: calc(-1 * var(--space-6)); top: calc(1.375rem - 1px); bottom: auto; width: auto; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--line));
+  }
+  .steps--row h3 { padding-top: 0; }
+}

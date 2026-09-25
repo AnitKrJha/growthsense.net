@@ -1,15 +1,196 @@
 ---
+/**
+ * Home page. All copy lives in src/content/home.ts; this file is structure + minimal layout CSS
+ * (the visual design is handled separately).
+ */
+import { getCollection } from 'astro:content';
+import {
+  ArrowRight, BellRing, Calculator, CircleCheck, ClipboardList, FileCheck, Landmark, MessageCircle, UserRound,
+} from 'lucide-react';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import ContactButtons from '@/components/ContactButtons.astro';
 import CtaBand from '@/components/CtaBand.astro';
+import Faq from '@/components/Faq.astro';
+import ServiceIcon from '@/components/ServiceIcon.astro';
 import { site } from '@/config/site';
+import { serviceNav, toolNav } from '@/config/nav';
+import { allFaqs } from '@/content/faqs';
+import {
+  closingCta, faqTeaser, hero, heroExample, homeMeta, howItWorks, servicesIntro, toolsIntro, whyUs,
+} from '@/content/home';
+import { formatINR } from '@/lib/format';
+
+// Only link to services that have a published (non-draft) page.
+const live = new Set((await getCollection('services', ({ data }) => !data.draft)).map((e) => e.id));
+const services = serviceNav.filter((s) => live.has(s.slug));
+
+const icons = { UserRound, ClipboardList, MessageCircle, FileCheck, Landmark, BellRing } as const;
+const maxAmount = Math.max(...heroExample.rows.map((r) => r.amount));
+const [oldRow, newRow] = heroExample.rows;
+const diff = oldRow.amount - newRow.amount;
 ---
-<BaseLayout description={site.tagline}>
-  <section class="section">
-    <div class="container">
-      <p class="eyebrow">{site.owner.role}</p>
-      <h1>{site.tagline}</h1>
-      <p class="lead">Placeholder home page. Content agent replaces this.</p>
+<BaseLayout description={homeMeta.description}>
+  <section class="section hero" aria-labelledby="hero-title">
+    <div class="container hero-grid">
+      <div>
+        <p class="eyebrow">{hero.eyebrow}</p>
+        <h1 id="hero-title">{hero.headlines[0]}</h1>
+        <p class="lead">{hero.lead}</p>
+        <ContactButtons />
+        <ul class="hero-points small" role="list">
+          {hero.points.map((p) => <li><CircleCheck aria-hidden="true" /> {p}</li>)}
+        </ul>
+      </div>
+
+      <figure class="card example" aria-labelledby="example-title">
+        <p id="example-title" class="example-title">{heroExample.title} <span class="pill">{heroExample.year}</span></p>
+        <p class="small muted">{heroExample.caption}</p>
+        <dl class="tabular">
+          {heroExample.rows.map((r) => (
+            <div class="example-row" style={`--w: ${Math.round((r.amount / maxAmount) * 100)}%`}>
+              <dt>{r.label}</dt>
+              <dd>{formatINR(r.amount)}</dd>
+            </div>
+          ))}
+        </dl>
+        <p class="small tabular"><strong>Difference in this example: {formatINR(diff)}</strong></p>
+        <figcaption class="small muted">
+          Example only, not advice. Try the <a href="/tools/income-tax-calculator">income tax calculator</a> with your own numbers.
+        </figcaption>
+      </figure>
     </div>
   </section>
-  <CtaBand />
+
+  <section class="section" aria-labelledby="services-title">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">{servicesIntro.eyebrow}</p>
+        <h2 id="services-title">{servicesIntro.title}</h2>
+        <p>{servicesIntro.text}</p>
+      </div>
+      <ul class="grid grid--3 card-list" role="list">
+        {services.map((s) => (
+          <li>
+            <a class="card card--link" href={s.href}>
+              <ServiceIcon slug={s.slug} />
+              <h3>{s.title}</h3>
+              <p class="muted">{s.short}</p>
+              <span class="link-arrow">View details <ArrowRight aria-hidden="true" /></span>
+            </a>
+          </li>
+        ))}
+        <li>
+          <a class="card card--link" href="/contact">
+            <span class="icon-badge" aria-hidden="true"><MessageCircle /></span>
+            <h3>{servicesIntro.unsure.title}</h3>
+            <p class="muted">{servicesIntro.unsure.text}</p>
+            <span class="link-arrow">{servicesIntro.unsure.cta} <ArrowRight aria-hidden="true" /></span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section section--alt" aria-labelledby="how-title">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">{howItWorks.eyebrow}</p>
+        <h2 id="how-title">{howItWorks.title}</h2>
+        <p>{howItWorks.text}</p>
+      </div>
+      <ol class="steps steps--row">
+        {howItWorks.steps.map((s) => (
+          <li>
+            <h3>{s.title}</h3>
+            <p>{s.text}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="tools-title">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">{toolsIntro.eyebrow}</p>
+        <h2 id="tools-title">{toolsIntro.title}</h2>
+        <p>{toolsIntro.text}</p>
+      </div>
+      <ul class="grid grid--3 card-list" role="list">
+        {toolNav.map((t) => (
+          <li>
+            <a class="card card--link" href={t.href}>
+              <span class="icon-badge" aria-hidden="true"><Calculator /></span>
+              <h3>{t.title}</h3>
+              <p class="muted">{t.short}</p>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="small muted tools-foot">
+        {toolsIntro.note} See the <a href="/disclaimer">disclaimer</a>. <a class="link-arrow" href="/tools">All calculators <ArrowRight aria-hidden="true" /></a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section section--alt" aria-labelledby="why-title">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">{whyUs.eyebrow}</p>
+        <h2 id="why-title">{whyUs.title}</h2>
+        <p>{whyUs.text}</p>
+      </div>
+      <ul class="grid grid--3 reasons" role="list">
+        {whyUs.points.map((p) => {
+          const Icon = icons[p.icon];
+          return (
+            <li>
+              <span class="icon-badge" aria-hidden="true"><Icon /></span>
+              <h3>{p.title}</h3>
+              <p class="muted">{p.text}</p>
+            </li>
+          );
+        })}
+      </ul>
+      <p><a class="link-arrow" href="/about">About {site.owner.name} <ArrowRight aria-hidden="true" /></a></p>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="faq-title">
+    <div class="container faq-wrap">
+      <div class="section-head">
+        <p class="eyebrow">{faqTeaser.eyebrow}</p>
+        <h2 id="faq-title">{faqTeaser.title}</h2>
+        <p>{faqTeaser.text}</p>
+      </div>
+      <Faq faqs={allFaqs.slice(0, faqTeaser.count)} />
+      <p class="faq-more"><a class="link-arrow" href="/faq">See all questions <ArrowRight aria-hidden="true" /></a></p>
+    </div>
+  </section>
+
+  <CtaBand title={closingCta.title} text={closingCta.text} />
 </BaseLayout>
+
+<style>
+  .hero-grid { display: grid; gap: var(--space-6); align-items: center; }
+  @media (min-width: 60rem) { .hero-grid { grid-template-columns: 1.2fr 0.8fr; gap: var(--space-8); } }
+  .hero-points { list-style: none; padding: 0; margin: var(--space-5) 0 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); }
+  .hero-points li { margin: 0; display: inline-flex; align-items: center; gap: var(--space-2); }
+  .hero-points :global(svg) { width: 1rem; height: 1rem; color: var(--accent); }
+
+  .example { margin: 0; }
+  .example-title { display: flex; justify-content: space-between; gap: var(--space-3); font-weight: 600; margin-bottom: var(--space-1); }
+  .example dl { margin: var(--space-4) 0; display: grid; gap: var(--space-3); }
+  .example-row { display: flex; justify-content: space-between; padding-bottom: var(--space-2); background: linear-gradient(var(--accent), var(--accent)) left bottom / var(--w) 6px no-repeat; }
+  .example-row dd { margin: 0; font-weight: 700; }
+
+  .card-list { list-style: none; padding: 0; margin: 0; }
+  .card-list > li, .reasons > li { margin: 0; }
+  .card .link-arrow { margin-top: var(--space-3); }
+  .reasons { list-style: none; padding: 0; margin: 0 0 var(--space-5); }
+  .reasons h3 { font-size: 1.125rem; }
+  .reasons p { margin: 0; }
+  .tools-foot { margin-top: var(--space-5); }
+  .faq-wrap { max-width: 52rem; }
+  .faq-more { margin-top: var(--space-4); }
+</style>

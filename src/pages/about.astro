@@ -1,0 +1,136 @@
+---
+import { UserRound } from 'lucide-react';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import CtaBand from '@/components/CtaBand.astro';
+import Todo from '@/components/Todo.astro';
+import { site, isTodo } from '@/config/site';
+import { breadcrumbLd } from '@/lib/schema';
+
+const siteUrl = Astro.site ?? new URL('https://example.com');
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'About', path: '/about' },
+];
+const { owner, location } = site;
+// Optional: add `photo: '/brand/owner.webp'` (and `photoAlt`) to site.owner once the owner sends a photo.
+const photo = (owner as { photo?: string | null }).photo ?? null;
+const langNames: Record<string, string> = { en: 'English', hi: 'Hindi' };
+const languages = site.languages.map((l) => langNames[l] ?? l).join(', ');
+const city = location.city;
+
+const principles = [
+  'You get a document checklist and a quote before any work starts.',
+  'Your figures are checked against what the department already has (Form 26AS, AIS, GSTR-2B).',
+  'Nothing is filed until you have seen a plain-language summary and approved it.',
+  'Returns and payments go through official government portals only.',
+  'Your documents are used only for your work and are not shared or sold.',
+  'If something is outside the scope of this service, you are told so plainly.',
+];
+---
+<BaseLayout
+  title={`About ${owner.name}`}
+  description={`About ${owner.name}, the individual tax practitioner behind ${site.brandName}: how the work is done, and help with ITR, GST, TDS and challans${city ? ` in ${city}` : ''}.`}
+  jsonLd={[breadcrumbLd(siteUrl, crumbs)]}
+>
+  <PageHeader
+    title={`About ${owner.name}`}
+    eyebrow={`About ${site.brandName}`}
+    lead={`${site.brandName} is run by ${owner.name}, an individual tax practitioner offering tax filing assistance to salaried people, pensioners, freelancers and small businesses${city ? ` in and around ${city}` : ''}.`}
+    crumbs={crumbs}
+  />
+
+  <section class="section">
+    <div class="container about-grid">
+      <figure class="photo">
+        {photo ? (
+          <img src={photo} alt={(owner as { photoAlt?: string }).photoAlt ?? `Photo of ${owner.name}`} width="480" height="600" loading="eager" />
+        ) : (
+          <div class="photo-placeholder">
+            <UserRound aria-hidden="true" />
+            <Todo label="owner photo" />
+          </div>
+        )}
+        <figcaption class="small muted">{owner.name} · {owner.role}</figcaption>
+      </figure>
+
+      <div class="bio">
+        <h2>Background</h2>
+        <div class="prose">
+          {owner.bio ? <p>{owner.bio}</p> : <p><Todo label="short bio from the owner (2–4 sentences, real facts only)" /></p>}
+        </div>
+
+        <dl class="facts">
+          <div>
+            <dt>Role</dt>
+            <dd>{owner.role}</dd>
+          </div>
+          <div>
+            <dt>Credentials</dt>
+            <dd>
+              {owner.credentials.length > 0 ? (
+                <ul>{owner.credentials.map((c) => <li>{c}</li>)}</ul>
+              ) : (
+                <Todo label="exact credentials, or remove this row if none" />
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt>Experience</dt>
+            <dd>{owner.yearsOfExperience ? `${owner.yearsOfExperience} years` : <Todo label="years of experience" />}</dd>
+          </div>
+          <div>
+            <dt>Based in</dt>
+            <dd>{city ? [city, location.state].filter(Boolean).join(', ') : <Todo label="city / areas served" />}</dd>
+          </div>
+          <div>
+            <dt>How you can work together</dt>
+            <dd>{isTodo(location.mode) ? <Todo label="in person, online, or both" /> : location.mode}</dd>
+          </div>
+          <div>
+            <dt>Languages</dt>
+            <dd>{languages}</dd>
+          </div>
+        </dl>
+        <p class="small muted">Only the credentials listed on this page are claimed. {site.brandName} is not affiliated with any government department.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--alt" aria-labelledby="how-title">
+    <div class="container">
+      <div class="section-head">
+        <p class="eyebrow">How the work is done</p>
+        <h2 id="how-title">A few simple rules</h2>
+        <p>Every client, every service, the same way.</p>
+      </div>
+      <ul class="checklist principles">
+        {principles.map((p) => <li>{p}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <CtaBand title={`Talk to ${owner.name}`} text="Send a message on WhatsApp or call. Describe what you need and you’ll get a checklist and a quote." />
+</BaseLayout>
+
+<style>
+  .about-grid { display: grid; gap: var(--space-6); align-items: start; }
+  @media (min-width: 48rem) { .about-grid { grid-template-columns: minmax(14rem, 22rem) minmax(0, 1fr); gap: var(--space-8); } }
+  .photo { margin: 0; }
+  .photo img, .photo-placeholder { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
+  .photo-placeholder {
+    display: grid; place-items: center; align-content: center; gap: var(--space-3);
+    background: var(--gradient-soft); border: 1px dashed #b9d8c8; color: var(--accent);
+  }
+  .photo-placeholder :global(svg) { width: 3.5rem; height: 3.5rem; opacity: 0.6; }
+  .photo figcaption { margin-top: var(--space-3); }
+  .facts { margin: var(--space-6) 0 var(--space-4); display: grid; border-top: 1px solid var(--line); }
+  .facts > div { display: grid; gap: var(--space-1); padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
+  @media (min-width: 40rem) { .facts > div { grid-template-columns: 13rem 1fr; gap: var(--space-4); } }
+  .facts dt { font-weight: 600; color: var(--muted); font-size: 0.9375rem; }
+  .facts dd { margin: 0; }
+  .facts ul { margin: 0; padding-left: 1.1rem; }
+  .principles { display: grid; gap: var(--space-3) var(--space-6); max-width: 60rem; }
+  .principles li { margin: 0; }
+  @media (min-width: 48rem) { .principles { grid-template-columns: 1fr 1fr; } }
+</style>

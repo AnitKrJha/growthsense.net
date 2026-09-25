@@ -1,0 +1,71 @@
+---
+import ToolShell from '@/components/tools/ToolShell.astro';
+import HraCalculator from '@/components/tools/HraCalculator';
+import Faq from '@/components/Faq.astro';
+import { faqLd } from '@/lib/schema';
+import { site } from '@/config/site';
+import { hraMetroCities } from '@/lib/hra/hra';
+
+const near = site.location.city ? ` in ${site.location.city}` : '';
+const metros = hraMetroCities.cities.join(', ');
+
+const faqs = [
+  {
+    question: 'Can I claim HRA exemption under the new tax regime?',
+    answer:
+      'No. HRA exemption is available only if you choose the old tax regime. Under the new regime the full HRA is taxable. Compare both regimes before you decide.',
+  },
+  {
+    question: 'Which cities count as metro for HRA?',
+    answer: `For the 50% limit, the long-standing metro cities are ${metros}. All other cities use 40%. Proposals under the new Income-tax Rules may add cities such as Bengaluru, Hyderabad, Pune and Ahmedabad, so confirm the current list before relying on it.`,
+  },
+  {
+    question: 'Do I need my landlord’s PAN?',
+    answer:
+      'Yes, if the rent you pay is more than ₹1,00,000 in the year. Your employer will ask for the landlord’s PAN along with rent receipts or the rent agreement.',
+  },
+  {
+    question: 'What if I do not get HRA from my employer?',
+    answer:
+      'This calculator is only for HRA received from an employer. If you pay rent but get no HRA, a separate deduction under section 80GG may apply in the old regime, subject to its own limits.',
+  },
+];
+---
+<ToolShell
+  title="HRA exemption calculator"
+  seoTitle="HRA exemption calculator: exempt and taxable HRA (old regime)"
+  description={`Work out how much of your house rent allowance is tax-free under the old regime. Shows all three HRA limits and which one applies. Salaried? Get ITR filing help${near}.`}
+  lead="Find the tax-free part of your HRA under the old regime. Enter monthly or yearly figures."
+  verifiedNote="HRA rules and the metro city list are unverified as of 26 Sep 2026. Section numbers and the metro list may change under the Income-tax Act, 2025 and its rules. Check on incometax.gov.in."
+  ctaTopic="income tax return (ITR) filing"
+>
+  <HraCalculator client:visible />
+  <Fragment slot="after">
+    <div class="prose tool-after">
+      <h2>How the HRA exemption works</h2>
+      <p>The tax-free (exempt) part of HRA is the <strong>lowest</strong> of these three amounts for the year:</p>
+      <ol>
+        <li>the HRA you actually received;</li>
+        <li>rent paid minus 10% of salary;</li>
+        <li>50% of salary if you live in a metro ({metros}), or 40% elsewhere.</li>
+      </ol>
+      <p>
+        Here, <strong>salary</strong> means basic pay plus dearness allowance that counts for retirement benefits
+        (and any commission fixed as a percentage of turnover). The rest of the HRA is taxable. If your rent is not
+        more than 10% of salary, no HRA is exempt.
+      </p>
+      <p>
+        This applies only under the <strong>old tax regime</strong>. Keep rent receipts, and give your employer your
+        landlord’s PAN if yearly rent is above ₹1,00,000. Official information:
+        <a href="https://www.incometax.gov.in" rel="noopener" target="_blank">incometax.gov.in</a>.
+      </p>
+      <h2>Frequently asked questions</h2>
+      <Faq faqs={faqs} />
+    </div>
+    <script type="application/ld+json" set:html={JSON.stringify(faqLd(faqs))} />
+  </Fragment>
+</ToolShell>
+
+<style>
+  .tool-after { margin-top: var(--space-7); }
+</style>

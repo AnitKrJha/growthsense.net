@@ -1,0 +1,131 @@
+---
+import { Clock, Mail, MapPin, Phone } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import ContactButtons from '@/components/ContactButtons.astro';
+import ContactForm from '@/components/ContactForm.tsx';
+import Todo from '@/components/Todo.astro';
+import { site, isTodo } from '@/config/site';
+import { formatPhone, mailtoUrl, telUrl, whatsappUrl, defaultWhatsappMessage } from '@/lib/contact';
+import { breadcrumbLd } from '@/lib/schema';
+
+const siteUrl = Astro.site ?? new URL('https://example.com');
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Contact', path: '/contact' },
+];
+const { contact, location } = site;
+const city = location.city;
+const wa = whatsappUrl(defaultWhatsappMessage());
+const tel = telUrl();
+const mail = mailtoUrl('Enquiry');
+const area = [location.city, location.state].filter(Boolean).join(', ');
+const address = [location.streetAddress, area, location.postalCode].filter(Boolean).join(', ');
+---
+<BaseLayout
+  title={city ? `Contact: tax filing help in ${city}` : 'Contact: WhatsApp, call or send an enquiry'}
+  description={`Contact ${site.owner.name} (${site.brandName}) for ITR, GST, TDS or challan help. WhatsApp, call or send a short enquiry and get a checklist and quote.`}
+  jsonLd={[breadcrumbLd(siteUrl, crumbs)]}
+>
+  <PageHeader
+    title="Contact"
+    eyebrow="Get in touch"
+    lead="WhatsApp is usually the quickest. You can also call, or send a short enquiry below and you’ll be contacted back."
+    crumbs={crumbs}
+  >
+    <div class="head-actions"><ContactButtons showEmail /></div>
+  </PageHeader>
+
+  <section class="section contact-section">
+    <div class="container contact-grid">
+      <div class="card form-card">
+        <h2 class="form-title">Send an enquiry</h2>
+        <p class="muted">A few details are enough. You’ll get a reply with a checklist and a quote.</p>
+        <ContactForm client:load />
+      </div>
+
+      <aside class="details" aria-labelledby="details-title">
+        <h2 id="details-title" class="details-title">Direct contact</h2>
+        <ul class="detail-list" role="list">
+          <li>
+            <span class="icon-badge" aria-hidden="true"><FaWhatsapp /></span>
+            <div>
+              <p class="dl-label">WhatsApp</p>
+              <p>{wa ? <a href={wa} target="_blank" rel="noopener">{formatPhone(contact.whatsapp)}</a> : <Todo label="WhatsApp number" />}</p>
+            </div>
+          </li>
+          <li>
+            <span class="icon-badge" aria-hidden="true"><Phone /></span>
+            <div>
+              <p class="dl-label">Phone</p>
+              <p>{tel ? <a href={tel}>{formatPhone(contact.phone)}</a> : <Todo label="phone number" />}</p>
+            </div>
+          </li>
+          <li>
+            <span class="icon-badge" aria-hidden="true"><Mail /></span>
+            <div>
+              <p class="dl-label">Email</p>
+              <p>{mail ? <a href={mail}>{contact.email}</a> : <Todo label="email" />}</p>
+            </div>
+          </li>
+          <li>
+            <span class="icon-badge" aria-hidden="true"><Clock /></span>
+            <div>
+              <p class="dl-label">Working hours</p>
+              <p>{contact.hoursLabel ?? <Todo label="working hours" />}</p>
+            </div>
+          </li>
+          <li>
+            <span class="icon-badge" aria-hidden="true"><MapPin /></span>
+            <div>
+              <p class="dl-label">Location</p>
+              <p>{address || <Todo label="city / areas served" />}</p>
+              {location.areasServed.length > 0 && <p class="small muted">Areas served: {location.areasServed.join(', ')}</p>}
+              <p class="small muted">{isTodo(location.mode) ? <Todo label="in person, online, or both" /> : location.mode}</p>
+            </div>
+          </li>
+        </ul>
+
+        <div class="notice docs-note">
+          <p><strong>Sending documents?</strong> Please don’t send PAN, Aadhaar or other documents through the form. Once you decide to go ahead, share them on WhatsApp or in person.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .head-actions { margin-top: var(--space-5); }
+  .contact-section { background: var(--gradient-soft); }
+  .contact-grid { display: grid; gap: var(--space-6); align-items: start; }
+  @media (min-width: 60rem) { .contact-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--space-7); } }
+  .form-card { padding: var(--space-5); box-shadow: var(--shadow-lg); }
+  @media (min-width: 48rem) { .form-card { padding: var(--space-6); } }
+  .form-title, .details-title { font-size: 1.5rem; }
+
+  .detail-list { list-style: none; padding: 0; margin: 0 0 var(--space-5); display: grid; gap: var(--space-4); }
+  .detail-list li { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: var(--space-4); align-items: start; }
+  .detail-list .icon-badge { margin: 0; }
+  .detail-list p { margin: 0; }
+  .dl-label { font-weight: 600; font-size: 0.875rem; color: var(--muted); }
+  .detail-list a { font-weight: 600; }
+  .docs-note p { margin: 0; }
+</style>
+
+<style is:global>
+  /* ContactForm.tsx island styles (React markup, so global but namespaced under .contact-form). */
+  .contact-form .cf-grid { display: grid; gap: var(--space-4); }
+  @media (min-width: 40rem) {
+    .contact-form .cf-grid { grid-template-columns: 1fr 1fr; gap: var(--space-5) var(--space-4); }
+    .contact-form .cf-full { grid-column: 1 / -1; }
+  }
+  .contact-form .field p { margin: 0; }
+  .contact-form .optional { font-weight: 400; color: var(--muted); }
+  .contact-form .cf-hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+  .contact-form .cf-note, .contact-form .cf-msg { display: flex; gap: var(--space-3); align-items: flex-start; margin: var(--space-5) 0 0; }
+  .contact-form .cf-note svg, .contact-form .cf-msg svg { width: 1.25rem; height: 1.25rem; margin-top: 0.15rem; }
+  .contact-form .cf-actions { margin-top: var(--space-5); }
+  .contact-form .cf-actions .btn { width: 100%; }
+  @media (min-width: 40rem) { .contact-form .cf-actions .btn { width: auto; min-width: 12rem; } }
+</style>
