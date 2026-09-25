@@ -113,6 +113,7 @@
 /* ── one flap ── */
 .flap {
   position: relative;
+  flex: none;
   display: inline-block;
   width: var(--cell-w);
   height: var(--cell-h);

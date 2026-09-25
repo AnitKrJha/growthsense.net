@@ -2,7 +2,7 @@
 # Owner to confirm: which registrations are offered (Udyam / MSME, TAN, GST, shop & establishment, professional tax?) and in which states.
 # Rule: official portals only. Udyam registration is free on the government portal. Say so.
 title: Business registrations
-seoTitle: Udyam (MSME), TAN and GST registration help for small businesses
+seoTitle: Udyam, TAN and GST registration help
 description: Help with the registrations a new or small business in India usually needs, such as Udyam (MSME) registration, TAN and GST registration, done on official portals.
 order: 7
 whoFor:

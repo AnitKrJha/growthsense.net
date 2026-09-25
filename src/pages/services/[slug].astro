@@ -193,6 +193,7 @@ const hostOf = (url: string) => new URL(url).hostname.replace(/^www\./, '');
 
   .svc-layout {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-l);
     padding-bottom: var(--space-xl);
   }
@@ -205,8 +206,13 @@ const hostOf = (url: string) => new URL(url).hostname.replace(/^www\./, '');
   }
   .svc-main {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-m);
     min-width: 0;
+  }
+  .jump {
+    min-width: 0;
+    max-width: 100%;
   }
 
   /* Jump index: small file tabs. */
@@ -261,6 +267,7 @@ const hostOf = (url: string) => new URL(url).hostname.replace(/^www\./, '');
 
   .svc-sheet {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-l);
   }
   .svc-intro :global(p) {

@@ -9,6 +9,7 @@ import Footer from '@/components/Footer.astro';
 import MobileContactBar from '@/components/MobileContactBar.astro';
 import { site } from '@/config/site';
 import { professionalServiceLd } from '@/lib/schema';
+import { ogRoutes, ogSlugForPath } from '@/lib/og/routes';
 
 interface Props {
   /** Page title without the brand suffix. Omit on the home page. */
@@ -16,18 +17,29 @@ interface Props {
   description: string;
   /** Extra JSON-LD objects (FAQPage, BreadcrumbList, WebApplication, Service...). */
   jsonLd?: Record<string, unknown>[];
-  /** Absolute or root-relative OG image. */
+  /** Absolute or root-relative OG image. Defaults to this route's generated card (/og/<slug>.png). */
   ogImage?: string;
+  /** Alt text for the OG image. Defaults to the card's alt from src/lib/og/routes.ts. */
+  ogImageAlt?: string;
+  /** og:type. Service and calculator pages are still "website"; use "article" only for dated content. */
+  ogType?: 'website' | 'article' | 'profile';
   /** Topic for the sticky mobile WhatsApp message. */
   whatsappTopic?: string;
   noindex?: boolean;
 }
 
-const { title, description, jsonLd = [], ogImage = '/og-default.png', whatsappTopic, noindex = false } = Astro.props;
+const { title, description, jsonLd = [], ogImage, ogImageAlt, ogType = 'website', whatsappTopic, noindex = false } = Astro.props;
 const siteUrl = Astro.site ?? new URL('https://example.com');
-const fullTitle = title ? `${title} | ${site.brandName}` : `${site.brandName}: ${site.tagline}`;
+const homeTitle = `Income tax, GST & TDS filing help${site.location.city ? ` in ${site.location.city}` : ''}`;
+const fullTitle = title ? `${title} | ${site.brandName}` : `${site.brandName} | ${homeTitle}`;
 const canonical = new URL(Astro.url.pathname.replace(/\/$/, '') || '/', siteUrl).toString();
-const ogUrl = new URL(ogImage, siteUrl).toString();
+
+// Each route has its own generated card; unknown routes (404) fall back to the home card.
+const cards = await ogRoutes();
+const card = cards.find((c) => c.slug === ogSlugForPath(Astro.url.pathname)) ?? cards.find((c) => c.slug === 'index')!;
+const ogUrl = new URL(ogImage ?? `/og/${card.slug}.png`, siteUrl).toString();
+const ogAlt = ogImageAlt ?? card.alt;
+const robots = noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1';
 const ld = [professionalServiceLd(siteUrl), ...jsonLd];
 ---
 <!doctype html>
@@ -38,26 +50,34 @@ const ld = [professionalServiceLd(siteUrl), ...jsonLd];
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="alternate" hreflang="en-IN" href={canonical} />
+    <link rel="alternate" hreflang="x-default" href={canonical} />
+    <meta name="robots" content={robots} />
+    <meta name="author" content={site.owner.name} />
+    <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#f8f3e9" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:site_name" content={site.brandName} />
     <meta property="og:locale" content="en_IN" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogUrl} />
+    <meta property="og:image:secure_url" content={ogUrl} />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={ogAlt} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogUrl} />
+    <meta name="twitter:image:alt" content={ogAlt} />
 
     {ld.map((obj) => <script type="application/ld+json" set:html={JSON.stringify(obj)} />)}
   </head>

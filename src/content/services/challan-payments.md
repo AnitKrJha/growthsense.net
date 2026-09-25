@@ -2,8 +2,8 @@
 # Owner to confirm: whether vehicle challans / road tax are really offered, and which states.
 # Rule: assistance with paying through official portals ONLY. Never suggest fines can be reduced or waived.
 title: Challan payments
-seoTitle: Help paying income tax, GST and vehicle e-challans online
-description: Assistance paying income tax challans (advance and self-assessment tax), GST PMT-06 challans and traffic e-challans through official government portals, with receipts kept safe.
+seoTitle: Income tax, GST and vehicle challan help
+description: Help paying income tax challans (advance and self-assessment tax), GST PMT-06 challans and traffic e-challans on official government portals, with receipts kept safe.
 order: 4
 whoFor:
   - Anyone who needs to pay advance tax or self-assessment tax and isn't sure which challan to use

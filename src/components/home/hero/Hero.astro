@@ -97,17 +97,21 @@ const poster = posterSvg();
     // Mobile hold: stick the stage when its bottom meets the screen bottom (below the sticky header if it fits).
     var stage = s.querySelector('[data-hero-stage]');
     var mq = matchMedia('(max-width: 59.99rem)');
-    function measure() {
+    // Only re-measure when the WIDTH changes: mobile browsers fire resize on every address-bar show/hide while
+    // scrolling, and re-pinning on those made the whole hero jitter.
+    var lastW = 0;
+    function measure(force) {
       if (!stage || !mq.matches) return;
-      var h = stage.offsetHeight;
+      var w = window.innerWidth;
+      if (!force && w === lastW) return;
+      lastW = w;
       var header = document.querySelector('.site-header');
-      var headerH = header ? header.getBoundingClientRect().height : 0;
-      s.style.setProperty('--stage-natural', h + 'px');
-      s.style.setProperty('--stage-sticky', Math.min(headerH, window.innerHeight - h) + 'px');
+      s.style.setProperty('--stage-natural', stage.offsetHeight + 'px');
+      s.style.setProperty('--hdr-h', (header ? header.offsetHeight : 0) + 'px');
     }
-    measure();
-    addEventListener('resize', measure, { passive: true });
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+    measure(true);
+    addEventListener('resize', function () { measure(false); }, { passive: true });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { measure(true); });
   })();
 </script>
 
@@ -331,7 +335,8 @@ const poster = posterSvg();
     }
     .hero[data-story='on'] .hero__stage {
       position: sticky;
-      top: var(--stage-sticky, 0px);
+      /* svh (small viewport) doesn't change when the mobile address bar shows/hides, so the hold point is stable. */
+      top: min(var(--hdr-h, 0px), calc(100svh - var(--stage-natural, 100svh)));
     }
   }
 

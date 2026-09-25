@@ -1,7 +1,7 @@
 ---
 # Owner to confirm: scope (especially notice replies), client types and the checklist below.
 title: Income Tax Return (ITR) filing
-seoTitle: ITR filing help for salaried, pensioners and freelancers
+seoTitle: ITR filing for salaried and freelancers
 description: Income tax return (ITR) filing assistance for salaried people, pensioners, freelancers and small businesses. Clear document checklist, regime comparison and e-verification.
 order: 1
 whoFor:

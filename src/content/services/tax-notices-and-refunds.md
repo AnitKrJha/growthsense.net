@@ -3,7 +3,7 @@
 # Note: section numbers below are under the Income-tax Act, 1961. The Income-tax Act, 2025 renumbers them. VERIFY labels.
 # Rule: no promises about outcomes or refund amounts.
 title: Income tax notices & refunds
-seoTitle: Help replying to income tax notices and tracking stuck refunds
+seoTitle: Income tax notice and refund help
 description: Help understanding and replying to income tax notices and intimations, filing rectifications and revised returns, and following up refunds that are delayed or failed.
 order: 6
 whoFor:

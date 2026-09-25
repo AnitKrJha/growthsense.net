@@ -115,3 +115,16 @@ Copy `.env.example` to `.env` for local use and set the same variables in Vercel
 ---
 
 Website designed with ♥ by [Anit](https://anit.dev).
+
+## Social previews (OG images) and SEO checks
+
+- Every route gets its own 1200×630 Open Graph card, generated at build time from `src/lib/og/routes.ts` (the words on each card) and `src/lib/og/render.ts` (the design). The cards are served at `/og/<route>.png` (the home card is `/og/index.png`).
+- `BaseLayout` picks the card for each page automatically and emits the full Open Graph and Twitter tag set, with alt text, canonical URL, robots and hreflang.
+- **Adding a page?** Add an entry to `ogRoutes()` as well. Otherwise the page falls back to the home card.
+- `pnpm build` ends with `scripts/check-seo.mjs`, which audits every built page and fails the build on errors. Warnings do not fail it. It covers:
+  - title and description: present and unique; long ones only raise a warning
+  - canonical URL, robots, and the full Open Graph and Twitter tag set
+  - that the OG image file exists (and is under 300 KB, as a warning)
+  - exactly one `<h1>`, and valid JSON-LD
+  - that the page is listed in the sitemap
+- Run the audit alone with `pnpm check:seo`, after a build.

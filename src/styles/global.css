@@ -45,6 +45,15 @@ body {
 main {
   overflow-x: clip;
 }
+/* Defensive layout: flex/grid children may shrink below their content width, so a non-wrapping row
+   (tab strips, jump links, long tokens) scrolls inside itself instead of stretching the whole column
+   past the screen edge. Zero specificity: any component that sets its own min-width still wins. */
+:where(main, footer) :where(*:not(input, img, svg, picture, video, canvas, iframe)) {
+  min-width: 0;
+}
+:where(main, footer) :where(p, li, dd, td, th, h1, h2, h3, h4, a, span, label, summary) {
+  overflow-wrap: break-word;
+}
 
 ::selection {
   background: var(--mint-300);

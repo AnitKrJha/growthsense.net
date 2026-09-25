@@ -2,7 +2,7 @@
 # Owner to confirm: whether PAN / Aadhaar help is offered, and which parts (new PAN, correction, linking, e-PAN).
 # Rule: official portals only (income tax portal, Protean / UTIITSL). Government fees are paid by the applicant directly.
 title: PAN & Aadhaar help
-seoTitle: PAN card application, correction and PAN-Aadhaar linking help
+seoTitle: PAN card and PAN-Aadhaar linking help
 description: Help applying for a new PAN, correcting PAN details, getting an instant e-PAN and linking PAN with Aadhaar, done through official portals only.
 order: 5
 whoFor:

@@ -97,5 +97,5 @@ export const closingCta = {
 };
 
 export const homeMeta = {
-  description: `Tax filing assistance${city ? ` in ${city}` : ''} from ${owner}: ITR filing, GST registration and returns, TDS and challan payments. Clear checklist, quote upfront, filed on official portals.`,
+  description: `Tax filing help${city ? ` in ${city}` : ''} from ${owner}: ITR, GST registration and returns, TDS and challans. Clear checklist, quote upfront, filed on official portals.`,
 };

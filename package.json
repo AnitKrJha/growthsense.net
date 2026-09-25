@@ -6,11 +6,12 @@
   "packageManager": "pnpm@10.8.1",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro check && astro build",
+    "build": "astro check && astro build && node scripts/check-seo.mjs",
     "preview": "astro preview",
     "check": "astro check",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check:seo": "node scripts/check-seo.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^7.0.0",
@@ -29,10 +30,15 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@fontsource/bricolage-grotesque": "^5.3.0",
+    "@fontsource/hanken-grotesk": "^5.3.0",
+    "@fontsource/martian-mono": "^5.3.0",
+    "@resvg/resvg-wasm": "^2.6.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@types/three": "^0.186.0",
     "happy-dom": "^20.14.5",
+    "satori": "^0.33.4",
     "typescript": "^6.0.3",
     "vitest": "^5.0.2"
   },

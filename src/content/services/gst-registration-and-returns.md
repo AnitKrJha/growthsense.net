@@ -1,7 +1,7 @@
 ---
 # Owner to confirm: scope (composition, annual return, LUT, cancellation) and the checklists below.
 title: GST registration & returns
-seoTitle: GST registration and GSTR-1 / GSTR-3B return filing help
+seoTitle: GST registration and return filing
 description: Help with new GST registration and regular GSTR-1 and GSTR-3B filing for small businesses, traders and freelancers. Document checklist and a simple monthly routine.
 order: 2
 whoFor:

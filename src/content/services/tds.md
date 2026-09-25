@@ -2,7 +2,7 @@
 # Owner to confirm: scope (salary TDS, non-salary, property/rent, TCS, correction statements) and the checklist.
 # Note: the Income-tax Act, 2025 applies from 1 April 2026 and renumbers many sections and forms. VERIFY labels.
 title: TDS returns & payments
-seoTitle: TDS return filing and TDS payment help (24Q, 26Q, 26QB)
+seoTitle: TDS return filing and payment help
 description: Help with TDS deduction, challan payment, quarterly TDS returns and Form 16 / 16A for small businesses, employers and property buyers. Checklist and due-date reminders.
 order: 3
 whoFor:

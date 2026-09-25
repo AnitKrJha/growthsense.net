@@ -15,7 +15,7 @@ export function professionalServiceLd(siteUrl: URL): Json {
     description: site.tagline,
     url: abs(siteUrl, '/'),
     logo: abs(siteUrl, '/icon-512.png'),
-    image: abs(siteUrl, '/og-default.png'),
+    image: abs(siteUrl, '/og/index.png'),
     founder: {
       '@type': 'Person',
       name: owner.name,

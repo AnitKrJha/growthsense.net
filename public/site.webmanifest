@@ -1,0 +1,16 @@
+{
+  "name": "GrowthSense: tax filing help by Avinash Thakur",
+  "short_name": "GrowthSense",
+  "description": "Income tax, GST, TDS and challan help, plus free tax calculators.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8f3e9",
+  "theme_color": "#f8f3e9",
+  "lang": "en-IN",
+  "icons": [
+    { "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any" },
+    { "src": "/apple-touch-icon.png", "type": "image/png", "sizes": "180x180" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" }
+  ]
+}

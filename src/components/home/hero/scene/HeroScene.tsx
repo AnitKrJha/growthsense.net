@@ -30,6 +30,8 @@ import { createInkMaterial, createPaperMaterial, type PaperMaterial } from './ma
 import { Choreographer } from './choreo';
 
 gsap.registerPlugin(ScrollTrigger);
+// Mobile address-bar show/hide fires resize events; don't recompute trigger positions for those (prevents jitter).
+ScrollTrigger.config({ ignoreMobileResize: true });
 
 export interface HeroHost {
   section: HTMLElement;
@@ -322,7 +324,8 @@ function World({ host }: { host: HeroHost }) {
     pm.sy = MathUtils.damp(pm.sy, pm.y, HERO.parallax.damping, dt);
     const calm = MathUtils.lerp(1, HERO.parallax.filedFactor, choreo.filed);
     r.rotation.set(pm.sy * HERO.parallax.rotX * calm, pm.sx * HERO.parallax.rotY * calm, 0);
-    r.position.y -= choreo.thud * L.s;
+    // The stamp "thud" nudges the whole scene; keep it subtle on phones, where it read as screen shake.
+    r.position.y -= choreo.thud * L.s * (mobile ? 0.25 : 1);
 
     // Sheets.
     const P0 = HERO.paper;
