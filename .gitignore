@@ -1,0 +1,29 @@
+# deps / build
+node_modules/
+dist/
+.astro/
+.vercel/
+coverage/
+
+# env
+.env
+.env.*
+!.env.example
+
+# logs / os
+*.log
+.DS_Store
+
+# The global gitignore ignores images, fonts and PDFs; re-include them for this project.
+!*.png
+!*.jpg
+!*.jpeg
+!*.webp
+!*.svg
+!*.ico
+!*.gif
+!*.pdf
+!*.woff
+!*.woff2
+!*.ttf
+!*.otf
