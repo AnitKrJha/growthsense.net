@@ -1,0 +1,55 @@
+---
+/**
+ * Shared wrapper for every /tools/* page: header, breadcrumbs, WebApplication + Breadcrumb JSON-LD,
+ * the island (default slot), "rules last verified" note, disclaimer and CTA.
+ */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import CtaBand from '@/components/CtaBand.astro';
+import { breadcrumbLd, webAppLd } from '@/lib/schema';
+
+interface Props {
+  title: string;
+  /** <title> override; defaults to title. */
+  seoTitle?: string;
+  description: string;
+  lead?: string;
+  /** e.g. "Rules last verified for FY 2025-26 on 26 Sep 2026". Shown above the disclaimer. */
+  verifiedNote?: string;
+  ctaTopic?: string;
+}
+const { title, seoTitle, description, lead, verifiedNote, ctaTopic } = Astro.props;
+const siteUrl = Astro.site ?? new URL('https://example.com');
+const path = Astro.url.pathname.replace(/\/$/, '');
+const crumbs = [
+  { name: 'Home', path: '/' },
+  { name: 'Calculators', path: '/tools' },
+  { name: title, path },
+];
+---
+<BaseLayout
+  title={seoTitle ?? title}
+  description={description}
+  whatsappTopic={ctaTopic}
+  jsonLd={[breadcrumbLd(siteUrl, crumbs), webAppLd(siteUrl, { name: title, path, description })]}
+>
+  <PageHeader title={title} lead={lead} crumbs={crumbs} />
+  <section class="section tool-body">
+    <div class="container">
+      <slot />
+      <div class="tool-notes small">
+        {verifiedNote && <p class="notice notice--info">{verifiedNote}</p>}
+        <p class="muted">
+          Estimates for information only. This is not tax, legal or financial advice. Your actual liability depends on
+          your full facts and the law in force. <a href="/disclaimer">Read the disclaimer</a>.
+        </p>
+      </div>
+      <slot name="after" />
+    </div>
+  </section>
+  <CtaBand title="Get this filed for you" topic={ctaTopic} />
+</BaseLayout>
+<style>
+  .tool-body { padding-top: var(--space-6); }
+  .tool-notes { margin-top: var(--space-6); max-width: var(--measure); }
+</style>
