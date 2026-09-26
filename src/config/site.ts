@@ -95,7 +95,8 @@ export const site = {
   /** TODO(owner): "en" only, or also "hi". If Hindi is wanted, add /hi/ routes with hreflang. */
   languages: ['en'] as const,
 
-  credit: { label: 'Anit', url: 'https://anit.dev' },
+  /** Designer credit in the footer. Links to the case study on the designer's site. */
+  credit: { label: 'Anit Jha', url: 'https://anit.dev/projects/growthsense', title: 'Anit Jha, designer and developer of this site' },
 } as const;
 
 export const isTodo = (v: unknown): boolean =>

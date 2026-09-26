@@ -86,7 +86,15 @@ const portals = [
       </div>
       <p class="f-row">
         <span>© {year} {site.brandName} · {owner.name}</span>
-        <span class="f-credit">Website designed with <span aria-hidden="true" class="f-heart">♥</span><span class="visually-hidden">love</span> by <a href={site.credit.url} rel="noopener">{site.credit.label}</a></span>
+        <span class="f-credit">
+          Designed and built with <span aria-hidden="true" class="f-heart">♥</span><span class="visually-hidden">love</span> by{" "}
+          <a href={site.credit.url} rel="noopener" title={site.credit.title} class="f-credit-link">
+            <svg class="f-credit-mark" viewBox="0 0 46 32" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M21.201 0.528l-15.055 22.56h8.063l6.991-10.68 2.488 3.646 3.946-5.919-6.434-9.607z" />
+              <path fill="currentColor" d="M3.273 27.42l-2.788 4.246c5.719 0.014 17.834 0.043 20.545 0.043s5.075-2.545 5.919-3.817l2.316-3.345c0.5 0.786 1.879 2.831 3.388 4.718s3.946 2.416 4.975 2.445h4.418l-8.793-13.296 11.838-17.928h-18.572l2.831 4.289h4.975c-4.346 6.519-13.236 19.858-14.025 21.059s-2.245 1.558-2.874 1.587h-14.154z" />
+            </svg>{site.credit.label}</a
+          >
+        </span>
       </p>
     </div>
   </div>
@@ -286,7 +294,21 @@ const portals = [
     display: inline-block;
     color: oklch(0.7 0.16 29);
   }
-  .f-credit a {
+  .f-credit-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
     font-weight: 650;
+    white-space: nowrap;
+  }
+  /* The designer's AJ mark, sized to the text. */
+  .f-credit-mark {
+    width: 1.35em;
+    height: auto;
+    flex-shrink: 0;
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .f-credit-link:hover .f-credit-mark {
+    transform: translateY(-1px) rotate(-4deg);
   }
 </style>
